@@ -20,7 +20,7 @@ A full-stack project template combining Django REST API backend with React, Vite
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Exalt24/WebEngFinalExam.git
 cd WebEngFinalExam
 ```
 
