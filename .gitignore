@@ -1,9 +1,42 @@
-# Python
+# Root-level Node
+/node_modules/
+
+# Python virtual env
 backend/venv/
 
-# Node
+# Python bytecode
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Django local database
+db.sqlite3
+
+# Django static files (if you collectstatic locally)
+/staticfiles/
+/frontend/dist/assets/
+
+# Node in the frontend
 frontend/node_modules/
 frontend/build/
 
-# Env
+# Logs and coverage
+*.log
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Environment files
 .env
+.env.*
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# MacOS
+.DS_Store
