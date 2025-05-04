@@ -1,30 +1,31 @@
-import { useEffect, useState } from 'react';
-import { API_URL, APP_TITLE, DEBUG } from './config';
-import './index.css'
+// src/App.jsx
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Home     from './pages/Home'
+import Login    from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import { isLoggedIn } from './services/authService'
 
-function App() {
-  const [msg, setMsg] = useState('loading…');
-
-  useEffect(() => {
-    fetch(`${API_URL}ping/`)
-      .then(res => res.json())
-      .then(data => setMsg(data.message))
-      .catch(() => setMsg('error'));
-  }, []);
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 flex-col">
-      <h1 className="text-3xl font-medium mb-4">
-        Welcome to <span className="text-purple-600">{APP_TITLE}</span>
-      </h1>
-      <h1 className="text-3xl font-medium mb-4">
-        {API_URL} says: <span className="text-purple-600">{msg}</span>
-      </h1>
-      <h1 className="text-3xl font-medium">
-        Debug: <span className="text-purple-600">{DEBUG ? 'true' : 'false'}</span>
-      </h1>
-    </div>
-  );
+function PrivateRoute({ children }) {
+  return isLoggedIn()
+    ? children
+    : <Navigate to="/login" replace />
 }
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route path="/" element={<Home />} />
+      {/* catch‐all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
