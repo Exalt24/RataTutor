@@ -1,10 +1,11 @@
 {
   "scripts": {
-    "backend":  "cd backend && python manage.py runserver",
+    "backend": "cd backend && python manage.py runserver",
     "frontend": "cd frontend && npm run dev",
-    "dev":      "concurrently --kill-others \"npm run backend\" \"npm run frontend\""
+    "dev": "concurrently --kill-others \"npm run backend\" \"npm run frontend\""
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "connect-history-api-fallback": "^2.0.0"
   }
 }

@@ -1,15 +1,17 @@
 # ┌─────────────────────────────┐
 # │ Stage 1: Build the frontend │
 # └─────────────────────────────┘
-FROM node:18-alpine AS frontend-build
+FROM node:20-alpine AS frontend-build
 
 # Declare ARGs with defaults matching your Render URL and title
 ARG VITE_API_URL="https://webengfinalexam.onrender.com/api/"
+ARG VITE_AUTH_URL="https://webengfinalexam.onrender.com/auth/"
 ARG VITE_APP_TITLE="WebEngFinalExam"
 ARG VITE_DEBUG="false"
 
 # Export them so Vite picks them up during `npm run build`
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_AUTH_URL=${VITE_AUTH_URL}
 ENV VITE_APP_TITLE=${VITE_APP_TITLE}
 ENV VITE_DEBUG=${VITE_DEBUG}
 

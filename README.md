@@ -11,8 +11,8 @@ A full-stack project template combining Django REST API backend with React, Vite
 
 ## 📋 Prerequisites
 
-- Python 3.8 or newer
-- Node.js 16 or newer with npm
+- Python 3.10 or newer
+- Node.js 20
 - Git for version control
 
 ## 🔧 Installation
@@ -20,7 +20,7 @@ A full-stack project template combining Django REST API backend with React, Vite
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Exalt24/WebEngFinalExam.git
 cd WebEngFinalExam
 ```
 
@@ -141,7 +141,6 @@ docker build -t webengfinalexam . && \
 docker run --rm -it -p 8000:8000 \
   -e SECRET_KEY="<your-secret>" \
   -e DEBUG=True \
-  -e DATABASE_URL="sqlite:///db.sqlite3" \
   -e EMAIL_HOST_USER="<your-email>" \
   -e EMAIL_HOST_PASSWORD="<your-google-api-app-password>" \
   -e GEMINI_API_KEY="<your-gemini-app-key>" \
