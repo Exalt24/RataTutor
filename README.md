@@ -50,13 +50,15 @@ pip install -r requirements.txt
 # Create a new .env file for environment variables
 # On macOS/Linux:
 touch .env
-# On Windows:
-# echo. > .env
+
+# On Windows (PowerShell)
+# New-Item -Path . -Name ".env" -ItemType "File" -Force
 
 # Generate a Django secret key
 python -c "from django.core.management.utils import get_random_secret_key; print('SECRET_KEY=' + get_random_secret_key())"
 
-# Copy the printed SECRET_KEY into backend/.env and add any other values you need
+# STRICTLY copy the printed SECRET_KEY into backend/.env
+# For details on what to include in this .env file, see the "Environment Variables" section below
 cd ..
 ```
 
@@ -69,13 +71,14 @@ npm install
 # Create environment files
 # On macOS/Linux:
 touch .env .env.development .env.production
-# On Windows:
-# echo. > .env
-# echo. > .env.development
-# echo. > .env.production
 
-# Add appropriate configuration to each file (examples below)
-# Customize environment files as needed
+# On Windows (PowerShell)
+# New-Item -Path . -Name ".env" -ItemType "File" -Force
+# New-Item -Path . -Name ".env.development" -ItemType "File" -Force
+# New-Item -Path . -Name ".env.production" -ItemType "File" -Force
+
+# Add appropriate configuration to each file
+# For details on what to include in these files, see the "Environment Variables" section below
 cd ..
 ```
 
@@ -157,9 +160,9 @@ WebEngFinalExam/
 SECRET_KEY=django-insecure-<your-generated-secret>
 DEBUG=True
 
-# Email (for password resets, notifications, etc.)
+# Email (Make sure that the host password is the App password for Google APIs, not your actual email password)
 EMAIL_HOST_USER=<your-email>
-EMAIL_HOST_PASSWORD=<your-email-password>
+EMAIL_HOST_PASSWORD=<your-google-api-app-password>
 
 # External APIs
 GEMINI_API_KEY=<your-api-key>
