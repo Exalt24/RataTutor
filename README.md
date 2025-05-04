@@ -20,7 +20,7 @@ A full-stack project template combining Django REST API backend with React, Vite
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Exalt24/WebEngFinalExam.git
+git clone <your-repo-url>
 cd WebEngFinalExam
 ```
 
@@ -135,6 +135,17 @@ cd backend && python manage.py makemigrations && python manage.py migrate && cd 
 
 # 3. Start the servers
 npm run dev
+
+# OR Use Docker
+docker build -t webengfinalexam . && \
+docker run --rm -it -p 8000:8000 \
+  -e SECRET_KEY="<your-secret>" \
+  -e DEBUG=True \
+  -e DATABASE_URL="sqlite:///db.sqlite3" \
+  -e EMAIL_HOST_USER="<your-email>" \
+  -e EMAIL_HOST_PASSWORD="<your-google-api-app-password>" \
+  -e GEMINI_API_KEY="<your-gemini-app-key>" \
+  webengfinalexam
 ```
 
 Then verify these three things work:
@@ -154,8 +165,7 @@ WebEngFinalExam/
 │  ├─ WebEngFinalExam/        # Project settings & URLs
 │  ├─ api/                    # API app (models, views, serializers)
 │  ├─ manage.py               # Django command line tool
-│  ├─ requirements.txt        # Python dependencies
-│  └─ .env                    # Environment files
+│  └─ requirements.txt        # Python dependencies
 │
 ├─ frontend/                  # React + Vite + Tailwind app
 │  ├─ public/                 # Static assets
@@ -175,6 +185,57 @@ WebEngFinalExam/
 2. **Make focused commits** that address specific issues
 3. **Push your branch** and open a Pull Request against `main`
 4. **Run the verification test** before requesting a code review
+
+## 🐳 Local Docker Test
+
+1. **Build the image**
+
+   ```bash
+   docker build -t webengfinalexam .
+   ```
+2. **Run the container**
+
+   ```bash
+   docker run --rm -it \
+     -p 8000:8000 \
+     -e SECRET_KEY="<your-secret>" \
+     -e DEBUG=True \
+     -e DATABASE_URL="sqlite:///db.sqlite3" \
+     webengfinalexam
+   ```
+3. **Verify**
+
+   * API ping: [http://localhost:8000/api/ping/](http://localhost:8000/api/ping/) → `{"message":"pong"}`
+   * SPA:        [http://localhost:8000/](http://localhost:8000/)        → your React app
+
+## 🚀 Deployment on Render
+
+Render will build your Docker image and deploy one service for both backend and frontend.
+
+1. **Push** your code and Docker files:
+
+   ```bash
+   git add Dockerfile docker-entrypoint.sh
+   git commit -m "Add Docker deploy config"
+   git push origin main
+   ```
+2. In Render dashboard → **New → Web Service**
+
+   * **Environment:** Docker
+   * **Root Directory:** *leave blank* (Dockerfile in repo root)
+   * **Env Vars:** set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `GEMINI_API_KEY`
+3. **Create** and let Render build/deploy
+
+Your service URL:
+
+```
+https://<your-service-name>.onrender.com/
+```
+
+* API ping: `/api/ping/`
+* SPA: `/`
+
+**Demo Site:** To see a working example, visit [https://webengfinalexam.onrender.com](https://webengfinalexam.onrender.com)
 
 ## 📚 Resources
 
