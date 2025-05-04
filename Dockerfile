@@ -51,8 +51,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
 
 # 3. Copy the frontend build into Django staticfiles
-#    (STATIC_ROOT should be BASE_DIR/staticfiles)
 COPY --from=frontend-build /app/frontend/dist ./staticfiles
+
+# Create your templates folder and copy index.html there
+RUN mkdir -p WebEngFinalExam/templates \
+ && cp staticfiles/index.html WebEngFinalExam/templates/index.html
 
 # 4. Copy & mark entrypoint
 COPY docker-entrypoint.sh ./
