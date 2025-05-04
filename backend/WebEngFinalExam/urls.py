@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, re_path, include
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -9,7 +9,6 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    re_path(r'^.*$', TemplateView.as_view(
-        template_name='static/index.html'
-    ), name='spa'),
+    path('', RedirectView.as_view(url='/static/index.html', permanent=False)),
+    re_path(r'^(?!api/).*$', RedirectView.as_view(url='/static/index.html', permanent=False)),
 ]
