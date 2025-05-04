@@ -1,0 +1,51 @@
+# ┌─────────────────────────────┐
+# │ Stage 1: Build the frontend │
+# └─────────────────────────────┘
+FROM node:18-alpine AS frontend-build
+
+WORKDIR /app/frontend
+
+# 1. Copy only package files (cache npm install)
+COPY frontend/package.json frontend/package-lock.json ./
+
+# 2. Install & build
+RUN npm ci
+
+# 3. Copy source & build
+COPY frontend/ ./
+RUN npm run build
+
+
+
+# ┌────────────────────────────┐
+# │ Stage 2: Build the backend │
+# └────────────────────────────┘
+FROM python:3.10-slim AS backend-build
+
+# Install system deps (for psycopg2, etc.)
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      libpq-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 1. Install Python deps
+COPY backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 2. Copy Django code
+COPY backend/ ./
+
+# 3. Copy the frontend build into Django staticfiles
+#    (STATIC_ROOT should be BASE_DIR/staticfiles)
+COPY --from=frontend-build /app/frontend/dist ./staticfiles
+
+# 4. Copy & mark entrypoint
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+# Expose port and set entrypoint
+EXPOSE 8000
+ENTRYPOINT ["./docker-entrypoint.sh"]
