@@ -20,7 +20,7 @@ A full-stack project template combining Django REST API backend with React, Vite
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Exalt24/WebEngFinalExam.git
+git clone <your-repo-url>
 cd WebEngFinalExam
 ```
 
@@ -51,14 +51,19 @@ pip install -r requirements.txt
 # On macOS/Linux:
 touch .env
 
-# On Windows (PowerShell)
+# On Windows (PowerShell):
 # New-Item -Path . -Name ".env" -ItemType "File" -Force
 
 # Generate a Django secret key
 python -c "from django.core.management.utils import get_random_secret_key; print('SECRET_KEY=' + get_random_secret_key())"
 
-# STRICTLY copy the printed SECRET_KEY into backend/.env
-# For details on what to include in this .env file, see the "Environment Variables" section below
+# Add the following variables to your .env file:
+# SECRET_KEY=django-insecure-<your-generated-secret>
+# DEBUG=True
+# EMAIL_HOST_USER=<your-email>
+# EMAIL_HOST_PASSWORD=<your-google-api-app-password>  (Note: use app password for Google APIs, not your actual email password)
+# GEMINI_API_KEY=<your-api-key>  (if using Gemini API)
+
 cd ..
 ```
 
@@ -72,13 +77,26 @@ npm install
 # On macOS/Linux:
 touch .env .env.development .env.production
 
-# On Windows (PowerShell)
+# On Windows (PowerShell):
 # New-Item -Path . -Name ".env" -ItemType "File" -Force
 # New-Item -Path . -Name ".env.development" -ItemType "File" -Force
 # New-Item -Path . -Name ".env.production" -ItemType "File" -Force
 
-# Add appropriate configuration to each file
-# For details on what to include in these files, see the "Environment Variables" section below
+# Add the following configuration to each file:
+
+# For .env (Base variables for all environments):
+# VITE_API_URL="http://localhost:8000/api/"
+# VITE_APP_TITLE="WebEngFinalExam"
+
+# For .env.development (Development-only variables):
+# VITE_DEBUG=true
+
+# For .env.production (Production-only variables):
+# VITE_DEBUG=false
+
+# Note: Vite automatically selects the right environment file based on build mode.
+# Only variables with the VITE_ prefix are exposed to your React code through import.meta.env.
+
 cd ..
 ```
 
@@ -136,8 +154,8 @@ WebEngFinalExam/
 │  ├─ WebEngFinalExam/        # Project settings & URLs
 │  ├─ api/                    # API app (models, views, serializers)
 │  ├─ manage.py               # Django command line tool
-│  └─ requirements.txt        # Python dependencies
-│
+│  ├─ requirements.txt        # Python dependencies
+│  └─ .env                    # Environment files
 │
 ├─ frontend/                  # React + Vite + Tailwind app
 │  ├─ public/                 # Static assets
@@ -150,46 +168,6 @@ WebEngFinalExam/
 ├─ package.json               # Root scripts & dependencies
 └─ .gitignore                 # Git ignore patterns
 ```
-
-## 📖 Environment Variables
-
-### Backend (`backend/.env`)
-
-```dotenv
-# Security
-SECRET_KEY=django-insecure-<your-generated-secret>
-DEBUG=True
-
-# Email (Make sure that the host password is the App password for Google APIs, not your actual email password)
-EMAIL_HOST_USER=<your-email>
-EMAIL_HOST_PASSWORD=<your-google-api-app-password>
-
-# External APIs
-GEMINI_API_KEY=<your-api-key>
-```
-
-### Frontend Environment Files
-
-#### `frontend/.env` (Base variables for all environments)
-
-```dotenv
-VITE_API_URL="http://localhost:8000/api/"
-VITE_APP_TITLE="WebEngFinalExam"
-```
-
-#### `frontend/.env.development` (Development-only variables)
-
-```dotenv
-VITE_DEBUG=true
-```
-
-#### `frontend/.env.production` (Production-only variables)
-
-```dotenv
-VITE_DEBUG=false
-```
-
-> **Note:** Vite automatically selects the right environment file based on the build mode. Only variables with the `VITE_` prefix are exposed to your React code through `import.meta.env`.
 
 ## 🤝 Contributing
 
