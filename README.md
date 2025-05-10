@@ -62,7 +62,7 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 # DEBUG=True
 # EMAIL_HOST_USER=<your-email>
 # EMAIL_HOST_PASSWORD=<your-google-api-app-password>  (Note: use app password for Google APIs, not your actual email password)
-# GEMINI_API_KEY=<your-api-key>  (if using Gemini API)
+# OPENROUTER_API_KEY=<your-api-key>
 
 cd ..
 ```
@@ -143,7 +143,7 @@ docker run --rm -it -p 8000:8000 \
   -e DEBUG=True \
   -e EMAIL_HOST_USER="<your-email>" \
   -e EMAIL_HOST_PASSWORD="<your-google-api-app-password>" \
-  -e GEMINI_API_KEY="<your-gemini-app-key>" \
+  -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
   webengfinalexam
 ```
 
@@ -222,7 +222,7 @@ Render will build your Docker image and deploy one service for both backend and 
 
    * **Environment:** Docker
    * **Root Directory:** *leave blank* (Dockerfile in repo root)
-   * **Env Vars:** set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `GEMINI_API_KEY`
+   * **Env Vars:** set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `OPENROUTER_API_KEY`
 3. **Create** and let Render build/deploy
 
 Your service URL:
