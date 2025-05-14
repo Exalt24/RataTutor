@@ -170,7 +170,6 @@ WebEngFinalExam/
 │  ├─ public/                 # Static assets
 │  ├─ src/                    # React components & logic
 │  ├─ vite.config.js          # Vite configuration
-│  ├─ tailwind.config.js      # Tailwind CSS settings
 │  ├─ package.json            # Frontend dependencies
 │  └─ .env.*                  # Environment files for different modes
 │
