@@ -5,7 +5,7 @@ from rest_framework import status
 from api.services.ai_service import generate_ai_response
 
 class OpenRouterChatView(APIView):
-    permission_classes = []  # or IsAuthenticated
+    permission_classes = []
 
     def post(self, request):
         prompt = request.data.get("prompt", "").strip()
