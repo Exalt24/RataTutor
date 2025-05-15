@@ -4,9 +4,9 @@
 FROM node:20-alpine AS frontend-build
 
 # Declare ARGs with defaults matching your Render URL and title
-ARG VITE_API_URL="https://webengfinalexam.onrender.com/api/"
-ARG VITE_AUTH_URL="https://webengfinalexam.onrender.com/auth/"
-ARG VITE_APP_TITLE="WebEngFinalExam"
+ARG VITE_API_URL="https://ratatutor.onrender.com/api/"
+ARG VITE_AUTH_URL="https://ratatutor.onrender.com/auth/"
+ARG VITE_APP_TITLE="RataTutor"
 ARG VITE_DEBUG="false"
 
 # Export them so Vite picks them up during `npm run build`
@@ -54,8 +54,8 @@ COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist ./staticfiles
 
 # Create your templates folder and copy index.html there
-RUN mkdir -p WebEngFinalExam/templates \
- && cp staticfiles/index.html WebEngFinalExam/templates/index.html
+RUN mkdir -p RataTutor/templates \
+ && cp staticfiles/index.html RataTutor/templates/index.html
 
 # 4. Copy & mark entrypoint
 COPY docker-entrypoint.sh ./
