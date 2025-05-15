@@ -1,0 +1,1040 @@
+/* Import handwriting fonts */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap');
+
+/* Super Mario Font */
+@font-face {
+  font-family: 'SuperMario';
+  src: url('https://db.onlinewebfonts.com/t/39a2c7f346d5cfae7045aeb2fb50d9ad.eot');
+  src: url('https://db.onlinewebfonts.com/t/39a2c7f346d5cfae7045aeb2fb50d9ad.eot?#iefix') format('embedded-opentype'),
+       url('https://db.onlinewebfonts.com/t/39a2c7f346d5cfae7045aeb2fb50d9ad.woff2') format('woff2'),
+       url('https://db.onlinewebfonts.com/t/39a2c7f346d5cfae7045aeb2fb50d9ad.woff') format('woff'),
+       url('https://db.onlinewebfonts.com/t/39a2c7f346d5cfae7045aeb2fb50d9ad.ttf') format('truetype'),
+       url('https://db.onlinewebfonts.com/t/39a2c7f346d5cfae7045aeb2fb50d9ad.svg#Super Mario 256') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --pastel-blue: #7BA7CC;
+  --pastel-pink: #FF9EAF;
+  --pastel-yellow: #E6C87F;
+  --pastel-green: #8FCEB3;
+  --pastel-purple: #9EA7D9;
+  --pastel-orange: #FF8E88;
+  --pastel-cream: #F5E6CC;
+  --white: #ffffff;
+  --text-dark: #2D4246;
+  --button-primary: #FF6B6B;
+  --button-hover: #FF4F4F;
+  --font-pixel: 'SuperMario', cursive;
+  --font-pixel-secondary: 'SuperMario', cursive;
+  --font-handwriting: 'Caveat', cursive;
+  --font-handwriting-secondary: 'Kalam', cursive;
+}
+
+/* Base Styles */
+.exam-container {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text-dark);
+}
+
+.horizontal-scroll {
+  display: flex;
+  width: 400vw;
+  height: 100vh;
+  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.section {
+  width: 100vw;
+  height: 100vh;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  transition: background 0.5s ease;
+}
+
+/* Gradient Backgrounds */
+.bg-color-1 {
+  background: linear-gradient(135deg, 
+    #AAC4FF 0%, 
+    #B1E1FF 50%, 
+    #C7E9FF 100%
+  );
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px
+    ),
+    linear-gradient(135deg, 
+      #AAC4FF 0%, 
+      #B1E1FF 50%, 
+      #C7E9FF 100%
+    );
+}
+
+.bg-color-2 {
+  background: linear-gradient(135deg, 
+    #FFD6E0 0%, 
+    #FFEFF2 50%, 
+    #FFF5F7 100%
+  );
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px
+    ),
+    linear-gradient(135deg, 
+      #FFD6E0 0%, 
+      #FFEFF2 50%, 
+      #FFF5F7 100%
+    );
+}
+
+.bg-color-3 {
+  background: linear-gradient(135deg, 
+    #E0C3FC 0%, 
+    #E5D4F5 50%, 
+    #F1E6FF 100%
+  );
+  background-image: 
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px
+    ),
+    linear-gradient(135deg, 
+      #E0C3FC 0%, 
+      #E5D4F5 50%, 
+      #F1E6FF 100%
+    );
+}
+
+.bg-color-4 {
+  background: linear-gradient(135deg, 
+    #FFE5B4 0%, 
+    #FFF1D0 50%, 
+    #FFF8E7 100%
+  );
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px
+    ),
+    linear-gradient(135deg, 
+      #FFE5B4 0%, 
+      #FFF1D0 50%, 
+      #FFF8E7 100%
+    );
+}
+
+.wheel-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+}
+
+.image-wheel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wheel-image {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  opacity: 0.7;
+}
+
+.wheel-image.position-1 {
+  transform: translate(-50%, -50%) scale(1);
+  top: 15%;
+  left: 25%;
+  z-index: 4;
+  opacity: 1;
+}
+
+.wheel-image.position-2 {
+  transform: translate(-50%, -50%) scale(0.9);
+  top: 15%;
+  left: 75%;
+  z-index: 3;
+}
+
+.wheel-image.position-3 {
+  transform: translate(-50%, -50%) scale(0.9);
+  top: 65%;
+  left: 75%;
+  z-index: 2;
+}
+
+.wheel-image.position-4 {
+  transform: translate(-50%, -50%) scale(0.9);
+  top: 65%;
+  left: 25%;
+  z-index: 1;
+}
+
+.wheel-image:hover {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.1);
+  z-index: 5;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+}
+
+.wheel-image.active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.2);
+  z-index: 5;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+}
+
+.hero-content {
+  position: absolute;
+  z-index: 10;
+  text-align: center;
+  color: var(--white);
+  padding: 2rem;
+  max-width: 800px;
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.hero-content.fade-in {
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Typography with pixel and handwriting fonts */
+.exam-heading {
+  font-family: var(--font-pixel);
+  font-size: 2.8rem;
+  font-weight: normal;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+  text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
+  letter-spacing: 2px;
+  line-height: 1.6;
+  position: relative;
+  text-transform: uppercase;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+}
+
+.exam-heading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.1) 1px,
+    rgba(0, 0, 0, 0.1) 2px
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.exam-heading::after {
+  content: attr(data-subtitle);
+  display: block;
+  font-family: var(--font-handwriting);
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--text-dark);
+  opacity: 0.85;
+  text-shadow: none;
+  margin-top: 0.5rem;
+  letter-spacing: 0;
+  transform: rotate(-2deg);
+}
+
+.exam-subheading {
+  font-family: var(--font-handwriting);
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  transform: rotate(-1deg);
+}
+
+/* Buttons with pixel font main text and handwriting hover effect */
+.exam-button {
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  letter-spacing: 2px;
+  padding: 1.2rem 2.4rem;
+  text-transform: uppercase;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  background: var(--button-primary);
+  color: var(--white);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+.exam-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.1) 2px,
+      rgba(255, 255, 255, 0.1) 4px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.05) 1px,
+      rgba(0, 0, 0, 0.05) 2px
+    );
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.exam-button::before {
+  content: attr(data-hover);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  padding: 0.5rem;
+  font-family: var(--font-handwriting);
+  font-size: 1.4rem;
+  transform: rotate(-3deg);
+  transition: all 0.3s ease;
+  opacity: 0;
+  background: var(--button-hover);
+  color: var(--white);
+  z-index: 2;
+}
+
+.exam-button:hover {
+  background: var(--button-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.exam-button:hover::before {
+  top: 50%;
+  transform: translateY(-50%) rotate(-3deg);
+  opacity: 1;
+}
+
+.exam-button:hover::after {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.15) 3px,
+    rgba(255, 255, 255, 0.15) 6px
+  );
+}
+
+/* Cards with mixed typography */
+.exam-card h2 {
+  font-family: var(--font-pixel);
+  font-size: 2rem;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+  font-weight: normal;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+}
+
+.exam-card h2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.1) 1px,
+    rgba(0, 0, 0, 0.1) 2px
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.exam-card h3 {
+  font-family: var(--font-handwriting);
+  font-size: 1.8rem;
+  letter-spacing: 0;
+  line-height: 1.3;
+  transform: rotate(-1deg);
+  margin-bottom: 0.5rem;
+}
+
+.exam-card p {
+  font-family: var(--font-handwriting-secondary);
+  font-size: 1.3rem;
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+}
+
+/* Special text combinations */
+.pixel-accent {
+  font-family: var(--font-pixel);
+  font-size: 1em;
+  letter-spacing: 2px;
+  display: inline-block;
+  vertical-align: middle;
+  transform: translateY(-1px);
+  text-transform: uppercase;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+}
+
+.pixel-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.1) 1px,
+    rgba(0, 0, 0, 0.1) 2px
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.handwriting-accent {
+  font-family: var(--font-handwriting);
+  font-size: 1.2em;
+  display: inline-block;
+  transform: rotate(-2deg);
+  margin: 0 0.2em;
+}
+
+/* Cards */
+.exam-card {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  image-rendering: pixelated;
+}
+
+.exam-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.1) 3px,
+    rgba(255, 255, 255, 0.1) 6px
+  );
+}
+
+.exam-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-5px) rotate(2deg);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rotateIn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Navigation Dots */
+.nav-dots {
+  position: fixed;
+  top: 50%;
+  right: 2rem;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.nav-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(69, 98, 104, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  opacity: 0.5;
+}
+
+.nav-dot.active {
+  background-color: var(--text-dark);
+  transform: scale(1.3);
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.gap-4 { gap: 1rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+
+/* Add texture to all pixel font elements */
+[class*="exam-"] {
+  &[style*="font-family: var(--font-pixel)"],
+  &[style*="font-family: var(--font-pixel-secondary)"] {
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    position: relative;
+  }
+
+  &[style*="font-family: var(--font-pixel)"]::before,
+  &[style*="font-family: var(--font-pixel-secondary)"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.1) 1px,
+      rgba(0, 0, 0, 0.1) 2px
+    );
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
+}
+
+/* Button specific texture */
+.exam-button {
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  letter-spacing: 2px;
+  padding: 1.2rem 2.4rem;
+  text-transform: uppercase;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  background: var(--button-primary);
+  color: var(--white);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+.exam-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.1) 2px,
+      rgba(255, 255, 255, 0.1) 4px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 1px,
+      rgba(0, 0, 0, 0.05) 1px,
+      rgba(0, 0, 0, 0.05) 2px
+    );
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Card headings texture */
+.exam-card h2 {
+  font-family: var(--font-pixel);
+  font-size: 2rem;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+  font-weight: normal;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+}
+
+.exam-card h2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.1) 1px,
+    rgba(0, 0, 0, 0.1) 2px
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+/* Pixel accent texture */
+.pixel-accent {
+  font-family: var(--font-pixel);
+  font-size: 1em;
+  letter-spacing: 2px;
+  display: inline-block;
+  vertical-align: middle;
+  transform: translateY(-1px);
+  text-transform: uppercase;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+}
+
+.pixel-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 0, 0, 0.1) 1px,
+    rgba(0, 0, 0, 0.1) 2px
+  );
+  pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.handwriting-accent {
+  font-family: var(--font-handwriting);
+  font-size: 1.2em;
+  display: inline-block;
+  transform: rotate(-2deg);
+  margin: 0 0.2em;
+}
+
+/* Login Page Styles */
+.login-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, 
+    var(--pastel-blue) 0%, 
+    var(--pastel-cream) 100%
+  );
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px
+    ),
+    linear-gradient(135deg, 
+      var(--pastel-blue) 0%, 
+      var(--pastel-cream) 100%
+    );
+}
+
+/* Envelope */
+.envelope {
+  position: relative;
+  width: 600px;
+  height: 400px;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.envelope:hover {
+  transform: translateY(-5px);
+}
+
+/* Envelope Structure */
+.envelope-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pastel-cream);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform-style: preserve-3d;
+  z-index: 1;
+}
+
+/* Envelope Front Cover */
+.envelope-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pastel-cream);
+  clip-path: polygon(0 50%, 50% 70%, 100% 50%, 100% 100%, 0 100%);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 8px 8px;
+  z-index: 4;
+  transition: clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.envelope.open .envelope-front {
+  clip-path: polygon(0 70%, 50% 90%, 100% 70%, 100% 100%, 0 100%);
+}
+
+/* Envelope Side Flaps */
+.envelope-side {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: var(--pastel-cream);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  z-index: 3;
+}
+
+.envelope-side.left {
+  left: 0;
+  transform-origin: left;
+  clip-path: polygon(0 0, 100% 50%, 100% 100%, 0 100%);
+}
+
+.envelope-side.right {
+  right: 0;
+  transform-origin: right;
+  clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Envelope Top Flap */
+.envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pastel-cream);
+  clip-path: polygon(0 0, 50% 50%, 100% 0);
+  transform-origin: top;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.envelope.open .envelope-flap {
+  transform: rotateX(180deg);
+}
+
+/* Paper/Form Container */
+.envelope-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  height: 90%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* Initial Paper Peek */
+.paper-peek {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 6;
+}
+
+.paper-content {
+  text-align: center;
+}
+
+.paper-content .handwriting-accent {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.pull-arrow {
+  font-size: 2rem;
+  color: var(--button-primary);
+  animation: bounce 1s infinite;
+  margin-top: 0.5rem;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulled Out Form */
+.letter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  padding: 3rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(0);
+  animation: slideToTop 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 10;
+}
+
+@keyframes slideToTop {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-20%);
+    opacity: 1;
+  }
+}
+
+/* Form Styles */
+.letter-title {
+  font-family: var(--font-pixel);
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+}
+
+.letter-content {
+  padding: 1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.form-group:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.form-group:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-group label {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  opacity: 0.8;
+}
+
+.form-input {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--pastel-blue);
+  border-radius: 5px;
+  font-family: var(--font-handwriting-secondary);
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+
+/* Button */
+.exam-button {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.3s ease forwards;
+  animation-delay: 0.5s;
+}
+
+/* Envelope Inner Shadow */
+.envelope-back::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0) 20%
+  );
+  z-index: 2;
+} 
+
+.envelope.form-pulled .envelope-content {
+  z-index: 6;
+}
+
+.envelope.form-pulled .letter {
+  height: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
