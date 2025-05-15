@@ -218,6 +218,39 @@ RataTutor/
 - **Responsive Design**: Study seamlessly across desktop and mobile devices
 - **Offline Access**: Download generated study materials for offline use
 
+## 🖼️ Screenshots & Showcase
+
+<div align="center">
+  <p><i>Coming soon! Screenshots and GIFs of RataTutor in action will be added here.</i></p>
+  <!-- Placeholder for future screenshots -->
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://via.placeholder.com/400x225?text=Upload+Notes+Screen" alt="Upload Notes Screen"/>
+        <br/>
+        <em>Upload Notes</em>
+      </td>
+      <td align="center">
+        <img src="https://via.placeholder.com/400x225?text=Flashcards+Generation" alt="Flashcards Generation"/>
+        <br/>
+        <em>Flashcards Generation</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="https://via.placeholder.com/400x225?text=Quiz+Mode" alt="Quiz Mode"/>
+        <br/>
+        <em>Quiz Mode</em>
+      </td>
+      <td align="center">
+        <img src="https://via.placeholder.com/400x225?text=Study+Summary" alt="Study Summary"/>
+        <br/>
+        <em>Study Summary</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
 ## 🤝 Contributing
 
 1. **Create a branch** from `main` with a descriptive name
@@ -277,6 +310,18 @@ https://<your-service-name>.onrender.com/
 
 **Demo Site:** To see a working example, visit [https://ratatutor.onrender.com](https://ratatutor.onrender.com)
 
+## 👨‍👩‍👧‍👦 Team & Acknowledgements
+
+RataTutor was created by:
+
+- **Daniel Alexis Cruz** ([@Exalt24](https://github.com/Exalt24))
+- **Nikka Joie Mendoza** ([@nikkamendoza](https://github.com/nikkamendoza))
+- **Shaira Joy Macale** ([@howtodoitpleasehelp](https://github.com/howtodoitpleasehelp))
+- **Vince Quinañola** ([@binskyut](https://github.com/binskyut))
+- **Mc Clareenz Zerrudo** ([@clareenz](https://github.com/clareenz))
+
+Special thanks to all contributors and supporters who helped make this project possible.
+
 ## 📚 Resources & Documentation
 
 * [Django REST Framework Documentation](https://www.django-rest-framework.org/)
@@ -287,3 +332,13 @@ https://<your-service-name>.onrender.com/
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+  <img src="https://via.placeholder.com/100x100?text=RataTutor" alt="RataTutor Logo" width="80"/>
+  <p>
+    <b>Anyone Can Cook Up Knowledge</b><br/>
+    Crafted with ❤️ by the RataTutor Team © 2025
+  </p>
+</div>
