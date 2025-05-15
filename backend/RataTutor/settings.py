@@ -16,7 +16,7 @@ DEBUG = env('DEBUG')
 if DEBUG:
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 else:
-    ALLOWED_HOSTS = ["webengfinalexam.onrender.com"]
+    ALLOWED_HOSTS = ["ratatutor.onrender.com"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -44,12 +44,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'WebEngFinalExam.urls'
+ROOT_URLCONF = 'RataTutor.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [ BASE_DIR / 'WebEngFinalExam' / 'templates' ],
+        'DIRS': [ BASE_DIR / 'RataTutor' / 'templates' ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -61,7 +61,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'WebEngFinalExam.wsgi.application'
+WSGI_APPLICATION = 'RataTutor.wsgi.application'
 
 
 # Database

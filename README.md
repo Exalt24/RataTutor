@@ -1,27 +1,35 @@
-# WebEngFinalExam
+# RataTutor - AI-Powered Study Assistant
 
-A full-stack project template combining Django REST API backend with React, Vite, and Tailwind CSS frontend. Launch both servers with a single command!
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Python](https://img.shields.io/badge/python-3.10+-yellow)
+![Node](https://img.shields.io/badge/node-20.x-brightgreen)
+
+A full-stack AI-powered study assistant that converts your notes into flashcards, summaries, and quiz questions. Like a tiny chef guiding your culinary creations, RataTutor helps prepare the perfect recipe for exam success!
 
 ## 🚀 Overview
 
 - **Backend:** Django + Django REST Framework + django-cors-headers  
-- **Frontend:** React + Vite + Tailwind CSS  
+- **Frontend:** React + Vite + Tailwind CSS
+- **AI Integration:** OpenRouter API for AI text generation
 - **Development:** Single command (`npm run dev`) to run everything
 - **API Proxy:** Frontend `/api/*` requests automatically forwarded to Django
 
 ## 📋 Prerequisites
 
-- Python 3.10 or newer
-- Node.js 20
-- Git for version control
+- **Python 3.10+**: For backend development and Django
+- **Node.js 20.x**: For frontend development with React
+- **Git**: For version control and collaboration
+- **OpenRouter API key**: For AI-powered functionality
+- **Docker** (optional): For containerized development and deployment
 
 ## 🔧 Installation
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Exalt24/WebEngFinalExam.git
-cd WebEngFinalExam
+git clone https://github.com/Exalt24/RataTutor.git
+cd RataTutor
 ```
 
 ### 2. Install root dependencies
@@ -86,7 +94,7 @@ touch .env .env.development .env.production
 
 # For .env (Base variables for all environments):
 # VITE_API_URL="http://localhost:8000/api/"
-# VITE_APP_TITLE="WebEngFinalExam"
+# VITE_APP_TITLE="RataTutor"
 
 # For .env.development (Development-only variables):
 # VITE_DEBUG=true
@@ -137,14 +145,14 @@ cd backend && python manage.py makemigrations && python manage.py migrate && cd 
 npm run dev
 
 # OR Use Docker
-docker build -t webengfinalexam . && \
+docker build -t ratatutor . && \
 docker run --rm -it -p 8000:8000 \
   -e SECRET_KEY="<your-secret>" \
   -e DEBUG=True \
   -e EMAIL_HOST_USER="<your-email>" \
   -e EMAIL_HOST_PASSWORD="<your-google-api-app-password>" \
   -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
-  webengfinalexam
+  ratatutor
 ```
 
 Then verify these three things work:
@@ -158,24 +166,57 @@ If any step fails, report an issue before continuing your work.
 ## 🗂️ Project Structure
 
 ```
-WebEngFinalExam/
-├─ backend/                   # Django REST API
-│  ├─ venv/                   # Python virtual environment
-│  ├─ WebEngFinalExam/        # Project settings & URLs
-│  ├─ api/                    # API app (models, views, serializers)
-│  ├─ manage.py               # Django command line tool
+RataTutor/
+├─ backend/                   # Django REST API server
+│  ├─ accounts/               # User authentication and profile management
+│  ├─ api/                    # Core API functionality and endpoints
+│  ├─ venv/                   # Python virtual environment (gitignored)
+│  ├─ RataTutor/              # Django project settings & configuration
+│  ├─ .env                    # Environment variables (gitignored)
+│  ├─ db.sqlite3              # Database file (gitignored)
+│  ├─ manage.py               # Django management script
 │  └─ requirements.txt        # Python dependencies
 │
-├─ frontend/                  # React + Vite + Tailwind app
-│  ├─ public/                 # Static assets
-│  ├─ src/                    # React components & logic
-│  ├─ vite.config.js          # Vite configuration
-│  ├─ package.json            # Frontend dependencies
-│  └─ .env.*                  # Environment files for different modes
+├─ frontend/                  # React + Vite + Tailwind application
+│  ├─ public/                 # Static assets and resources
+│  ├─ src/                    # React components and application logic
+│  │  ├─ assets/             # Static assets and resources
+│  │  ├─ components/         # Reusable UI components
+│  │  ├─ pages/              # Page-level components
+│  │  ├─ services/           # API integration and services
+│  │  ├─ App.jsx             # Main application component
+│  │  ├─ config.js           # Application configuration
+│  │  ├─ index.css           # Global CSS styles
+│  │  └─ main.jsx            # Application entry point
+│  ├─ .env                    # Base environment variables (gitignored)
+│  ├─ .env.development        # Development environment variables (gitignored)
+│  ├─ .env.production         # Production environment variables (gitignored)
+│  ├─ eslint.config.js        # ESLint configuration
+│  ├─ index.html              # HTML entry point
+│  ├─ package.json            # Frontend dependencies and scripts
+│  ├─ package-lock.json       # Frontend dependency lock file
+│  └─ vite.config.js          # Vite bundler configuration
 │
+├─ docker-entrypoint.sh       # Docker container startup script
+├─ Dockerfile                 # Docker container definition
 ├─ package.json               # Root scripts & dependencies
-└─ .gitignore                 # Git ignore patterns
+├─ package-lock.json          # Root dependency lock file
+├─ LICENSE                    # MIT License file
+└─ README.md                  # Project documentation
 ```
+
+## 🚀 Features
+
+- **Note Upload & Processing**: Upload study materials in various formats (PDF, DOCX, TXT)
+- **AI-Powered Content Generation**:
+  - Generate flashcards with question/answer pairs
+  - Create concise summaries of key concepts
+  - Produce practice quiz questions to test knowledge
+- **User Management**: Secure account creation and authentication system
+- **Material Organization**: Save, categorize, and manage study materials
+- **Progress Tracking**: Monitor learning progress and quiz performance
+- **Responsive Design**: Study seamlessly across desktop and mobile devices
+- **Offline Access**: Download generated study materials for offline use
 
 ## 🤝 Contributing
 
@@ -189,7 +230,7 @@ WebEngFinalExam/
 1. **Build the image**
 
    ```bash
-   docker build -t webengfinalexam .
+   docker build -t ratatutor .
    ```
 2. **Run the container**
 
@@ -199,7 +240,8 @@ WebEngFinalExam/
      -e SECRET_KEY="<your-secret>" \
      -e DEBUG=True \
      -e DATABASE_URL="sqlite:///db.sqlite3" \
-     webengfinalexam
+     -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
+     ratatutor
    ```
 3. **Verify**
 
@@ -233,10 +275,15 @@ https://<your-service-name>.onrender.com/
 * API ping: `/api/ping/`
 * SPA: `/`
 
-**Demo Site:** To see a working example, visit [https://webengfinalexam.onrender.com](https://webengfinalexam.onrender.com)
+**Demo Site:** To see a working example, visit [https://ratatutor.onrender.com](https://ratatutor.onrender.com)
 
-## 📚 Resources
+## 📚 Resources & Documentation
 
 * [Django REST Framework Documentation](https://www.django-rest-framework.org/)
 * [Vite + React Guide](https://vitejs.dev/guide/)
 * [Tailwind CSS Documentation](https://tailwindcss.com/docs/)
+* [OpenRouter API Documentation](https://openrouter.ai/docs)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
