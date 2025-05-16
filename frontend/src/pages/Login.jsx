@@ -42,7 +42,7 @@ export default function Login() {
             <div className="paper-peek" onClick={handlePaperClick}>
               <div className="paper-content">
                 <span className="handwriting-accent">Click to open</span>
-                <div className="pull-arrow">↑</div>
+                <div className="pull-arrow mb-40">↑</div>
               </div>
             </div>
           ) : (
