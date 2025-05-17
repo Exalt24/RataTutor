@@ -75,6 +75,7 @@ export default function Login({ isActive, onGoRegister }) {
                       value={creds.username}
                       onChange={e => setCreds({ ...creds, username: e.target.value })}
                       className="form-input"
+                      placeholder="Enter your username"
                       required
                     />
                     {errors.username?.map((msg, i) => (
@@ -88,6 +89,7 @@ export default function Login({ isActive, onGoRegister }) {
                       value={creds.password}
                       onChange={e => setCreds({ ...creds, password: e.target.value })}
                       className="form-input"
+                      placeholder="Enter your password"
                       required
                     />
                     {errors.password?.map((msg, i) => (

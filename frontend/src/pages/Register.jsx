@@ -95,6 +95,7 @@ export default function Register({ isActive, onGoLogin }) {
                     value={formData.username}
                     onChange={handleChange}
                     className="form-input"
+                    placeholder="e.g. Rata123"
                     required
                   />
                   {errors.username?.map((msg, i) => (
@@ -109,6 +110,7 @@ export default function Register({ isActive, onGoLogin }) {
                     value={formData.email}
                     onChange={handleChange}
                     className="form-input"
+                    placeholder="e.g. someone@example.com"
                     required
                   />
                   {errors.email?.map((msg, i) => (
@@ -123,6 +125,7 @@ export default function Register({ isActive, onGoLogin }) {
                     value={formData.password}
                     onChange={handleChange}
                     className="form-input"
+                    placeholder="e.g. D@ntTe11"
                     required
                   />
                   {errors.password?.map((msg, i) => (
@@ -137,6 +140,7 @@ export default function Register({ isActive, onGoLogin }) {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className="form-input"
+                    placeholder="e.g. D@ntTe11"
                     required
                   />
                   {errors.confirm_password?.map((msg, i) => (
