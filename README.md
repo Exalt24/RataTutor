@@ -180,14 +180,14 @@ RataTutor/
 ├─ frontend/                  # React + Vite + Tailwind application
 │  ├─ public/                 # Static assets and resources
 │  ├─ src/                    # React components and application logic
-│  │  ├─ assets/             # Static assets and resources
-│  │  ├─ components/         # Reusable UI components
-│  │  ├─ pages/              # Page-level components
-│  │  ├─ services/           # API integration and services
-│  │  ├─ App.jsx             # Main application component
-│  │  ├─ config.js           # Application configuration
-│  │  ├─ index.css           # Global CSS styles
-│  │  └─ main.jsx            # Application entry point
+│  │  ├─ assets/              # Static assets and resources
+│  │  ├─ components/          # Reusable UI components
+│  │  ├─ pages/               # Page-level components
+│  │  ├─ services/            # API integration and services
+│  │  ├─ styles/              # Global and Specific CSS styles
+│  │  ├─ App.jsx              # Main application component
+│  │  ├─ config.js            # Application configuration
+│  │  └─ main.jsx             # Application entry point
 │  ├─ .env                    # Base environment variables (gitignored)
 │  ├─ .env.development        # Development environment variables (gitignored)
 │  ├─ .env.production         # Production environment variables (gitignored)
