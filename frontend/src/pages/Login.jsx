@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../services/authService'
+import '../styles/exam-theme.css'
 
-export default function Login() {
+export default function Login({ onGoRegister }) {
   const [creds, setCreds] = useState({ username: '', password: '' })
   const [isOpen, setIsOpen] = useState(false)
   const [isPulledOut, setIsPulledOut] = useState(false)
@@ -18,22 +19,27 @@ export default function Login() {
     }
   }
 
-  const handlePaperClick = (e) => {
+  const handlePaperClick = e => {
     e.stopPropagation()
-    if (isOpen && !isPulledOut) {
-      setIsPulledOut(true)
+    if (isOpen && !isPulledOut) setIsPulledOut(true)
+  }
+
+  const handleOutsideClick = () => {
+    if (isPulledOut) {
+      setIsPulledOut(false)
+      setIsOpen(false)
     }
   }
 
   return (
-    <div className="login-container">
-      <div 
-        className={`envelope ${isOpen ? 'open' : ''} ${isPulledOut ? 'form-pulled' : ''}`}
+    <div className="login-container" onClick={handleOutsideClick}>
+      <div
+        className={`envelope ${isOpen ? 'open' : ''} ${
+          isPulledOut ? 'form-pulled' : ''
+        }`}
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => {
-          if (!isPulledOut) {
-            setIsOpen(false)
-          }
+          if (!isPulledOut) setIsOpen(false)
         }}
       >
         <div className="envelope-back"></div>
@@ -46,7 +52,10 @@ export default function Login() {
               </div>
             </div>
           ) : (
-            <div className="letter">
+            <div
+              className="letter"
+              onClick={e => e.stopPropagation()}
+            >
               <h2 className="letter-title">Welcome Back!</h2>
               <div className="letter-content">
                 <form onSubmit={submit} className="login-form">
@@ -55,8 +64,11 @@ export default function Login() {
                     <input
                       type="text"
                       value={creds.username}
-                      onChange={e => setCreds({ ...creds, username: e.target.value })}
+                      onChange={e =>
+                        setCreds({ ...creds, username: e.target.value })
+                      }
                       className="form-input"
+                      required
                     />
                   </div>
                   <div className="form-group">
@@ -64,10 +76,14 @@ export default function Login() {
                     <input
                       type="password"
                       value={creds.password}
-                      onChange={e => setCreds({ ...creds, password: e.target.value })}
+                      onChange={e =>
+                        setCreds({ ...creds, password: e.target.value })
+                      }
                       className="form-input"
+                      required
                     />
                   </div>
+
                   <button type="submit" className="exam-button">
                     Sign In
                   </button>
@@ -80,6 +96,14 @@ export default function Login() {
         <div className="envelope-side right"></div>
         <div className="envelope-front"></div>
         <div className="envelope-flap"></div>
+      </div>
+
+      {/* right arrow to switch to Register */}
+      <div
+        className="slide-arrow"
+        onClick={e => { e.stopPropagation(); onGoRegister() }}
+      >
+        →
       </div>
     </div>
   )
