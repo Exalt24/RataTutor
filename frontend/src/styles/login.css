@@ -24,7 +24,6 @@
     );
 }
 
-/* Envelope */
 .envelope {
   position: relative;
   width: 600px;
@@ -35,7 +34,6 @@
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Envelope Structure */
 .envelope-back {
   position: absolute;
   top: 0;
@@ -52,7 +50,6 @@
   z-index: 1;
 }
 
-/* Envelope Front Cover */
 .envelope-front {
   position: absolute;
   top: 0;
@@ -94,7 +91,6 @@
   clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
 }
 
-/* Envelope Top Flap */
 .envelope-flap {
   position: absolute;
   top: 0;
@@ -116,7 +112,6 @@
     inset 0 -5px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Paper/Form Container */
 .envelope-content {
   position: absolute;
   top: 50%;
@@ -127,7 +122,6 @@
   z-index: 2;
 }
 
-/* Initial Paper Peek */
 .paper-peek {
   position: absolute;
   left: 0;
@@ -176,7 +170,6 @@
   }
 }
 
-/* Pulled Out Form */
 .letter {
   position: absolute;
   top: 0;
@@ -278,7 +271,6 @@
   box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
 }
 
-/* Envelope Inner Shadow */
 .envelope-back::before {
   content: '';
   position: absolute;

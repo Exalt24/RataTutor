@@ -1,4 +1,3 @@
-// src/pages/Register.jsx
 import { useEffect, useState } from 'react'
 import { register } from '../services/authService'
 import Toast from '../components/Toast'
@@ -72,9 +71,9 @@ export default function Register({ isActive, onGoLogin }) {
       setTimeout(() => {
         setHideForm(true)
         setSuccess(true)
-        setTimeout(() => handleGoLogin(), 2000)
-      }, 2500)
-    }, 2000)
+        setTimeout(() => handleGoLogin(), 1000)
+      }, 1500)
+    }, 1500)
   }
 
   return (
