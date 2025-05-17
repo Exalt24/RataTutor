@@ -619,3 +619,32 @@ img,
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
+
+/* make wrapper the same width as the input */
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+/* ensure your input fills the wrapper */
+.input-with-icon .form-input {
+  width: 100%;
+  box-sizing: border-box;  /* include padding/border in that 100% */
+  padding-right: 2.5rem;   /* leave room for the eye button */
+}
+
+/* absolute‐position the eye inside the wrapper */
+.toggle-btn {
+  position: absolute;
+  right: 0.75rem;          /* shift it in from the very edge */
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.toggle-btn:hover {
+  opacity: 1;
+}
