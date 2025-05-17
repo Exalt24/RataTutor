@@ -65,7 +65,7 @@ export default function Login({ isActive, onGoRegister }) {
               <h2 className="letter-title">Welcome Back!</h2>
               <div className="letter-content">
                 {errors.non_field_errors?.map((msg, i) => (
-                  <p key={i} className="text-red-500 text-center">{msg}</p>
+                  <p key={i} className="errors-form-all">{msg}</p>
                 ))}
                 <form onSubmit={submit} className="login-form">
                   <div className="form-group">
@@ -78,7 +78,7 @@ export default function Login({ isActive, onGoRegister }) {
                       required
                     />
                     {errors.username?.map((msg, i) => (
-                      <p key={i} className="text-red-500 text-sm">{msg}</p>
+                      <p key={i} className="errors-form-per-field">{msg}</p>
                     ))}
                   </div>
                   <div className="form-group">
@@ -91,10 +91,10 @@ export default function Login({ isActive, onGoRegister }) {
                       required
                     />
                     {errors.password?.map((msg, i) => (
-                      <p key={i} className="text-red-500 text-sm">{msg}</p>
+                      <p key={i} className="errors-form-per-field">{msg}</p>
                     ))}
                   </div>
-                  <button type="submit" className="exam-button">
+                  <button type="submit" className="exam-button" data-hover="Start Cooking!">
                     Sign In
                   </button>
                 </form>
