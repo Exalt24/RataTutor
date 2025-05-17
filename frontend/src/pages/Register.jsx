@@ -10,6 +10,7 @@ export default function Register({ onGoLogin }) {
     password: '',
     confirmPassword: '',
   })
+  const [errors, setErrors] = useState({})           // ← field & global errors
   const [animationStage, setAnimationStage] = useState(0)
   const [sending, setSending] = useState(false)
   const [hideForm, setHideForm] = useState(false)
@@ -26,23 +27,29 @@ export default function Register({ onGoLogin }) {
 
   const handleSubmit = async e => {
     e.preventDefault()
+    setErrors({})                                   // clear previous errors
+
+    // client-side password match check
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
+      setErrors({ confirm_password: ['Passwords do not match.'] })
       return
     }
 
     try {
+      // include confirm_password in the payload
       await register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
+        username:          formData.username,
+        email:             formData.email,
+        password:          formData.password,
+        confirm_password:  formData.confirmPassword,
       })
     } catch (err) {
-      const detail = err.response?.data?.detail || 'Registration failed'
-      alert(detail)
+      const data = err.response?.data || {}
+      setErrors(data)
       return
     }
 
+    // kick off the mailbox animation
     setAnimationStage(2)
     setTimeout(() => {
       setAnimationStage(3)
@@ -62,7 +69,14 @@ export default function Register({ onGoLogin }) {
         {!hideForm && (
           <div className={`register-letter ${animationStage >= 2 ? 'sending' : ''}`}>
             <h2 className="letter-title">Join RataTutor</h2>
+
+            {/* global (non-field) errors */}
+            {errors.non_field_errors?.map((msg, i) => (
+              <p key={i} className="text-red-500 text-center">{msg}</p>
+            ))}
+
             <form onSubmit={handleSubmit} className="register-form">
+              {/* Username */}
               <div className="form-group">
                 <label className="handwriting-accent">Username</label>
                 <input
@@ -73,7 +87,12 @@ export default function Register({ onGoLogin }) {
                   className="form-input"
                   required
                 />
+                {errors.username?.map((msg, i) => (
+                  <p key={i} className="text-red-500 text-sm">{msg}</p>
+                ))}
               </div>
+
+              {/* Email */}
               <div className="form-group">
                 <label className="handwriting-accent">Email</label>
                 <input
@@ -84,7 +103,12 @@ export default function Register({ onGoLogin }) {
                   className="form-input"
                   required
                 />
+                {errors.email?.map((msg, i) => (
+                  <p key={i} className="text-red-500 text-sm">{msg}</p>
+                ))}
               </div>
+
+              {/* Password */}
               <div className="form-group">
                 <label className="handwriting-accent">Password</label>
                 <input
@@ -95,7 +119,12 @@ export default function Register({ onGoLogin }) {
                   className="form-input"
                   required
                 />
+                {errors.password?.map((msg, i) => (
+                  <p key={i} className="text-red-500 text-sm">{msg}</p>
+                ))}
               </div>
+
+              {/* Confirm Password */}
               <div className="form-group">
                 <label className="handwriting-accent">Confirm Password</label>
                 <input
@@ -106,6 +135,9 @@ export default function Register({ onGoLogin }) {
                   className="form-input"
                   required
                 />
+                {errors.confirm_password?.map((msg, i) => (
+                  <p key={i} className="text-red-500 text-sm">{msg}</p>
+                ))}
               </div>
 
               <button type="submit" className="exam-button" data-hover="Join Us!">
@@ -143,12 +175,12 @@ export default function Register({ onGoLogin }) {
           Welcome aboard!
         </span>
       </div>
-      
+
       <div
-       className="slide-arrow left"
-       onClick={e => { e.stopPropagation(); onGoLogin() }}
-      >        
-      ←
+        className="slide-arrow left"
+        onClick={e => { e.stopPropagation(); onGoLogin() }}
+      >
+        ←
       </div>
     </div>
   )

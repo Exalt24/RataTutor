@@ -1,13 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
+# --- One-line regex patterns ------------------------------------------------
 USERNAME_REGEX = r'^[\w.@+-]{3,}$'  # at least 3 chars, no spaces
 EMAIL_REGEX    = r'^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}(?:\.[A-Za-z]{2,})?$'
 PASSWORD_REGEX = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
+# -----------------------------------------------------------------------------
 
 class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -21,6 +24,10 @@ class RegisterSerializer(serializers.ModelSerializer):
                     "Username must be ≥3 chars and can only contain "
                     "letters, numbers, and @/./+/-/_ (no spaces)."
                 )
+            ),
+            UniqueValidator(
+                queryset=User.objects.all(),
+                message="That username is already taken."
             )
         ],
         error_messages={
@@ -35,6 +42,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             RegexValidator(
                 regex=EMAIL_REGEX,
                 message='Enter a valid email address.'
+            ),
+            UniqueValidator(
+                queryset=User.objects.all(),
+                message="That email is already registered."
             )
         ],
         error_messages={'required': 'Email is required.'}
@@ -61,6 +72,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'password', 'confirm_password')
 
     def validate(self, data):
+        # ensure passwords match
         if data.get('password') != data.get('confirm_password'):
             raise serializers.ValidationError({'confirm_password': ['Passwords do not match.']})
         return data
@@ -89,7 +101,6 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(**data)
         if not user:
             raise serializers.ValidationError('Invalid username or password.')
-
         tokens = RefreshToken.for_user(user)
         return {'refresh': str(tokens), 'access': str(tokens.access_token)}
 
