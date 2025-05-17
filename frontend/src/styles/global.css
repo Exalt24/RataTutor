@@ -176,21 +176,16 @@
   transform: rotate(-2deg);
 }
 
-/* Mini heading—add this alongside your base styles */
 .exam-heading-mini {
-  /* inherit all the base rules, just override sizes */
-  font-size: 1.8rem;       /* smaller main text */
-  margin-bottom: 1rem;     /* tighter spacing */
-  letter-spacing: 1px;     /* less tracking */
-  line-height: 1.4;        /* tighter line-height */
+
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+  line-height: 1.4;
 }
 
-.exam-heading-mini::before {
-  /* keep your existing stripe overlay settings */
-}
 
 .exam-heading-mini::after {
-  /* inherit all, but smaller subtitle */
   font-size: 1.2rem;
   margin-top: 0.3rem;
 }
