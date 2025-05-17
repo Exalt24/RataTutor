@@ -1,28 +1,100 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import FilesScreen from '../components/FileScreen'
+import Header from '../components/Header'
+import HomeScreen from '../components/Homescreen'
+import ProfileScreen from '../components/ProfileScreen'
+import SavedScreen from '../components/SavedScreen'
+import Sidebar from '../components/Sidebar'
+import StreakScreen from '../components/StreakScreen'
+import TrashScreen from '../components/TrashScreen'
 import api from '../services/api'
 import { logout } from '../services/authService'
-import { useNavigate } from 'react-router-dom'
 
-export default function Dashboard() {
-  const [msg, setMsg] = useState('')
+
+const Dashboard = () => {
+  const [screen, setScreen] = useState('home')
+  const [streak, setStreak] = useState(0)
+  const [level, setLevel] = useState(1)
+  const [points, setPoints] = useState(0)
+  const [generated, setGenerated] = useState({ flashcards: [], summary: '', quiz: [] })
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [badges, setBadges] = useState([])
+
   const nav = useNavigate()
-
+  
   useEffect(() => {
-    api.get('ping/')
-       .then(r => setMsg(r.data.message))
-       .catch(() => setMsg('Error'))
+    Promise.all([ api.get('streak/'), api.get('daily-challenge/'), api.get('profile/') ])
+      .then(([sr, cr, pr]) => {
+        setStreak(sr.data.streak || 0)
+        setPoints(pr.data.points)
+        setBadges(pr.data.badges)
+        setLevel(pr.data.level)
+      })
+      .catch(() => setStreak(0))
   }, [])
 
-  const doLogout = () => {
-    logout()
-    nav('/login', { replace: true })
+  const doLogout = () => { logout(); nav('/login', { replace: true }) }
+  
+  const showProfile = () => setScreen('profile')
+  const showStreak = () => setScreen('streak')
+
+  const handleFileChange = e => { setSelectedFile(e.target.files[0]); setGenerated({ flashcards: [], summary: '', quiz: [] }) }
+
+  const uploadAndGenerate = async type => {
+    if (!selectedFile) return alert('Please select a file first')
+    const form = new FormData(); form.append('file', selectedFile)
+    try { const res = await api.post(`/generate/${type}/`, form, { headers: {'Content-Type':'multipart/form-data'} })
+      setGenerated(prev => ({...prev, [type]: res.data}))
+    } catch { alert(`Error generating ${type}`) }
   }
 
+  const gradientClass = () => {
+    switch(screen) {
+      case 'home':
+        return 'bg-color-1'
+      case 'files':
+        return 'bg-color-2'
+      case 'saved':
+        return 'bg-color-3'
+      case 'trash':
+        return 'bg-color-4'
+      case 'profile':
+        return 'bg-color-2'
+      case 'streak':
+        return 'bg-color-3'
+      default:
+        return 'bg-color-1'
+    }
+  }
+
+  const files = [ { title:'Scripts sa IOT', updated:'270d ago', tag:'Flashcards (33)' },
+                  { title:'Untitled', updated:'270d ago', tag:'Note' },
+                  { title:'(Draft) 5 Integration Testing', updated:'367d ago', tag:'Flashcards (14)' } ]
+
   return (
-    <div className="p-8 space-y-4">
-      <h1>Dashboard</h1>
-      <p>API says: {msg}</p>
-      <button onClick={doLogout} className="bg-red-500 text-white px-4 py-2">Logout</button>
+    <div className="flex h-screen text-xs sm:text-sm">
+      <Sidebar screen={screen} setScreen={setScreen}/>
+      <div className="flex-1 flex flex-col">
+        <Header 
+          streak={streak} 
+          level={level} 
+          points={points} 
+          onLogout={doLogout}
+          onProfile={showProfile}
+          onStreak={showStreak}
+        />
+        <main className={`flex-1 overflow-auto p-2 sm:p-4 ${gradientClass()}`}>
+          {screen==='home' && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={generated}/>}
+          {screen==='files' && <FilesScreen files={files}/>}
+          {screen==='saved' && <SavedScreen/>}
+          {screen==='trash' && <TrashScreen/>}
+          {screen==='profile' && <ProfileScreen points={points} badges={badges}/>}
+          {screen==='streak' && <StreakScreen points={points} badges={badges}/>}
+        </main>
+      </div>
     </div>
   )
 }
+
+export default Dashboard
