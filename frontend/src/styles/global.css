@@ -142,7 +142,7 @@
   -webkit-font-smoothing: none;
   position: relative;
 }
-/* bg heading */
+
 .exam-heading::before {
   content: '';
   position: absolute;
@@ -161,7 +161,6 @@
   mix-blend-mode: multiply;
 }
 
-/*subheading cursive */
 .exam-heading::after {
   content: attr(data-subtitle);
   display: block;
@@ -190,7 +189,6 @@
   margin-top: 0.3rem;
 }
 
-/* subheading label */
 .exam-subheading {
   font-family: var(--font-handwriting);
   font-size: 2.2rem;
@@ -203,7 +201,6 @@
   transform: rotate(-1deg);
 }
 
-/* Buttons with pixel font main text and handwriting hover effect */
 .exam-button {
   font-family: var(--font-pixel);
   font-size: 1rem;
@@ -273,19 +270,19 @@
   z-index: 2;
 }
 
-.exam-button:hover {
+.exam-button:not(:disabled):hover {
   background: var(--button-hover);
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-.exam-button:hover::before {
+.exam-button:not(:disabled):hover::before{
   top: 50%;
   transform: translateY(-50%) rotate(-3deg);
   opacity: 1;
 }
 
-.exam-button:hover::after {
+.exam-button:not(:disabled):hover::after {
   background: repeating-linear-gradient(
     45deg,
     transparent,
@@ -295,7 +292,19 @@
   );
 }
 
-/* Cards with mixed typography */
+.exam-button:disabled {
+  background: rgba(255, 107, 107, 0.5);
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.exam-button:disabled::before,
+.exam-button:disabled::after {
+  display: none;
+}
+
+
 .exam-card h2 {
   font-family: var(--font-pixel);
   font-size: 2rem;
@@ -523,6 +532,7 @@
   transform: translateY(-50%) translateX(-4px) rotate(360deg);
 }
 
+
 .form-input {
   padding: 0.8rem 1rem;
   border: 2px solid var(--pastel-blue);
@@ -539,6 +549,11 @@
   box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
 }
 
+.form-input:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--button-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 .form-input::placeholder {
   color: #999;
   opacity: 0.7;
@@ -620,31 +635,55 @@ img,
   line-height: 1.25rem;
 }
 
-/* make wrapper the same width as the input */
 .input-with-icon {
   position: relative;
   width: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* ensure your input fills the wrapper */
+.input-with-icon:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .input-with-icon .form-input {
   width: 100%;
-  box-sizing: border-box;  /* include padding/border in that 100% */
-  padding-right: 2.5rem;   /* leave room for the eye button */
+  box-sizing: border-box;
+  padding: 0.8rem 2.5rem 0.8rem 2.5rem;
+  border: 2px solid var(--pastel-blue);
+  border-radius: 5px;
+  background: rgba(255,255,255,0.9);
+  transition: border-color 0.3s ease;
 }
 
-/* absolute‐position the eye inside the wrapper */
-.toggle-btn {
+.input-with-icon .left-icon {
   position: absolute;
-  right: 0.75rem;          /* shift it in from the very edge */
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+  color: #888;
+}
+
+.input-with-icon .toggle-btn {
+  position: absolute;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+.input-with-icon .toggle-btn:hover {
+  opacity: 1;
 }
 
-.toggle-btn:hover {
-  opacity: 1;
+.input-with-icon .form-input:focus {
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 3px rgba(255,107,107,0.2);
 }
