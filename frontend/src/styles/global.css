@@ -507,6 +507,29 @@
   transform: translateY(-50%) translateX(-4px) rotate(360deg);
 }
 
+.form-input {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--pastel-blue);
+  border-radius: 5px;
+  font-family: var(--font-handwriting-secondary);
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+
+.form-input::placeholder {
+  color: #999;
+  opacity: 0.7;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
 .toast {
   position: fixed;
   top: 10%;
