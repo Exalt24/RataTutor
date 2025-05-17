@@ -21,10 +21,16 @@ export default function AuthSwitcher() {
         style={{ transform: `translateX(-${page * 100}vw)` }}
       >
         <section className="section bg-color-1">
-          <Login onGoRegister={() => setPage(1)} />
+          <Login
+            isActive={page === 0}
+            onGoRegister={() => setPage(1)}
+          />
         </section>
         <section className="section bg-color-2">
-          <Register onGoLogin={() => setPage(0)} />
+          <Register
+            isActive={page === 1}
+            onGoLogin={() => setPage(0)}
+          />
         </section>
       </div>
     </div>

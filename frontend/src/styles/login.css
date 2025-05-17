@@ -1,0 +1,305 @@
+.login-container {
+  position: relative;
+  transition: transform 300ms ease-in-out;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, 
+    var(--pastel-blue) 0%, 
+    var(--pastel-cream) 100%
+  );
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px
+    ),
+    linear-gradient(135deg, 
+      var(--pastel-blue) 0%, 
+      var(--pastel-cream) 100%
+    );
+}
+
+/* Envelope */
+.envelope {
+  position: relative;
+  width: 600px;
+  height: 400px;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Envelope Structure */
+.envelope-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pastel-cream);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    inset 0 0 30px rgba(0, 0, 0, 0.05);
+  transform-style: preserve-3d;
+  z-index: 1;
+}
+
+/* Envelope Front Cover */
+.envelope-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pastel-cream);
+  clip-path: polygon(0 50%, 50% 70%, 100% 50%, 100% 100%, 0 100%);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 8px 8px;
+  z-index: 4;
+  transition: clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.envelope.open .envelope-front {
+  clip-path: polygon(0 70%, 50% 90%, 100% 70%, 100% 100%, 0 100%);
+}
+
+/* Envelope Side Flaps */
+.envelope-side {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: var(--pastel-cream);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  z-index: 3;
+}
+
+.envelope-side.left {
+  left: 0;
+  transform-origin: left;
+  clip-path: polygon(0 0, 100% 50%, 100% 100%, 0 100%);
+}
+
+.envelope-side.right {
+  right: 0;
+  transform-origin: right;
+  clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Envelope Top Flap */
+.envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pastel-cream);
+  clip-path: polygon(0 0, 50% 50%, 100% 0);
+  transform-origin: top;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.envelope.open .envelope-flap {
+  transform: rotateX(180deg);
+  box-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.03),
+    inset 0 -5px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Paper/Form Container */
+.envelope-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  height: 90%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* Initial Paper Peek */
+.paper-peek {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 6;
+  background-image: 
+    linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
+    linear-gradient(#eee .1em, transparent .1em);
+  background-size: 100% 1.2em;
+}
+
+.paper-content {
+  text-align: center;
+}
+
+.paper-content .handwriting-accent {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.pull-arrow {
+  font-size: 2rem;
+  color: var(--button-primary);
+  animation: bounce 1s infinite;
+  margin-top: 0.5rem;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulled Out Form */
+.letter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  padding: 3rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transform: translateY(0);
+  animation: slideToTop 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 10;
+  background-image: 
+    linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
+    linear-gradient(#eee .1em, transparent .1em);
+  background-size: 100% 1.2em;
+}
+
+@keyframes slideToTop {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-20%);
+    opacity: 1;
+  }
+}
+
+/* Form Styles */
+.letter-title {
+  font-family: var(--font-pixel);
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+}
+
+.letter-content {
+  padding: 1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.form-group:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.form-group:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-group label {
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  opacity: 0.8;
+}
+
+.form-input {
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--pastel-blue);
+  border-radius: 5px;
+  font-family: var(--font-handwriting-secondary);
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+
+/* Envelope Inner Shadow */
+.envelope-back::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0) 20%
+  );
+  z-index: 2;
+} 
+
+.envelope.form-pulled .envelope-content {
+  z-index: 6;
+}
+
+.envelope.form-pulled .letter {
+  height: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}

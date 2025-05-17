@@ -4,7 +4,7 @@ import r1 from '../assets/r1.png'
 import r2 from '../assets/r2.png'
 import r3 from '../assets/r3.png'
 import r4 from '../assets/r4.png'
-import '../styles/exam-theme.css'
+import '../styles/home.css'
 
 const dishesData = [
   {
