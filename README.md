@@ -316,9 +316,9 @@ RataTutor was created by:
 
 - **Daniel Alexis Cruz** ([@Exalt24](https://github.com/Exalt24))
 - **Nikka Joie Mendoza** ([@nikkamendoza](https://github.com/nikkamendoza))
+- **Mc Clareenz Zerrudo** ([@clareenz](https://github.com/clareenz))
 - **Shaira Joy Macale** ([@howtodoitpleasehelp](https://github.com/howtodoitpleasehelp))
 - **Vince Quinañola** ([@binskyut](https://github.com/binskyut))
-- **Mc Clareenz Zerrudo** ([@clareenz](https://github.com/clareenz))
 
 Special thanks to all contributors and supporters who helped make this project possible.
 
