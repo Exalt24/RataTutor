@@ -6,11 +6,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
-# --- One-line regex patterns ------------------------------------------------
-USERNAME_REGEX = r'^[\w.@+-]{3,}$'  # at least 3 chars, no spaces
+USERNAME_REGEX = r'^[\w.@+-]{3,}$'
 EMAIL_REGEX    = r'^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}(?:\.[A-Za-z]{2,})?$'
 PASSWORD_REGEX = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
-# -----------------------------------------------------------------------------
 
 class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(

@@ -1,18 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../services/authService'
-import '../styles/exam-theme.css'
+import '../styles/login.css'
 
-export default function Login({ onGoRegister }) {
-  const [creds, setCreds] = useState({ username: '', password: '' })
-  const [errors, setErrors] = useState({})              // ← holds field & global errors
-  const [isOpen, setIsOpen] = useState(false)
+export default function Login({ isActive, onGoRegister }) {
+  const [creds, setCreds]       = useState({ username: '', password: '' })
+  const [errors, setErrors]     = useState({})
+  const [isOpen, setIsOpen]     = useState(false)
   const [isPulledOut, setIsPulledOut] = useState(false)
   const nav = useNavigate()
 
+  useEffect(() => {
+    if (isActive) {
+      setCreds({ username: '', password: '' })
+      setErrors({})
+      setIsOpen(false)
+      setIsPulledOut(false)
+    }
+  }, [isActive])
+
   const submit = async e => {
     e.preventDefault()
-    setErrors({})                                        // clear old errors
+    setErrors({})
     try {
       await login(creds)
       nav('/dashboard', { replace: true })
@@ -55,13 +64,10 @@ export default function Login({ onGoRegister }) {
             <div className="letter" onClick={e => e.stopPropagation()}>
               <h2 className="letter-title">Welcome Back!</h2>
               <div className="letter-content">
-                {/* non-field errors */}
                 {errors.non_field_errors?.map((msg, i) => (
                   <p key={i} className="text-red-500 text-center">{msg}</p>
                 ))}
-
                 <form onSubmit={submit} className="login-form">
-                  {/* Username */}
                   <div className="form-group">
                     <label className="handwriting-accent">Username</label>
                     <input
@@ -75,8 +81,6 @@ export default function Login({ onGoRegister }) {
                       <p key={i} className="text-red-500 text-sm">{msg}</p>
                     ))}
                   </div>
-
-                  {/* Password */}
                   <div className="form-group">
                     <label className="handwriting-accent">Password</label>
                     <input
@@ -90,7 +94,6 @@ export default function Login({ onGoRegister }) {
                       <p key={i} className="text-red-500 text-sm">{msg}</p>
                     ))}
                   </div>
-
                   <button type="submit" className="exam-button">
                     Sign In
                   </button>
@@ -104,8 +107,6 @@ export default function Login({ onGoRegister }) {
         <div className="envelope-front"></div>
         <div className="envelope-flap"></div>
       </div>
-
-      {/* right arrow to switch to Register */}
       <div className="slide-arrow" onClick={e => { e.stopPropagation(); onGoRegister() }}>
         →
       </div>
