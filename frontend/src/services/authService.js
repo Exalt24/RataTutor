@@ -25,10 +25,10 @@ export async function login({ username, password }) {
   return res.data
 }
 
-export async function register({ username, email, password }) {
+export async function register({ username, email, password, confirm_password }) {
   const res = await axios.post(
     `${AUTH_URL}register/`,
-    { username, email, password }
+    { username, email, password, confirm_password }
   )
   return res.data
 }
