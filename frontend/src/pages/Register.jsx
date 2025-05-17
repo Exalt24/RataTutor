@@ -84,7 +84,7 @@ export default function Register({ isActive, onGoLogin }) {
             <div className={`register-letter ${animationStage >= 2 ? 'sending' : ''}`}>
               <h2 className="letter-title">Join RataTutor</h2>
               {errors.non_field_errors?.map((msg, i) => (
-                <p key={i} className="text-red-500 text-center">{msg}</p>
+                <p key={i} className="errors-form-all">{msg}</p>
               ))}
               <form onSubmit={handleSubmit} className="register-form">
                 <div className="form-group">
@@ -98,7 +98,7 @@ export default function Register({ isActive, onGoLogin }) {
                     required
                   />
                   {errors.username?.map((msg, i) => (
-                    <p key={i} className="text-red-500 text-sm">{msg}</p>
+                    <p key={i} className="errors-form-per-field">{msg}</p>
                   ))}
                 </div>
                 <div className="form-group">
@@ -112,7 +112,7 @@ export default function Register({ isActive, onGoLogin }) {
                     required
                   />
                   {errors.email?.map((msg, i) => (
-                    <p key={i} className="text-red-500 text-sm">{msg}</p>
+                    <p key={i} className="errors-form-per-field">{msg}</p>
                   ))}
                 </div>
                 <div className="form-group">
@@ -126,7 +126,7 @@ export default function Register({ isActive, onGoLogin }) {
                     required
                   />
                   {errors.password?.map((msg, i) => (
-                    <p key={i} className="text-red-500 text-sm">{msg}</p>
+                    <p key={i} className="errors-form-per-field">{msg}</p>
                   ))}
                 </div>
                 <div className="form-group">
@@ -140,7 +140,7 @@ export default function Register({ isActive, onGoLogin }) {
                     required
                   />
                   {errors.confirm_password?.map((msg, i) => (
-                    <p key={i} className="text-red-500 text-sm">{msg}</p>
+                    <p key={i} className="errors-form-per-field">{msg}</p>
                   ))}
                 </div>
                 <button type="submit" className="exam-button" data-hover="Join Us!">

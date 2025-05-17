@@ -101,7 +101,7 @@ export default function Home() {
           <div className="hero-content">
             <h1 className="exam-heading">{dishesData[currentDish].name}</h1>
             <p className="exam-subheading">{dishesData[currentDish].description}</p>
-            <Link to="/login" className="exam-button">
+            <Link to="/login" className="exam-button" data-hover="Login Now!">
               Start Cooking
             </Link>
           </div>
@@ -146,7 +146,7 @@ export default function Home() {
           <div className="hero-content">
             <h2 className="exam-heading">Ready to Cook?</h2>
             <p className="exam-subheading">Join our culinary community</p>
-            <Link to="/register" className="exam-button">
+            <Link to="/register" className="exam-button" data-hover="Register Now!">
               Get Started
             </Link>
           </div>

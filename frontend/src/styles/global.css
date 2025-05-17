@@ -210,7 +210,6 @@
   overflow: hidden;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
   opacity: 0;
-  transform: translateY(20px);
   animation: fadeIn 0.3s ease forwards;
   animation-delay: 0.5s;
 }
@@ -554,7 +553,6 @@ body,
   -ms-user-select: none !important;
 }
 
-/* but allow selecting and dragging links and inputs */
 a,
 input,
 textarea {
@@ -570,4 +568,15 @@ img,
   -o-user-drag: none;
   -ms-user-drag: none;
   pointer-events: auto;
+}
+
+.errors-form-all {
+  color: #EF4444;
+  text-align: center;
+}
+
+.errors-form-per-field {
+  color: #EF4444;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }

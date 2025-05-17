@@ -295,3 +295,7 @@
   max-height: 90vh;
   overflow-y: auto;
 }
+
+.exam-button{
+  margin-top: 2rem;
+}
