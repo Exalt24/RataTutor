@@ -1,25 +1,23 @@
-// src/components/ValidatedInput.jsx
 import React, { useState, useEffect } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { defaultValidators } from '../utils/validation'
+import '../styles/components/validated-input.css'
 
-const ValidatedInput = ({
+export default function ValidatedInput({
   label,
   name,
   type = 'text',
   value,
   onChange,
-  placeholder,
   validate,
   compareValue,
   icon: LeftIcon,
   required = false,
   onValidityChange,
-}) => {
+}) {
   const [show, setShow] = useState(false)
-
+  const [focused, setFocused] = useState(false)
   const validator = validate ?? defaultValidators[name]
-
   const error = (() => {
     if (!value) return ''
     if (!validator) return ''
@@ -27,40 +25,37 @@ const ValidatedInput = ({
       ? validator(value, compareValue)
       : validator(value)
   })()
-
   const isValid = !!value && !error
 
   useEffect(() => {
     onValidityChange(name, isValid)
   }, [name, isValid, onValidityChange])
 
+  const isActive = focused || !!value
+
   return (
-    <div className="form-group relative mb-4">
-      <label className="handwriting-accent">{label}</label>
+    <div className={`form-field ${isActive ? 'active' : ''} ${error ? 'invalid' : ''}`}>
       <div className="input-with-icon">
         {LeftIcon && <LeftIcon size={16} className="left-icon" />}
         <input
+          id={name}
           name={name}
-          type={
-            type === 'password'
-              ? show
-                ? 'text'
-                : 'password'
-              : type
-          }
+          type={type === 'password' ? (show ? 'text' : 'password') : type}
           value={value}
           onChange={onChange}
-          className="form-input"
-          placeholder={placeholder}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           required={required}
+          className="form-input"
         />
+        <label htmlFor={name}>{label}</label>
         {type === 'password' && (
           <button
             type="button"
-            className="toggle-btn"
+            className="toggle-password"
             onClick={() => setShow(v => !v)}
           >
-            {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            {show ? <EyeOff size={16}/> : <Eye size={16}/>}
           </button>
         )}
       </div>
@@ -68,5 +63,3 @@ const ValidatedInput = ({
     </div>
   )
 }
-
-export default ValidatedInput

@@ -1,0 +1,90 @@
+.form-field {
+  position: relative;
+  margin-bottom: 1rem;
+}
+.input-with-icon {
+  position: relative;
+}
+.left-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+.form-input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border: 2px solid var(--pastel-blue);
+  border-radius: 5px;
+  font-family: var(--font-handwriting-secondary);
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-with-icon:hover .form-input {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--button-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.form-input:focus {
+  transform: translateY(-2px) scale(1.02);
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+}
+.form-input::placeholder {
+  color: #999;
+  opacity: 0.7;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 2;
+}
+.form-field label {
+  position: absolute;
+  left: 2.5rem;
+  top: 0;
+  transform: translateY(50%);
+  font-family: var(--font-handwriting);
+  font-size: 1rem;
+  color: #777;
+  opacity: 0.8;
+  pointer-events: none;
+  transition: transform 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+  background: transparent;
+  padding: 0 0.2rem;
+  z-index: 1;
+}
+.form-field.active label,
+.form-input:focus + label {
+  transform: translateY(-50%) translateX(-25%);
+  font-size: 1rem;
+  color: var(--button-primary);
+  opacity: 1;
+  background: white;
+}
+.errors-form-per-field {
+  color: #ef4444;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  margin-top: 0.25rem;
+}
+.input-with-icon:hover .left-icon {
+  transform: translateY(-50%) scale(1.1);
+}
+.input-with-icon:hover .toggle-password {
+  transform: translateY(-50%) scale(1.1);
+}
+.input-with-icon:not(:focus-within):hover label {
+  transform: translateY(35%) scale(1.1);
+}

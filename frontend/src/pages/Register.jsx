@@ -3,7 +3,7 @@ import { register } from '../services/auth'
 import Toast from '../components/Toast'
 import ValidatedInput from '../components/ValidatedInput'
 import { User, Mail, Lock } from 'lucide-react'
-import '../styles/register.css'
+import '../styles/pages/register.css'
 
 export default function Register({ isActive, onGoLogin }) {
   const [formData, setFormData] = useState({
