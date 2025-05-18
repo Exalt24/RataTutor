@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import '../styles/components/toast.css';
 
 const VARIANT_STYLES = {
   success: 'toast-success',

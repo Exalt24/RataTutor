@@ -14,19 +14,26 @@ export default function ValidatedInput({
   icon: LeftIcon,
   required = false,
   onValidityChange,
+  errorMessage: serverError = '',
 }) {
   const [show, setShow] = useState(false)
   const [focused, setFocused] = useState(false)
+
+  
   const validator = validate ?? defaultValidators[name]
-  const error = (() => {
+  const clientError = (() => {
     if (!value) return ''
     if (!validator) return ''
     return name === 'confirmPassword'
       ? validator(value, compareValue)
       : validator(value)
   })()
-  const isValid = !!value && !error
 
+  
+  const error = serverError || clientError
+
+  const isValid = !!value && !clientError
+  
   useEffect(() => {
     onValidityChange(name, isValid)
   }, [name, isValid, onValidityChange])
@@ -55,11 +62,15 @@ export default function ValidatedInput({
             className="toggle-password"
             onClick={() => setShow(v => !v)}
           >
-            {show ? <EyeOff size={16}/> : <Eye size={16}/>}
+            {show ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>
-      {error && <p className="errors-form-per-field">{error}</p>}
+      {error && (
+        <p className="errors-form-per-field">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

@@ -45,10 +45,21 @@ export default function Register({ isActive, onGoLogin }) {
     setAnimationStage(1)
   }, [])
 
-  const handleChange = e => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+const handleChange = e => {
+  const { name, value } = e.target
+
+  setFormData(prev => ({ ...prev, [name]: value }))
+
+  setErrors(prev => {
+    const next = { ...prev }
+    delete next[name]
+    if (name === 'password') {
+      delete next.confirmPassword
+    }
+    return next
+  })
+}
+
 
   const handleValidityChange = (field, isValid) => {
     setValidities(prev => {
@@ -71,10 +82,12 @@ export default function Register({ isActive, onGoLogin }) {
   const handleSubmit = async e => {
     e.preventDefault()
     setErrors({})
+
     if (formData.password !== formData.confirmPassword) {
-      setErrors({ confirm_password: ['Passwords do not match.'] })
+      setErrors({ confirmPassword: ['Passwords do not match.'] })
       return
     }
+
     try {
       await register({
         username: formData.username,
@@ -83,9 +96,11 @@ export default function Register({ isActive, onGoLogin }) {
         confirm_password: formData.confirmPassword,
       })
     } catch (err) {
+      console.error('Register error payload:', err.response?.data)
       setErrors(err.response?.data || {})
       return
     }
+
     setAnimationStage(2)
     setTimeout(() => {
       setAnimationStage(3)
@@ -119,6 +134,7 @@ export default function Register({ isActive, onGoLogin }) {
                   placeholder="e.g. Rata123"
                   required
                   onValidityChange={handleValidityChange}
+                  errorMessage={errors.username?.[0]}
                 />
                 <ValidatedInput
                   label="Email"
@@ -130,6 +146,7 @@ export default function Register({ isActive, onGoLogin }) {
                   placeholder="e.g. someone@example.com"
                   required
                   onValidityChange={handleValidityChange}
+                  errorMessage={errors.email?.[0]}
                 />
                 <ValidatedInput
                   label="Password"
@@ -141,6 +158,7 @@ export default function Register({ isActive, onGoLogin }) {
                   placeholder="e.g. D@ntTe11"
                   required
                   onValidityChange={handleValidityChange}
+                  errorMessage={errors.password?.[0]}
                 />
                 <ValidatedInput
                   label="Confirm Password"
@@ -152,9 +170,8 @@ export default function Register({ isActive, onGoLogin }) {
                   placeholder="Confirm your password"
                   required
                   compareValue={formData.password}
-                  onValidityChange={isValid =>
-                    handleValidityChange('confirmPassword', isValid)
-                  }
+                  onValidityChange={isValid => handleValidityChange('confirmPassword', isValid)}
+                  errorMessage={errors.confirmPassword?.[0]}
                 />
                 <button
                   type="submit"

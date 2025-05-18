@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
+import '../styles/components/auth-switcher.css'
 
 export default function AuthSwitcher() {
   const location = useLocation()
