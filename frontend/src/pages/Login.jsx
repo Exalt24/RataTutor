@@ -1,146 +1,155 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { login } from '../services/auth'
-import { User, Lock } from 'lucide-react'
-import ValidatedInput from '../components/ValidatedInput'
-import '../styles/pages/login.css'
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../services/auth";
+import { User, Lock } from "lucide-react";
+import Form from "../components/Form";
+import "../styles/pages/login.css";
+
+const loginFields = [
+  {
+    name: "username",
+    label: "Username",
+    icon: User,
+    placeholder: "Enter your username",
+  },
+  {
+    name: "password",
+    type: "password",
+    label: "Password",
+    icon: Lock,
+    placeholder: "Enter your password",
+  },
+];
 
 export default function Login({ isActive, onGoRegister }) {
-  const [formData, setFormData] = useState({ username: '', password: '' })
-  const [serverErrors, setServerErrors] = useState({})
-  const [isOpen, setIsOpen] = useState(false)
-  const [isPulledOut, setIsPulledOut] = useState(false)
+  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [serverErrors, setServerErrors] = useState({});
+  const [bannerErrors, setBannerErrors] = useState([]);
   const [validities, setValidities] = useState({
     username: false,
     password: false,
-  })
-  const nav = useNavigate()
+  });
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPulledOut, setIsPulledOut] = useState(false);
+  const nav = useNavigate();
 
   useEffect(() => {
     if (isActive) {
-      setFormData({ username: '', password: '' })
-      setServerErrors({})
-      setIsOpen(false)
-      setIsPulledOut(false)
-      setValidities({ username: false, password: false })
+      setFormData({ username: "", password: "" });
+      setServerErrors({});
+      setBannerErrors([]);
+      setValidities({ username: false, password: false });
+      setIsOpen(false);
+      setIsPulledOut(false);
     }
-  }, [isActive])
+  }, [isActive]);
 
-  const submit = async e => {
-    e.preventDefault()
-    setServerErrors({})
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((f) => ({ ...f, [name]: value }));
+
+    setServerErrors((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
+
+  const handleValidityChange = (field, ok) => {
+    setValidities((prev) =>
+      prev[field] === ok ? prev : { ...prev, [field]: ok }
+    );
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setServerErrors({});
+    setBannerErrors([]);
+
     try {
-      await login(formData)
-      nav('/dashboard', { replace: true })
+      await login(formData);
+      nav("/dashboard", { replace: true });
     } catch (err) {
-      setServerErrors(err.response?.data || {})
+      const data = err.response?.data || {};
+      setServerErrors(data);
+
+      const msgs = [];
+      Object.entries(data).forEach(([key, val]) => {
+        if (Array.isArray(val)) val.forEach((m) => msgs.push(m));
+        else if (typeof val === "string") msgs.push(val);
+      });
+      setBannerErrors(msgs);
     }
-  }
+  };
 
-  // Only update the specific field if its validity actually changed
-  const handleValidityChange = (field, isValid) => {
-    setValidities(prev => {
-      if (prev[field] === isValid) return prev
-      return { ...prev, [field]: isValid }
-    })
-  }
+  const isDisabled = !validities.username || !validities.password;
 
-  const isDisabled =
-    !validities.username ||
-    !validities.password
-
-  const handlePaperClick = e => {
-    e.stopPropagation()
-    if (isOpen && !isPulledOut) setIsPulledOut(true)
-  }
+  const handlePaperClick = (e) => {
+    e.stopPropagation();
+    if (isOpen && !isPulledOut) setIsPulledOut(true);
+  };
   const handleOutsideClick = () => {
     if (isPulledOut) {
-      setIsPulledOut(false)
-      setIsOpen(false)
+      setIsPulledOut(false);
+      setIsOpen(false);
     }
-  }
-
-  const handleChange = e => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  };
 
   return (
     <div className="login-container" onClick={handleOutsideClick}>
       <div
-        className={`envelope ${isOpen ? 'open' : ''} ${
-          isPulledOut ? 'form-pulled' : ''
+        className={`envelope ${isOpen ? "open" : ""} ${
+          isPulledOut ? "form-pulled" : ""
         }`}
         onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => {
-          if (!isPulledOut) setIsOpen(false)
-        }}
+        onMouseLeave={() => !isPulledOut && setIsOpen(false)}
       >
         <div className="envelope-back"></div>
-        <div className="envelope-content">
-          {!isPulledOut ? (
+
+        {!isPulledOut ? (
+          <div className="envelope-content">
             <div className="paper-peek" onClick={handlePaperClick}>
               <div className="paper-content">
                 <span className="handwriting-accent">Click to open</span>
-                <div className="pull-arrow mb-40">↑</div>
+                <div className="pull-arrow">↑</div>
               </div>
             </div>
-          ) : (
-            <div className="letter" onClick={e => e.stopPropagation()}>
-              <h2 className="letter-title">Welcome Back!</h2>
-              {serverErrors.non_field_errors?.map((msg, i) => (
-                <p key={i} className="errors-form-all">
-                  {msg}
-                </p>
-              ))}
-              <form onSubmit={submit} className="login-form">
-                <ValidatedInput
-                  label="Username"
-                  name="username"
-                  icon={User}
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="Enter your username"
-                  required
-                  onValidityChange={handleValidityChange}
-                />
-                <ValidatedInput
-                  label="Password"
-                  name="password"
-                  type="password"
-                  icon={Lock}
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  required
-                  onValidityChange={handleValidityChange}
-                />
-                <button
-                  type="submit"
-                  className="exam-button w-full py-2"
-                  disabled={isDisabled}
-                  data-hover={!isDisabled ? 'Welcome Back!' : undefined}
-                >
-                  Sign In
-                </button>
-              </form>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="letter-slideIn" onClick={(e) => e.stopPropagation()}>
+            <Form
+              wrapperClass="letter"
+              enableTilt={true}
+              title="Welcome Back!"
+              fields={loginFields}
+              formData={formData}
+              onChange={handleChange}
+              validities={validities}
+              onValidityChange={handleValidityChange}
+              bannerErrors={bannerErrors}
+              onSubmit={handleSubmit}
+              submitDisabled={isDisabled}
+              submitText="Sign In"
+              submitTextDataHover="Welcome back!"
+            />
+          </div>
+        )}
+
         <div className="envelope-side left"></div>
         <div className="envelope-side right"></div>
         <div className="envelope-front"></div>
         <div className="envelope-flap"></div>
       </div>
+
       <div
         className="slide-arrow"
-        onClick={e => {
-          e.stopPropagation()
-          onGoRegister()
+        onClick={(e) => {
+          e.stopPropagation();
+          onGoRegister();
         }}
       >
         →
       </div>
     </div>
-  )
+  );
 }

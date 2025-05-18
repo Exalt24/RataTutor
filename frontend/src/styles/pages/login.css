@@ -6,22 +6,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, 
-    var(--pastel-blue) 0%, 
+  background: linear-gradient(
+    135deg,
+    var(--pastel-blue) 0%,
     var(--pastel-cream) 100%
   );
-  background-image: 
-    repeating-linear-gradient(
+  background-image: repeating-linear-gradient(
       45deg,
       transparent,
       transparent 8px,
       rgba(255, 255, 255, 0.05) 8px,
       rgba(255, 255, 255, 0.05) 16px
     ),
-    linear-gradient(135deg, 
-      var(--pastel-blue) 0%, 
-      var(--pastel-cream) 100%
-    );
+    linear-gradient(135deg, var(--pastel-blue) 0%, var(--pastel-cream) 100%);
 }
 
 .envelope {
@@ -43,9 +40,7 @@
   background: var(--pastel-cream);
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.15),
-    inset 0 0 30px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.05);
   transform-style: preserve-3d;
   z-index: 1;
 }
@@ -68,7 +63,6 @@
   clip-path: polygon(0 70%, 50% 90%, 100% 70%, 100% 100%, 0 100%);
 }
 
-/* Envelope Side Flaps */
 .envelope-side {
   position: absolute;
   top: 0;
@@ -107,8 +101,7 @@
 
 .envelope.open .envelope-flap {
   transform: rotateX(180deg);
-  box-shadow: 
-    0 2px 5px rgba(0, 0, 0, 0.03),
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03),
     inset 0 -5px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -139,9 +132,14 @@
   justify-content: center;
   flex-direction: column;
   z-index: 6;
-  background-image: 
-    linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
-    linear-gradient(#eee .1em, transparent .1em);
+  background-image: linear-gradient(
+      90deg,
+      transparent 79px,
+      #abced4 79px,
+      #abced4 81px,
+      transparent 81px
+    ),
+    linear-gradient(#eee 0.1em, transparent 0.1em);
   background-size: 100% 1.2em;
 }
 
@@ -159,10 +157,12 @@
   color: var(--button-primary);
   animation: bounce 1s infinite;
   margin-top: 0.5rem;
+  margin-bottom: 10rem;
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -170,23 +170,34 @@
   }
 }
 
-.letter {
+.letter-slideIn {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  animation: slideToTop 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 10;
+}
+
+.letter {
+  margin: 0 auto;
+  top: 0;
+  left: 0;
+  width: 90%;
+  height: auto;
   background: #fff;
   padding: 3rem;
   border-radius: 4px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  transform: translateY(0);
-  animation: slideToTop 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  z-index: 10;
-  background-image: 
-    linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
-    linear-gradient(#eee .1em, transparent .1em);
+  background-image: linear-gradient(
+      90deg,
+      transparent 79px,
+      #abced4 79px,
+      #abced4 81px,
+      transparent 81px
+    ),
+    linear-gradient(#eee 0.1em, transparent 0.1em);
   background-size: 100% 1.2em;
 }
 
@@ -199,82 +210,4 @@
     transform: translateY(-20%);
     opacity: 1;
   }
-}
-
-/* Form Styles */
-.letter-title {
-  font-family: var(--font-pixel);
-  font-size: 2rem;
-  text-align: center;
-  margin-bottom: 2rem;
-  color: var(--text-dark);
-  letter-spacing: 2px;
-  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
-}
-
-.letter-content {
-  padding: 1rem;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeIn 0.3s ease forwards;
-}
-
-.form-group:nth-child(1) {
-  animation-delay: 0.3s;
-}
-
-.form-group:nth-child(2) {
-  animation-delay: 0.4s;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.form-group label {
-  font-size: 1.2rem;
-  color: var(--text-dark);
-  opacity: 0.8;
-}
-
-.envelope-back::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.05) 0%,
-    rgba(0, 0, 0, 0) 20%
-  );
-  z-index: 2;
-} 
-
-.envelope.form-pulled .envelope-content {
-  z-index: 6;
-}
-
-.envelope.form-pulled .letter {
-  height: auto;
-  max-height: 90vh;
-  overflow-y: auto;
 }
