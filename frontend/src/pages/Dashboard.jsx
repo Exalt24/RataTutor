@@ -10,7 +10,7 @@ import StreakScreen from '../components/StreakScreen'
 import TrashScreen from '../components/TrashScreen'
 // import api from '../services/api'   ← comment this out until ready
 import { logout } from '../services/auth'
-import '../styles/dashboard.css'
+import '../styles/pages/dashboard.css'
 
 const Dashboard = () => {
   const [screen, setScreen] = useState('home')

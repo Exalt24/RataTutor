@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import '../styles/hero.css';
+import '../styles/components/hero.css';
 import { Link } from 'react-router-dom';
 
 const slides = [

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { login } from '../services/auth'
 import { User, Lock } from 'lucide-react'
 import ValidatedInput from '../components/ValidatedInput'
-import '../styles/login.css'
+import '../styles/pages/login.css'
 
 export default function Login({ isActive, onGoRegister }) {
   const [formData, setFormData] = useState({ username: '', password: '' })
