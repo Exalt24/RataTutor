@@ -23,7 +23,6 @@ const loginFields = [
 
 export default function Login({ isActive, onGoRegister }) {
   const [formData, setFormData] = useState({ username: "", password: "" });
-  const [serverErrors, setServerErrors] = useState({});
   const [bannerErrors, setBannerErrors] = useState([]);
   const [validities, setValidities] = useState({
     username: false,
@@ -36,7 +35,6 @@ export default function Login({ isActive, onGoRegister }) {
   useEffect(() => {
     if (isActive) {
       setFormData({ username: "", password: "" });
-      setServerErrors({});
       setBannerErrors([]);
       setValidities({ username: false, password: false });
       setIsOpen(false);
@@ -47,12 +45,6 @@ export default function Login({ isActive, onGoRegister }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((f) => ({ ...f, [name]: value }));
-
-    setServerErrors((prev) => {
-      const next = { ...prev };
-      delete next[name];
-      return next;
-    });
   };
 
   const handleValidityChange = (field, ok) => {
@@ -63,7 +55,6 @@ export default function Login({ isActive, onGoRegister }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setServerErrors({});
     setBannerErrors([]);
 
     try {
@@ -71,7 +62,6 @@ export default function Login({ isActive, onGoRegister }) {
       nav("/dashboard", { replace: true });
     } catch (err) {
       const data = err.response?.data || {};
-      setServerErrors(data);
 
       const msgs = [];
       Object.entries(data).forEach(([key, val]) => {
