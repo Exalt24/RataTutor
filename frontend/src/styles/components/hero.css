@@ -88,8 +88,8 @@ input:checked + label.card {
 }
 
 .card .description h4 {
-  text-transform: uppercase;
   margin: 0 0 0.5rem 0;
+  color: var(--text-dark);
 }
 
 .card .description p {
