@@ -47,8 +47,7 @@ export default function Login({ isActive, onGoRegister }) {
 
   const isDisabled =
     !validities.username ||
-    !validities.password ||
-    Object.keys(serverErrors).length > 0
+    !validities.password
 
   const handlePaperClick = e => {
     e.stopPropagation()
