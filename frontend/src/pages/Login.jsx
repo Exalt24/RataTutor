@@ -82,6 +82,9 @@ export default function Login({ isActive, onGoRegister }) {
     if (isPulledOut) {
       setIsPulledOut(false);
       setIsOpen(false);
+      setFormData({ username: "", password: "" });
+      setBannerErrors([]);
+      setValidities({ username: false, password: false });
     }
   };
 
@@ -111,6 +114,7 @@ export default function Login({ isActive, onGoRegister }) {
               wrapperClass="letter"
               enableTilt={true}
               title="Welcome Back!"
+              titleKey={isActive}
               fields={loginFields}
               formData={formData}
               onChange={handleChange}
