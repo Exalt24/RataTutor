@@ -48,6 +48,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  transition: transform 0.2s ease;
   z-index: 2;
 }
 .form-field label {
@@ -80,10 +81,10 @@
   margin-top: 0.25rem;
 }
 .input-with-icon:hover .left-icon {
-  transform: translateY(-50%) scale(1.1);
+  transform: translateY(-65%) scale(1.1);
 }
 .input-with-icon:hover .toggle-password {
-  transform: translateY(-50%) scale(1.1);
+  transform: translateY(-65%) scale(1.1);
 }
 .form-field:not(.active) .input-with-icon:not(:focus-within):hover label {
   transform: translateY(35%) scale(1.1);
