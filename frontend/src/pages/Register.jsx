@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { register } from "../services/auth";
 import Toast from "../components/Toast";
 import Form from "../components/Form";
@@ -54,6 +54,8 @@ export default function Register({ isActive, onGoLogin }) {
   const [hideForm, setHideForm] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const [titleKey, setTitleKey] = useState(0)
+  const prevActive = useRef(false)
   
   useEffect(() => {
     if (isActive) {
@@ -75,6 +77,12 @@ export default function Register({ isActive, onGoLogin }) {
       setHideForm(false);
       setSuccess(false);
     }
+
+    if (!prevActive.current && isActive) {
+      setTitleKey(k => k + 1)
+    }
+    prevActive.current = isActive
+
   }, [isActive]);
 
   const handleChange = (e) => {
@@ -145,6 +153,7 @@ export default function Register({ isActive, onGoLogin }) {
               }`}
               enableTilt={true}
               title="Join RataTutor"
+              titleKey={titleKey}
               fields={registerFields}
               formData={formData}
               onChange={handleChange}
