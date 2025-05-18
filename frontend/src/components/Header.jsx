@@ -28,7 +28,7 @@ const Header = ({ streak = 5, level, points, onLogout, onProfile, onStreak }) =>
             <input
               type="text"
               placeholder="Search for anything"
-              className="w-full pl-10 pr-4 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition"
+              className="label-text w-full pl-10 pr-4 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition"
             />
           </div>
         </div>
@@ -75,21 +75,21 @@ const Header = ({ streak = 5, level, points, onLogout, onProfile, onStreak }) =>
                   className="w-full flex items-center px-4 py-2 hover:bg-gray-50 transition space-x-2 text-sm"
                 >
                   <User size={16} className="text-gray-600" />
-                  <span>Profile</span>
+                  <span className="label-text">Profile</span>
                 </button>
                 <button
                   onClick={() => { onStreak(); setOpen(false) }}
                   className="w-full flex items-center px-4 py-2 hover:bg-gray-50 transition space-x-2 text-sm"
                 >
                   <Flame size={16} className="text-orange-500" />
-                  <span>View Streak</span>
+                  <span className="label-text">View Streak</span>
                 </button>
                 <button
                   onClick={() => { onLogout(); setOpen(false) }}
                   className="w-full flex items-center px-4 py-2 hover:bg-gray-50 transition space-x-2 text-sm text-red-500"
                 >
                   <LogOut size={16} />
-                  <span>Logout</span>
+                  <span className="label-text">Logout</span>
                 </button>
               </div>
             )}

@@ -13,8 +13,8 @@ const ProfileScreen = ({ points, badges }) => (
             className="w-full h-full object-cover"
             />
         </div>
-      <h2 className="text-lg font-semibold">Nikka Joie Mendoza</h2>
-      <p className="text-gray-500">@bananachips</p>
+      <span className="exam-heading-mini label-text">Nikka Joie Mendoza</span>
+      <span className="text-gray-500 label-text">@bananachips</span>
       <button className="exam-button-mini py-1 px-3 text-xs sm:text-sm">Edit profile</button>
     </div>
 

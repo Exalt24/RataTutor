@@ -10,6 +10,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 import React from 'react'
+import logotemp from '../assets/logotemp.png';
 
 const Sidebar = ({ screen, setScreen }) => {
   const menu = [
@@ -29,7 +30,14 @@ const Sidebar = ({ screen, setScreen }) => {
     <aside className="hidden md:flex md:w-1/5 bg-color-2 p-4 flex-col justify-between overflow-y-auto h-full">
       <div>
         {/* Logo placeholder */}
-        <h2 className="exam-heading text-base mb-4" data-subtitle="Your Notes">Logo</h2>
+        <a href=".">
+          <img
+            src={logotemp}
+            alt="Logo"
+            className="block mx-auto w-16 sm:w-20 border-b border-gray-200 pb-1 mb-3"
+          />
+        </a>
+        <hr className="border-t border-gray-400 mb-4" />
         <nav>
           <p className="sidebar-category">Library</p>
           {menu.map(item => (

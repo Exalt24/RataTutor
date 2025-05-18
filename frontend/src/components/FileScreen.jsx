@@ -18,7 +18,7 @@ const FilesScreen = ({ files }) => (
       {files.map((f,i) => (
         <div key={i} className="exam-card p-2 relative text-xs sm:text-sm">
           <h3 className="font-semibold mb-1">{f.title}</h3>
-          <p className="text-gray-600 mb-1 text-xs sm:text-sm">Updated {f.updated}</p>
+          <p className="mb-1 text-xs sm:text-sm">Updated {f.updated}</p>
           <span className="inline-block bg-gray-700 text-white rounded-full px-2 py-0.5 text-[10px] mb-2">{f.tag}</span>
           <div className="absolute bottom-2 right-2 flex space-x-1">
             <Eye size={14} /><Pin size={14} /><MoreHorizontal size={14} />
