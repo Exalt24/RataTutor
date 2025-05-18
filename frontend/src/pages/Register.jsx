@@ -1,91 +1,111 @@
-import React, { useEffect, useState } from 'react'
-import { register } from '../services/auth'
-import Toast from '../components/Toast'
-import ValidatedInput from '../components/ValidatedInput'
-import { User, Mail, Lock } from 'lucide-react'
-import '../styles/pages/register.css'
+
+import React, { useEffect, useState } from "react";
+import { register } from "../services/auth";
+import Toast from "../components/Toast";
+import Form from "../components/Form";
+import { User, Mail, Lock } from "lucide-react";
+import "../styles/pages/register.css";
+
+const registerFields = [
+  {
+    name: "username",
+    label: "Username",
+    icon: User,
+    placeholder: "e.g. Rata123",
+  },
+  {
+    name: "email",
+    label: "Email",
+    icon: Mail,
+    placeholder: "e.g. someone@example.com",
+  },
+  {
+    name: "password",
+    type: "password",
+    label: "Password",
+    icon: Lock,
+    placeholder: "e.g. D@ntTe11",
+  },
+  {
+    name: "confirmPassword",
+    type: "password",
+    label: "Confirm Password",
+    icon: Lock,
+    placeholder: "Confirm your password",
+  },
+];
 
 export default function Register({ isActive, onGoLogin }) {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  })
-  const [errors, setErrors] = useState({})
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [serverErrors, setServerErrors] = useState({});
+  const [bannerErrors, setBannerErrors] = useState([]); 
   const [validities, setValidities] = useState({
     username: false,
     email: false,
     password: false,
     confirmPassword: false,
-  })
-  const [animationStage, setAnimationStage] = useState(0)
-  const [sending, setSending] = useState(false)
-  const [hideForm, setHideForm] = useState(false)
-  const [success, setSuccess] = useState(false)
+  });
+  const [animationStage, setAnimationStage] = useState(0);
+  const [sending, setSending] = useState(false);
+  const [hideForm, setHideForm] = useState(false);
+  const [success, setSuccess] = useState(false);
 
+  
   useEffect(() => {
     if (isActive) {
-      setFormData({ username: '', email: '', password: '', confirmPassword: '' })
-      setErrors({})
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      setServerErrors({});
+      setBannerErrors([]); 
       setValidities({
         username: false,
         email: false,
         password: false,
         confirmPassword: false,
-      })
-      setAnimationStage(1)
-      setSending(false)
-      setHideForm(false)
-      setSuccess(false)
+      });
+      setAnimationStage(1);
+      setSending(false);
+      setHideForm(false);
+      setSuccess(false);
     }
-  }, [isActive])
+  }, [isActive]);
 
-  useEffect(() => {
-    setAnimationStage(1)
-  }, [])
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    setServerErrors((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      if (name === "password") delete next.confirmPassword;
+      return next;
+    });
+  };
 
-const handleChange = e => {
-  const { name, value } = e.target
+  const handleValidityChange = (field, ok) => {
+    setValidities((prev) =>
+      prev[field] === ok ? prev : { ...prev, [field]: ok }
+    );
+  };
 
-  setFormData(prev => ({ ...prev, [name]: value }))
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setServerErrors({});
+    setBannerErrors([]);
 
-  setErrors(prev => {
-    const next = { ...prev }
-    delete next[name]
-    if (name === 'password') {
-      delete next.confirmPassword
-    }
-    return next
-  })
-}
-
-
-  const handleValidityChange = (field, isValid) => {
-    setValidities(prev => {
-      if (prev[field] === isValid) return prev
-      return { ...prev, [field]: isValid }
-    })
-  }
-
-  const isDisabled =
-    Object.values(validities).some(v => !v) ||
-    formData.password !== formData.confirmPassword
-
-  const handleGoLogin = () => {
-    setSuccess(false)
-    setHideForm(false)
-    setAnimationStage(1)
-    onGoLogin()
-  }
-
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setErrors({})
-
+    
     if (formData.password !== formData.confirmPassword) {
-      setErrors({ confirmPassword: ['Passwords do not match.'] })
-      return
+      setBannerErrors(["Passwords do not match."]);
+      return;
     }
 
     try {
@@ -94,99 +114,70 @@ const handleChange = e => {
         email: formData.email,
         password: formData.password,
         confirm_password: formData.confirmPassword,
-      })
+      });
     } catch (err) {
-      console.error('Register error payload:', err.response?.data)
-      setErrors(err.response?.data || {})
-      return
+      const data = err.response?.data || {};
+      setServerErrors(data);
+
+      
+      const msgs = [];
+      Object.entries(data).forEach(([key, val]) => {
+        if (Array.isArray(val)) val.forEach((m) => msgs.push(m));
+        else if (typeof val === "string") msgs.push(val);
+      });
+      setBannerErrors(msgs);
+      return;
     }
 
-    setAnimationStage(2)
+    
+    setAnimationStage(2);
     setTimeout(() => {
-      setAnimationStage(3)
-      setSending(true)
+      setAnimationStage(3);
+      setSending(true);
       setTimeout(() => {
-        setHideForm(true)
-        setSuccess(true)
-        setTimeout(() => handleGoLogin(), 1000)
-      }, 1500)
-    }, 1500)
-  }
+        setHideForm(true);
+        setSuccess(true);
+        setTimeout(onGoLogin, 1000);
+      }, 1500);
+    }, 1500);
+  };
+
+  const isDisabled =
+    Object.values(validities).some((v) => !v) ||
+    formData.password !== formData.confirmPassword;
 
   return (
     <>
       <div className="register-container">
         <div className="register-content-wrapper">
           {!hideForm && (
-            <div className={`register-letter ${animationStage >= 2 ? 'sending' : ''}`}>
-              <h2 className="letter-title">Join RataTutor</h2>
-              {errors.non_field_errors?.map((msg, i) => (
-                <p key={i} className="errors-form-all">{msg}</p>
-              ))}
-              <form onSubmit={handleSubmit} className="register-form">
-                <ValidatedInput
-                  label="Username"
-                  name="username"
-                  icon={User}
-                  type="text"
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="e.g. Rata123"
-                  required
-                  onValidityChange={handleValidityChange}
-                  errorMessage={errors.username?.[0]}
-                />
-                <ValidatedInput
-                  label="Email"
-                  name="email"
-                  icon={Mail}
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="e.g. someone@example.com"
-                  required
-                  onValidityChange={handleValidityChange}
-                  errorMessage={errors.email?.[0]}
-                />
-                <ValidatedInput
-                  label="Password"
-                  name="password"
-                  icon={Lock}
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="e.g. D@ntTe11"
-                  required
-                  onValidityChange={handleValidityChange}
-                  errorMessage={errors.password?.[0]}
-                />
-                <ValidatedInput
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  icon={Lock}
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm your password"
-                  required
-                  compareValue={formData.password}
-                  onValidityChange={isValid => handleValidityChange('confirmPassword', isValid)}
-                  errorMessage={errors.confirmPassword?.[0]}
-                />
-                <button
-                  type="submit"
-                  className="exam-button w-full"
-                  disabled={isDisabled}
-                  data-hover={!isDisabled ? 'Join Us!' : undefined}
-                >
-                  REGISTER
-                </button>
-              </form>
-            </div>
+            <Form
+              wrapperClass={`register-letter ${
+                animationStage >= 2 ? "sending" : ""
+              }`}
+              enableTilt={true}
+              title="Join RataTutor"
+              fields={registerFields}
+              formData={formData}
+              onChange={handleChange}
+              validities={validities}
+              onValidityChange={handleValidityChange}
+              bannerErrors={bannerErrors}
+              onSubmit={handleSubmit}
+              submitDisabled={isDisabled}
+              submitText="REGISTER"
+              submitTextDataHover="Join us!"
+            />
           )}
+
+          {}
           <div className="register-mailbox">
-            <div className={`register-mailbox-slot ${animationStage >= 2 ? 'highlight' : ''}`}></div>
-            <div className={`register-mailbox-flag ${sending ? 'down' : ''}`}>
+            <div
+              className={`register-mailbox-slot ${
+                animationStage >= 2 ? "highlight" : ""
+              }`}
+            ></div>
+            <div className={`register-mailbox-flag ${sending ? "down" : ""}`}>
               <div className="register-mailbox-flag-head"></div>
             </div>
             {animationStage === 2 && (
@@ -205,16 +196,24 @@ const handleChange = e => {
             )}
           </div>
         </div>
-        <div className="slide-arrow left" onClick={e => { e.stopPropagation(); handleGoLogin() }}>
+
+        <div
+          className="slide-arrow left"
+          onClick={(e) => {
+            e.stopPropagation();
+            onGoLogin();
+          }}
+        >
           ←
         </div>
       </div>
+
       <Toast visible={success} variant="success">
         <span className="pixel-accent">Registration successful!</span>
-        <span className="handwriting-accent" style={{ marginLeft: '.5rem' }}>
+        <span className="handwriting-accent" style={{ marginLeft: ".5rem" }}>
           Welcome aboard!
         </span>
       </Toast>
     </>
-  )
+  );
 }

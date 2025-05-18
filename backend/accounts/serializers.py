@@ -62,7 +62,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     confirm_password = serializers.CharField(
         write_only=True,
-        error_messages={'required': 'Please confirm your password.'}
+        error_messages={'required': 'Confirm password is required.'}
     )
 
     class Meta:
@@ -70,9 +70,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'password', 'confirm_password')
 
     def validate(self, data):
-        # ensure passwords match
         if data.get('password') != data.get('confirm_password'):
-            raise serializers.ValidationError({'confirm_password': ['Passwords do not match.']})
+            raise serializers.ValidationError('Passwords do not match.')
+        if data.get('username') == data.get('email'):
+            raise serializers.ValidationError('Username cannot be the same as email.')
+        if data.get('username') == data.get('password'):
+            raise serializers.ValidationError('Username cannot be the same as password.')
+        if data.get('email') == data.get('password'):
+            raise serializers.ValidationError('Email cannot be the same as password.')
+        if data.get('username') == data.get('confirm_password'):
+            raise serializers.ValidationError('Username cannot be the same as confirm password.')
+        if data.get('email') == data.get('confirm_password'):
+            raise serializers.ValidationError('Email cannot be the same as confirm password.')
+        if User.objects.filter(username=data.get('username')).exists():
+            raise serializers.ValidationError('That username is already taken.')
+        if User.objects.filter(email=data.get('email')).exists():
+            raise serializers.ValidationError('That email is already registered.')
         return data
 
     def create(self, validated_data):
