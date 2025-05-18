@@ -1,6 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Gruppo&family=Syne:wght@400..800&display=swap");
 
-/* wrap & container fill full viewport */
 .wrapper {
   position: fixed;
   top: 0;
@@ -20,7 +19,6 @@
   scroll-behavior: smooth;
 }
 
-/* hide the radios */
 input[type="radio"] {
   display: none;
 }
@@ -42,7 +40,6 @@ input[type="radio"] {
   will-change: width;
 }
 
-/* when its radio is checked, grow this card to fill all space */
 input:checked + label.card {
   width: 76vw;
 }
@@ -83,7 +80,7 @@ input:checked + label.card {
   opacity: 0;
   transform: translateX(-20px);
   transition: opacity 0.6s cubic-bezier(0.28, -0.03, 0, 0.99),
-              transform 0.6s cubic-bezier(0.28, -0.03, 0, 0.99);
+    transform 0.6s cubic-bezier(0.28, -0.03, 0, 0.99);
   font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
@@ -102,114 +99,98 @@ input:checked + label.card {
   margin: 0;
 }
 
-/* reveal the description */
 input:checked + label.card .description {
   opacity: 1;
   transform: translateX(0);
   pointer-events: auto;
 }
 
-/* ensure smooth fade out when unchecking */
 input:not(:checked) + label.card .description {
   opacity: 0;
   transform: translateX(-20px);
-  transition: opacity 0.3s ease-out,
-              transform 0.3s ease-out;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
-/* background colors with gradients */
 .card--1 {
-  background: linear-gradient(135deg, #FFB5C5 0%, #FFE4E1 100%);
+  background: linear-gradient(135deg, #ffb5c5 0%, #ffe4e1 100%);
 }
 .card--2 {
-  background: linear-gradient(135deg, #B0E0E6 0%, #E0FFFF 100%);
+  background: linear-gradient(135deg, #b0e0e6 0%, #e0ffff 100%);
 }
 .card--3 {
-  background: linear-gradient(135deg, #DDA0DD 0%, #E6E6FA 100%);
+  background: linear-gradient(135deg, #dda0dd 0%, #e6e6fa 100%);
 }
 .card--4 {
-  background: linear-gradient(135deg, #98FB98 0%, #F0FFF0 100%);
+  background: linear-gradient(135deg, #98fb98 0%, #f0fff0 100%);
 }
-/* 1) Make .hero-center hidden by default, show only when checked */
+
 .hero-center {
-    /* keep your existing positioning… */
-    position: absolute;
-    top: 50%;
-    left: 40%;
-    transform: translate(-50%, -50%);
-    text-align: start;
-  
-    /* hide by default */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.6s cubic-bezier(0.28, -0.03, 0, 0.99),
-                visibility 0.6s ease;
-  }
-  
-  /* reveal center content only on the active (checked) card */
-  input:checked + label.card .hero-center {
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  /* 2) Ensure the description text is completely gone when collapsed */
-  input:not(:checked) + label.card .row .description {
-    display: none;
-  }
-  
-  .hero-actions {
-    margin-top: 1rem;
-    display: flex;
-    gap: 1rem;
-    justify-content: start;
-  }
+  position: absolute;
+  top: 50%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+  text-align: start;
 
-  .exam-card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-  }
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s cubic-bezier(0.28, -0.03, 0, 0.99),
+    visibility 0.6s ease;
+}
 
-  /* Contact form wrapper */
+input:checked + label.card .hero-center {
+  opacity: 1;
+  visibility: visible;
+}
+
+input:not(:checked) + label.card .row .description {
+  display: none;
+}
+
+.hero-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: start;
+}
+
+.exam-card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
 .contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
-    max-width: 400px;
-    margin: 2rem auto 0;  /* center and give some top spacing */
-  }
-  
-  /* Labels stack text + input */
-  .contact-form label {
-    display: flex;
-    flex-direction: column;
-    color: var(--white);
-    font-size: 1rem;
-    font-family: var(--font-handwriting-secondary);
-  }
-  
-  /* Inputs & textarea */
-  .contact-form input,
-  .contact-form textarea {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    border-radius: 4px;
-    font-size: 1rem;
-    background: rgba(255, 255, 255, 0.9);
-    font-family: var(--font-handwriting-secondary);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  /* Focus state */
-  .contact-form input:focus,
-  .contact-form textarea:focus {
-    outline: none;
-    border-color: var(--button-primary);
-    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
-  }
-  
-  /* Submit button inherits .exam-button styling already defined */
-  
-  
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+  margin: 2rem auto 0;
+}
+
+.contact-form label {
+  display: flex;
+  flex-direction: column;
+  color: var(--white);
+  font-size: 1rem;
+  font-family: var(--font-handwriting-secondary);
+}
+
+.contact-form input,
+.contact-form textarea {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-handwriting-secondary);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
+}
