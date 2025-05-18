@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login } from '../services/authService'
+import { login } from '../services/auth'
 import { User, Lock } from 'lucide-react'
 import ValidatedInput from '../components/ValidatedInput'
 import '../styles/login.css'

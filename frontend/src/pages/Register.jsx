@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { register } from '../services/authService'
+import { register } from '../services/auth'
 import Toast from '../components/Toast'
 import ValidatedInput from '../components/ValidatedInput'
 import { User, Mail, Lock } from 'lucide-react'

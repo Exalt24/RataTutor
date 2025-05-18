@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import AuthSwitcher from './components/AuthSwitcher'
-import { isLoggedIn } from './services/authService'
+import { isLoggedIn } from './services/auth'
 
 function PrivateRoute({ children }) {
   return isLoggedIn()
