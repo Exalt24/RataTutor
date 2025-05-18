@@ -10,7 +10,10 @@ export default function Login({ isActive, onGoRegister }) {
   const [serverErrors, setServerErrors] = useState({})
   const [isOpen, setIsOpen] = useState(false)
   const [isPulledOut, setIsPulledOut] = useState(false)
-  const [validities, setValidities] = useState({ username: false, password: false })
+  const [validities, setValidities] = useState({
+    username: false,
+    password: false,
+  })
   const nav = useNavigate()
 
   useEffect(() => {
@@ -34,8 +37,12 @@ export default function Login({ isActive, onGoRegister }) {
     }
   }
 
+  // Only update the specific field if its validity actually changed
   const handleValidityChange = (field, isValid) => {
-    setValidities(prev => ({ ...prev, [field]: isValid }))
+    setValidities(prev => {
+      if (prev[field] === isValid) return prev
+      return { ...prev, [field]: isValid }
+    })
   }
 
   const isDisabled =
@@ -66,7 +73,9 @@ export default function Login({ isActive, onGoRegister }) {
           isPulledOut ? 'form-pulled' : ''
         }`}
         onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => { if (!isPulledOut) setIsOpen(false) }}
+        onMouseLeave={() => {
+          if (!isPulledOut) setIsOpen(false)
+        }}
       >
         <div className="envelope-back"></div>
         <div className="envelope-content">
@@ -81,7 +90,9 @@ export default function Login({ isActive, onGoRegister }) {
             <div className="letter" onClick={e => e.stopPropagation()}>
               <h2 className="letter-title">Welcome Back!</h2>
               {serverErrors.non_field_errors?.map((msg, i) => (
-                <p key={i} className="errors-form-all">{msg}</p>
+                <p key={i} className="errors-form-all">
+                  {msg}
+                </p>
               ))}
               <form onSubmit={submit} className="login-form">
                 <ValidatedInput
@@ -122,7 +133,13 @@ export default function Login({ isActive, onGoRegister }) {
         <div className="envelope-front"></div>
         <div className="envelope-flap"></div>
       </div>
-      <div className="slide-arrow" onClick={e => { e.stopPropagation(); onGoRegister() }}>
+      <div
+        className="slide-arrow"
+        onClick={e => {
+          e.stopPropagation()
+          onGoRegister()
+        }}
+      >
         →
       </div>
     </div>
