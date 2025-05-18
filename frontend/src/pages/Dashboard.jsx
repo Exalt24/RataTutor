@@ -4,10 +4,10 @@ import FilesScreen from '../components/FileScreen'
 import Header from '../components/Header'
 import HomeScreen from '../components/HomeScreen'
 import ProfileScreen from '../components/ProfileScreen'
-import SavedScreen from '../components/SavedScreen'
+import SavedScreenEmptyState from '../components/SavedScreenEmptyState'
 import Sidebar from '../components/Sidebar'
 import StreakScreen from '../components/StreakScreen'
-import TrashScreen from '../components/TrashScreen'
+import TrashScreenEmptyState from '../components/TrashScreenEmptyState'
 // import api from '../services/api'   ← comment this out until ready
 import { logout } from '../services/auth'
 import '../styles/pages/dashboard.css'
@@ -82,8 +82,8 @@ const Dashboard = () => {
         <main className={`flex-1 overflow-auto p-2 sm:p-4 ${gradientClass()}`}>
           {screen==='home'   && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={generated}/>}
           {screen==='files'  && <FilesScreen files={files}/>}
-          {screen==='saved'  && <SavedScreen/>}
-          {screen==='trash'  && <TrashScreen/>}
+          {screen==='saved'  && <SavedScreenEmptyState/>}
+          {screen==='trash'  && <TrashScreenEmptyState/>}
           {screen==='profile'&& <ProfileScreen points={points} badges={badges}/>}
           {screen==='streak' && <StreakScreen points={points} badges={badges}/>}
         </main>

@@ -50,9 +50,9 @@ const StreakModal = ({ onClose, streakData = { current: 5, longest: 14, total: 4
 
         {/* Motivational Message */}
         <div className="text-center">
-          <p className="exam-subheading text-lg mb-4">
+          <p className="exam-msg text-lg mb-4">
             {streakData.current > 0 
-              ? "You're on fire! Keep the momentum going!" 
+              ? "You're on fire! Keep the momentum going!"
               : "Start your streak today!"}
           </p>
           <button 

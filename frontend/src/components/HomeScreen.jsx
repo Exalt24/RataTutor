@@ -3,9 +3,9 @@ import { FilePlus, Mic, FileText, Edit2 } from 'lucide-react'
 
 const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generated }) => (
   <div className="space-y-4">
-    <h1 className="exam-heading exam-heading-mini text-lg sm:text-xl">Welcome, Nikka Joie Mendoza!</h1>
+    <h1 className="exam-greeting text-end sm:text-xl px-6">Welcome, Nikka!</h1>
     <section>
-      <h2 className="exam-subheading mb-2 text-xs sm:text-sm">Create</h2>
+      <h2 className="exam-subheading sm:text-sm ">Create</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
         {[
           { icon: <FilePlus size={20} />, title: 'Upload a PDF, PPT, Video, or Audio', desc: 'Get flashcards, summaries & quiz questions instantly.' },
@@ -14,15 +14,16 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
           { icon: <Edit2 size={20} />, title: 'Create notes manually', desc: 'Create notes without AI for free.' }
         ].map((card, i) => (
           <div key={i} className="exam-card p-2 sm:p-4 text-xs sm:text-sm flex items-start">
-            <div className="mr-2 text-pixel">{card.icon}</div>
+            <div className="mr-2">{card.icon}</div>
             <div>
-              <h3 className="font-semibold">{card.title}</h3>
-              <p className="mt-1">{card.desc}</p>
+              <h3>{card.title}</h3>
+              <p >{card.desc}</p>
             </div>
           </div>
         ))}
       </div>
     </section>
+    <br />
     <section>
       <h2 className="exam-subheading mb-2 text-xs sm:text-sm">Upload & Generate</h2>
       <input type="file" onChange={handleFileChange} className="mb-2 text-xs sm:text-sm" />

@@ -47,7 +47,7 @@ const StreakScreen = ({ streakData = { current: 5, longest: 14, total: 42 } }) =
 
       {/* Motivational Section */}
       <div className="text-center">
-        <p className="exam-subheading text-lg mb-6">
+        <p className="exam-msg text-lg mb-6">
           {streakData.current > 0
             ? "You're on fire! Keep the momentum going!"
             : "Start your streak today!"}
