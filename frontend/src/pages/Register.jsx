@@ -42,7 +42,6 @@ export default function Register({ isActive, onGoLogin }) {
     password: "",
     confirmPassword: "",
   });
-  const [serverErrors, setServerErrors] = useState({});
   const [bannerErrors, setBannerErrors] = useState([]); 
   const [validities, setValidities] = useState({
     username: false,
@@ -64,7 +63,6 @@ export default function Register({ isActive, onGoLogin }) {
         password: "",
         confirmPassword: "",
       });
-      setServerErrors({});
       setBannerErrors([]); 
       setValidities({
         username: false,
@@ -82,13 +80,6 @@ export default function Register({ isActive, onGoLogin }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    setServerErrors((prev) => {
-      const next = { ...prev };
-      delete next[name];
-      if (name === "password") delete next.confirmPassword;
-      return next;
-    });
   };
 
   const handleValidityChange = (field, ok) => {
@@ -99,7 +90,6 @@ export default function Register({ isActive, onGoLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setServerErrors({});
     setBannerErrors([]);
 
     
@@ -117,8 +107,6 @@ export default function Register({ isActive, onGoLogin }) {
       });
     } catch (err) {
       const data = err.response?.data || {};
-      setServerErrors(data);
-
       
       const msgs = [];
       Object.entries(data).forEach(([key, val]) => {
