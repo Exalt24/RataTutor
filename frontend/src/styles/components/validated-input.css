@@ -85,6 +85,6 @@
 .input-with-icon:hover .toggle-password {
   transform: translateY(-50%) scale(1.1);
 }
-.input-with-icon:not(:focus-within):hover label {
+.form-field:not(.active) .input-with-icon:not(:focus-within):hover label {
   transform: translateY(35%) scale(1.1);
 }

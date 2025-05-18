@@ -28,7 +28,12 @@ export default function Register({ isActive, onGoLogin }) {
     if (isActive) {
       setFormData({ username: '', email: '', password: '', confirmPassword: '' })
       setErrors({})
-      setValidities({ username: false, email: false, password: false, confirmPassword: false })
+      setValidities({
+        username: false,
+        email: false,
+        password: false,
+        confirmPassword: false,
+      })
       setAnimationStage(1)
       setSending(false)
       setHideForm(false)
@@ -46,7 +51,10 @@ export default function Register({ isActive, onGoLogin }) {
   }
 
   const handleValidityChange = (field, isValid) => {
-    setValidities(prev => ({ ...prev, [field]: isValid }))
+    setValidities(prev => {
+      if (prev[field] === isValid) return prev
+      return { ...prev, [field]: isValid }
+    })
   }
 
   const isDisabled =
@@ -161,8 +169,7 @@ export default function Register({ isActive, onGoLogin }) {
           )}
           <div className="register-mailbox">
             <div className={`register-mailbox-slot ${animationStage >= 2 ? 'highlight' : ''}`}></div>
-            <div className={`register-mailbox-flag ${sending ? 'down' : ''}
-`}>
+            <div className={`register-mailbox-flag ${sending ? 'down' : ''}`}>
               <div className="register-mailbox-flag-head"></div>
             </div>
             {animationStage === 2 && (
