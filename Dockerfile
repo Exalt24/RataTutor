@@ -26,9 +26,6 @@ RUN npm ci
 # 3. Copy source & build
 COPY frontend/ ./
 
-RUN echo ">>> Listing /app/frontend/src/styles <<<" \
-    && ls -l src/styles
-
 RUN npm run build
 
 

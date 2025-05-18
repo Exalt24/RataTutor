@@ -64,7 +64,7 @@
   transform: scaleY(1);
 }
 
-/* Category headers in sidebar */
+
 .sidebar-category {
   font-family: var(--font-pixel);
   font-size: 0.75rem;
@@ -75,100 +75,98 @@
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-/* Smaller variant of .exam-button */
-.exam-button-mini {
-    font-family: var(--font-pixel);
-    font-size: 0.875rem;             /* smaller text */
-    letter-spacing: 1px;             /* tighter spacing */
-    padding: 0.8rem 1.6rem;          /* reduced padding */
-    text-transform: uppercase;
-    border-radius: 30px;             /* slightly smaller curve */
-    font-weight: 600;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    background: var(--button-primary);
-    color: var(--white);
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-    image-rendering: pixelated;
-    -webkit-font-smoothing: none;
-    position: relative;
-    overflow: hidden;
-    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    animation: fadeIn 0.3s ease forwards;
-    animation-delay: 0.3s;
-  }
-  
-  .exam-button-mini::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background:
-      repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 1px,
-        rgba(255,255,255,0.1) 1px,
-        rgba(255,255,255,0.1) 2px
-      ),
-      repeating-linear-gradient(
-        -45deg,
-        transparent,
-        transparent 1px,
-        rgba(0,0,0,0.05) 1px,
-        rgba(0,0,0,0.05) 2px
-      );
-    pointer-events: none;
-    mix-blend-mode: overlay;
-  }
-  
-  .exam-button-mini::before {
-    content: attr(data-hover);
-    position: absolute;
-    top: 100%; left: 0;
-    width: 100%;
-    padding: 0.4rem;                 /* reduced hover-label padding */
-    font-family: var(--font-handwriting);
-    font-size: 1.2rem;               /* slightly smaller label */
-    transform: rotate(-3deg);
-    transition: all 0.3s ease;
-    opacity: 0;
-    background: var(--button-hover);
-    color: var(--white);
-    z-index: 2;
-  }
-  
-  .exam-button-mini:hover {
-    background: var(--button-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-  
-  .exam-button-mini:hover::before {
-    top: 50%;
-    transform: translateY(-50%) rotate(-3deg);
-    opacity: 1;
-  }
-  
-  .exam-button-mini:hover::after {
-    background:
-      repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,0.15) 2px,
-        rgba(255,255,255,0.15) 4px
-      );
-  }
 
-  .exam-card.exam-card--alt:hover {
-    background: rgba(255, 255, 255, 0.9);
-    transform: scale(1);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-  
-  
+.exam-button-mini {
+  font-family: var(--font-pixel);
+  font-size: 0.875rem;             
+  letter-spacing: 1px;             
+  padding: 0.8rem 1.6rem;          
+  text-transform: uppercase;
+  border-radius: 30px;             
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  background: var(--button-primary);
+  color: var(--white);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  position: relative;
+  overflow: hidden;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+  animation-delay: 0.3s;
+}
+
+.exam-button-mini::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 1px,
+      rgba(255,255,255,0.1) 1px,
+      rgba(255,255,255,0.1) 2px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.05) 1px,
+      rgba(0,0,0,0.05) 2px
+    );
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.exam-button-mini::before {
+  content: attr(data-hover);
+  position: absolute;
+  top: 100%; left: 0;
+  width: 100%;
+  padding: 0.4rem;                 
+  font-family: var(--font-handwriting);
+  font-size: 1.2rem;               
+  transform: rotate(-3deg);
+  transition: all 0.3s ease;
+  opacity: 0;
+  background: var(--button-hover);
+  color: var(--white);
+  z-index: 2;
+}
+
+.exam-button-mini:hover {
+  background: var(--button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.exam-button-mini:hover::before {
+  top: 50%;
+  transform: translateY(-50%) rotate(-3deg);
+  opacity: 1;
+}
+
+.exam-button-mini:hover::after {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.15) 2px,
+      rgba(255,255,255,0.15) 4px
+    );
+}
+
+.exam-card.exam-card--alt:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
