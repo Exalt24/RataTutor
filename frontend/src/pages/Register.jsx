@@ -217,6 +217,7 @@ export default function Register({ isActive, onGoLogin }) {
             </button>
           </div>
         </div>
+
       </div>
 
       <Toast visible={success} variant="success">
