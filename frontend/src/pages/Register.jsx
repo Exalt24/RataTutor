@@ -5,6 +5,7 @@ import Toast from "../components/Toast";
 import Form from "../components/Form";
 import { User, Mail, Lock } from "lucide-react";
 import "../styles/pages/register.css";
+import { ArrowLeft } from "lucide-react";
 
 const registerFields = [
   {
@@ -162,7 +163,7 @@ export default function Register({ isActive, onGoLogin }) {
               bannerErrors={bannerErrors}
               onSubmit={handleSubmit}
               submitDisabled={isDisabled}
-              submitText="REGISTER"
+              submitText="Register"
               submitTextDataHover="Join us!"
             />
           )}
@@ -196,12 +197,25 @@ export default function Register({ isActive, onGoLogin }) {
 
         <div
           className="slide-arrow left"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onGoLogin();
           }}
         >
-          ←
+          <div role="button" aria-label="Go to Login">
+            <ArrowLeft size={24} strokeWidth={2} />
+          </div>
+
+          <div className="slide-tag">
+            <span>Already have an account?</span>
+            <button
+              type="button"
+              className="slide-tag-link"
+              onClick={e => { e.stopPropagation(); onGoLogin(); }}
+            >
+              Login here
+            </button>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { login } from "../services/auth";
 import { User, Lock } from "lucide-react";
 import Form from "../components/Form";
 import "../styles/pages/login.css";
+import { ArrowRight } from "lucide-react";
 
 const loginFields = [
   {
@@ -137,12 +138,25 @@ export default function Login({ isActive, onGoRegister }) {
 
       <div
         className="slide-arrow"
-        onClick={(e) => {
+        onClick={e => {
           e.stopPropagation();
           onGoRegister();
         }}
       >
-        →
+        <div role="button" aria-label="Go to Register">
+          <ArrowRight size={24} strokeWidth={2} />
+        </div>
+
+        <div className="slide-tag">
+          <span>No account yet?</span>
+          <button
+            type="button"
+            className="slide-tag-link"
+            onClick={e => { e.stopPropagation(); onGoRegister(); }}
+          >
+            Register here
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -18,21 +18,21 @@
   padding: 0.5rem 1rem 0.5rem 2.5rem;
   border: 2px solid var(--pastel-blue);
   border-radius: 5px;
-  font-family: var(--font-handwriting-secondary);
+  font-family: var(--font-pixel);
   font-size: 1.1rem;
   background: rgba(255, 255, 255, 0.9);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .input-with-icon:hover .form-input {
   transform: translateY(-2px) scale(1.02);
-  border-color: var(--button-primary);
+  border-color: var(--pastel-blue-active);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 .form-input:focus {
   transform: translateY(-2px) scale(1.02);
   outline: none;
-  border-color: var(--button-primary);
-  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2);
+  border-color: var(--pastel-blue-active);
+  box-shadow: 0 0 0 3px rgba(107, 176, 255, 0.2);
 }
 .form-input::placeholder {
   color: #999;
@@ -56,7 +56,7 @@
   left: 2.5rem;
   top: 0;
   transform: translateY(50%);
-  font-family: var(--font-handwriting);
+  font-family: var(--font-pixel);
   font-size: 1rem;
   color: #777;
   opacity: 0.8;
@@ -69,8 +69,8 @@
 .form-field.active label,
 .form-input:focus + label {
   transform: translateY(-50%) translateX(-25%);
-  font-size: 1rem;
-  color: var(--button-primary);
+  font-size: 0.7rem;
+  color: var(--pastel-blue);
   opacity: 1;
   background: white;
 }
