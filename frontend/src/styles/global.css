@@ -6,6 +6,7 @@
 
 :root {
   --pastel-blue: #7BA7CC;
+  --pastel-blue-active: #1b81d4;
   --pastel-pink: #FF9EAF;
   --pastel-yellow: #E6C87F;
   --pastel-green: #8FCEB3;
@@ -14,7 +15,7 @@
   --pastel-cream: #F5E6CC;
   --white: #ffffff;
   --text-dark: #2D4246;
-  --button-primary: #FF6B6B;
+  --button-primary: #ff7575;
   --button-hover: #FF4F4F;
   --font-pixel: 'Comfortaa', cursive;
   --font-pixel-secondary: 'Comfortaa', cursive;
@@ -205,15 +206,14 @@
   font-family: var(--font-pixel);
   font-size: 1rem;
   letter-spacing: 2px;
-  padding: 1.2rem 2.4rem;
-  text-transform: uppercase;
+  padding: 0.9rem;
   border-radius: 50px;
   font-weight: 600;
   transition: all 0.3s ease;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
-  background: var(--pastel-orange);
+  background: var(--button-primary);
   color: var(--white);
   border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
@@ -263,13 +263,13 @@
   transform: rotate(-3deg);
   transition: all 0.3s ease;
   opacity: 0;
-  background: var(--pastel-orange);
+  background: var(--button-primary);
   color: var(--white);
   z-index: 2;
 }
 
 .exam-button:not(:disabled):hover {
-  background: var(--pastel-orange);
+  background: var(--button-primary);
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }

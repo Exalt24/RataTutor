@@ -1,22 +1,104 @@
 .slide-arrow {
   position: absolute;
-  right: 1rem;
+  right: 3rem;
   top: 50%;
   transform: translateY(-50%);
   font-size: 2rem;
   cursor: pointer;
   user-select: none;
-  transition: transform 150ms;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  padding: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pastel-blue);
+  color: white;
+  border-radius: 50%;
 }
 .slide-arrow:hover {
   transform: translateY(-50%) translateX(4px);
+  background-color: var(--pastel-blue-active);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .slide-arrow.left {
   right: auto;
-  left: 1rem;
+  left: 3rem;
   transform: translateY(-50%) rotate(360deg);
 }
 .slide-arrow.left:hover {
   transform: translateY(-50%) translateX(-4px) rotate(360deg);
+}
+
+.slide-arrow-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.slide-tag {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform-origin: top center;
+  transform: translateX(-50%) rotate(0deg);
+  animation: swing 3s ease-in-out infinite;
+  margin-top: 0.5rem;
+  
+  background: linear-gradient(
+    90deg,
+    #deb887 0%,
+    #c79b6f 25%,
+    #ad7a4f 50%,
+    #c79b6f 75%,
+    #deb887 100%
+  );
+  
+  background-size: cover;
+  background-blend-mode: multiply;
+  
+  border: 2px solid #a36e4b;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.2),
+    0 4px 6px rgba(0,0,0,0.15);
+  
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: #3b2e2a;
+  font-family: 'Cinzel', serif;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+  text-align: center;
+}
+
+.slide-tag::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 10px;
+  background: 
+    linear-gradient(90deg, #b08b4f, #8c6a3e);
+  border-radius: 2px;
+}
+
+.slide-tag-link {
+  background: none;
+  border: none;
+  color: #2f1f17;
+  font-weight: bold;
+  text-decoration: underline;
+  padding: 0 0.2rem;
+  margin-left: 0.3rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.slide-tag-link:hover {
+  color: #4a2f24;
+}
+
+@keyframes swing {
+  0%,100% { transform: translateX(-50%) rotate(-4deg); }
+  50%     { transform: translateX(-50%) rotate(4deg); }
 }
