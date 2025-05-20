@@ -336,7 +336,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <img src="https://via.placeholder.com/100x100?text=RataTutor" alt="RataTutor Logo" width="80"/>
+  <img src="./frontend/src/assets/logotemp.png" alt="RataTutor Logo" width="80"/>
   <p>
     <b>Anyone Can Cook Up Knowledge</b><br/>
     Crafted with ❤️ by the RataTutor Team © 2025
