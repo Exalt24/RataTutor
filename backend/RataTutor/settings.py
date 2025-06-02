@@ -14,9 +14,20 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
 if DEBUG:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+    FRONTEND_URL = 'http://localhost:3000'
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = True
+    STATIC_URL = '/dev-static/'
 else:
-    ALLOWED_HOSTS = ["ratatutor.onrender.com"]
+    FRONTEND_URL = 'https://ratatutor.onrender.com'
+    CORS_ALLOWED_ORIGINS = [
+        "https://ratatutor.onrender.com",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+    STATIC_URL = '/static/'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -118,19 +129,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-CORS_ALLOW_ALL_ORIGINS = True
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
