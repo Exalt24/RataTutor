@@ -1,7 +1,8 @@
+// src/pages/Register.jsx
 
 import React, { useEffect, useState, useRef } from "react";
 import { register } from "../services/auth";
-import Toast from "../components/Toast";
+import { useToast } from "../components/Toast/ToastContext";
 import Form from "../components/Form";
 import { User, Mail, Lock } from "lucide-react";
 import "../styles/pages/register.css";
@@ -43,7 +44,7 @@ export default function Register({ isActive, onGoLogin }) {
     password: "",
     confirmPassword: "",
   });
-  const [bannerErrors, setBannerErrors] = useState([]); 
+  const [bannerErrors, setBannerErrors] = useState([]);
   const [validities, setValidities] = useState({
     username: false,
     email: false,
@@ -53,11 +54,13 @@ export default function Register({ isActive, onGoLogin }) {
   const [animationStage, setAnimationStage] = useState(0);
   const [sending, setSending] = useState(false);
   const [hideForm, setHideForm] = useState(false);
-  const [success, setSuccess] = useState(false);
 
-  const [titleKey, setTitleKey] = useState(0)
-  const prevActive = useRef(false)
-  
+
+  const [titleKey, setTitleKey] = useState(0);
+  const prevActive = useRef(false);
+
+  const { showToast } = useToast();
+
   useEffect(() => {
     if (isActive) {
       setFormData({
@@ -66,7 +69,7 @@ export default function Register({ isActive, onGoLogin }) {
         password: "",
         confirmPassword: "",
       });
-      setBannerErrors([]); 
+      setBannerErrors([]);
       setValidities({
         username: false,
         email: false,
@@ -76,14 +79,12 @@ export default function Register({ isActive, onGoLogin }) {
       setAnimationStage(1);
       setSending(false);
       setHideForm(false);
-      setSuccess(false);
     }
 
     if (!prevActive.current && isActive) {
-      setTitleKey(k => k + 1)
+      setTitleKey((k) => k + 1);
     }
-    prevActive.current = isActive
-
+    prevActive.current = isActive;
   }, [isActive]);
 
   const handleChange = (e) => {
@@ -101,7 +102,6 @@ export default function Register({ isActive, onGoLogin }) {
     e.preventDefault();
     setBannerErrors([]);
 
-    
     if (formData.password !== formData.confirmPassword) {
       setBannerErrors(["Passwords do not match."]);
       return;
@@ -116,7 +116,6 @@ export default function Register({ isActive, onGoLogin }) {
       });
     } catch (err) {
       const data = err.response?.data || {};
-      
       const msgs = [];
       Object.entries(data).forEach(([key, val]) => {
         if (Array.isArray(val)) val.forEach((m) => msgs.push(m));
@@ -126,14 +125,20 @@ export default function Register({ isActive, onGoLogin }) {
       return;
     }
 
-    
     setAnimationStage(2);
     setTimeout(() => {
       setAnimationStage(3);
       setSending(true);
       setTimeout(() => {
         setHideForm(true);
-        setSuccess(true);
+
+        showToast({
+          variant: "success",
+          title: "Registration successful!",
+          subtitle: "Welcome aboard!",
+        });
+
+
         setTimeout(onGoLogin, 1000);
       }, 1500);
     }, 1500);
@@ -168,7 +173,6 @@ export default function Register({ isActive, onGoLogin }) {
             />
           )}
 
-          {}
           <div className="register-mailbox">
             <div
               className={`register-mailbox-slot ${
@@ -197,7 +201,7 @@ export default function Register({ isActive, onGoLogin }) {
 
         <div
           className="slide-arrow left"
-          onClick={e => {
+          onClick={(e) => {
             e.stopPropagation();
             onGoLogin();
           }}
@@ -211,21 +215,16 @@ export default function Register({ isActive, onGoLogin }) {
             <button
               type="button"
               className="slide-tag-link"
-              onClick={e => { e.stopPropagation(); onGoLogin(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onGoLogin();
+              }}
             >
               Login here
             </button>
           </div>
         </div>
-
       </div>
-
-      <Toast visible={success} variant="success">
-        <span className="pixel-accent">Registration successful!</span>
-        <span className="handwriting-accent" style={{ marginLeft: ".5rem" }}>
-          Welcome aboard!
-        </span>
-      </Toast>
     </>
   );
 }

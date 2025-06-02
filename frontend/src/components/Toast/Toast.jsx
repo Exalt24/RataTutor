@@ -1,6 +1,7 @@
+// src/components/Toast/Toast.jsx
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import '../styles/components/toast.css';
+import '../../styles/components/toast.css';
 
 const VARIANT_STYLES = {
   success: 'toast-success',
@@ -8,7 +9,13 @@ const VARIANT_STYLES = {
   info:    'toast-info',
 };
 
-export default function Toast({ visible, variant = 'info', children, duration = 2500, onClose }) {
+export default function Toast({
+  visible,
+  variant = 'info',
+  message,         // { title: string, subtitle?: string }
+  duration = 2500, // not strictly necessary here, since ToastProvider handles timing
+  onClose,         // ToastProvider never passes this
+}) {
   const [internalVisible, setInternalVisible] = useState(visible);
   const mountNode = document.getElementById('portal-root');
   if (!mountNode) return null;
@@ -16,19 +23,26 @@ export default function Toast({ visible, variant = 'info', children, duration = 
   useEffect(() => {
     if (visible) {
       setInternalVisible(true);
-
       const timer = setTimeout(() => {
         setInternalVisible(false);
         onClose?.();
       }, duration);
-
       return () => clearTimeout(timer);
     }
   }, [visible, duration, onClose]);
 
   return createPortal(
     <div className={`toast ${VARIANT_STYLES[variant]} ${internalVisible ? 'visible' : ''}`}>
-      {children}
+      {message ? (
+        <>
+          <span className="pixel-accent">{message.title}</span>
+          {message.subtitle && (
+            <span className="handwriting-accent" style={{ marginLeft: '.5rem' }}>
+              {message.subtitle}
+            </span>
+          )}
+        </>
+      ) : null}
     </div>,
     mountNode
   );
