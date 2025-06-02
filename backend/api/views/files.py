@@ -1,6 +1,4 @@
-# backend/api/views/files.py
-
-from rest_framework import viewsets
+from .imports import viewsets
 from ..models import File
 from ..serializers import FileSerializer
 
