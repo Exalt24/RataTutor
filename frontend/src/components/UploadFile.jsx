@@ -114,6 +114,27 @@ const UploadFile = ({ isOpen, onClose }) => {
             </ul>
           </div>
         )}
+
+        {/* Action buttons */}
+        {files.length > 0 && (
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                // TODO: Implement upload functionality
+                onClose();
+              }}
+              className="exam-button-mini"
+            >
+              Upload
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
