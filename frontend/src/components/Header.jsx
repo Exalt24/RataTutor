@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import { Flame, LogOut, Plus, Search, User } from 'lucide-react'
+import { Flame, LogOut, Plus, User } from 'lucide-react'
 import React, { useState } from 'react'
 import StreakModal from './StreakModal'
 
@@ -20,17 +20,10 @@ const Header = ({ streak = 5, level, points, onLogout, onProfile, onStreak }) =>
 
   return (
     <>
-      <header className="relative flex items-center justify-between bg-white px-4 py-2 shadow text-xs sm:text-sm">
-        {/* Search */}
-        <div className="flex items-center flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search for anything"
-              className="label-text w-full pl-10 pr-4 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition"
-            />
-          </div>
+      <header className="relative flex items-center justify-between bg-white px-4 py-4 shadow text-xs sm:text-sm">
+        {/* Welcome Message */}
+        <div className="flex items-center">
+          <h1 className="label-text text-xl">Welcome, Nikka!</h1>
         </div>
 
         {/* Actions & Stats + Profile */}
