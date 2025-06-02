@@ -6,12 +6,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/',  include('api.urls')),
     path('auth/', include('accounts.urls')),
-    # … any other server‐side routes …
 ]
 
+# Only catch non-Django routes
 urlpatterns += [
     re_path(
-        r'^(?!api/|auth/|static/).*$',
+        r'^(?!admin|api|auth|static|media).*/$',  # Note the trailing slash
         TemplateView.as_view(template_name='index.html'),
         name='spa-fallback'
     ),
