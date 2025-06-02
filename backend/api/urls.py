@@ -1,32 +1,63 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CreateConversationView, ConversationChatView, RetrieveConversationView, FileViewSet, NoteViewSet, FlashcardViewSet
 
+from .views import MaterialViewSet, NoteViewSet, FlashcardViewSet, QuizViewSet, QuizQuestionViewSet, AttachmentUploadView, CreateConversationView, ConversationChatView, RetrieveConversationView, NoteGenerationView, FlashcardGenerationView, QuizGenerationView, CopyMaterialView
 app_name = "api"
-
 router = DefaultRouter()
-router.register(r"files", FileViewSet)
-router.register(r"notes", NoteViewSet)
-router.register(r"flashcards", FlashcardViewSet)
+router.register(r"materials", MaterialViewSet, basename="material")
+router.register(r"notes", NoteViewSet, basename="note")
+router.register(r"flashcards", FlashcardViewSet, basename="flashcard")
+router.register(r"quizzes", QuizViewSet, basename="quiz")
+router.register(r"quiz-questions", QuizQuestionViewSet, basename="quizquestion")
 
 urlpatterns = [
+    # 1) Upload a file into an existing Material
+    path(
+        "materials/<int:material_id>/upload/",
+        AttachmentUploadView.as_view(),
+        name="attachment-upload"
+    ),
+
+    # 2) AIConversation endpoints
     path(
         "conversations/create/",
         CreateConversationView.as_view(),
         name="conv-create"
     ),
-
     path(
         "conversations/<int:pk>/chat/",
         ConversationChatView.as_view(),
         name="conv-chat"
     ),
-
     path(
         "conversations/<int:pk>/",
         RetrieveConversationView.as_view(),
         name="conv-detail"
     ),
 
+    # 3) AI‐powered generation endpoints:
+    path(
+        "materials/<int:material_id>/generate-notes/",
+        NoteGenerationView.as_view(),
+        name="generate-notes"
+    ),
+    path(
+        "materials/<int:material_id>/generate-flashcards/",
+        FlashcardGenerationView.as_view(),
+        name="generate-flashcards"
+    ),
+    path(
+        "materials/<int:material_id>/generate-quiz/",
+        QuizGenerationView.as_view(),
+        name="generate-quiz"
+    ),
+
+    path(
+        "materials/<int:material_id>/copy/",
+        CopyMaterialView.as_view(),
+        name="material-copy"
+    ),
+
+    # 4) CRUD for Material, Note, Flashcard, Quiz, QuizQuestion
     path("", include(router.urls)),
 ]

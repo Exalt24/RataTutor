@@ -152,3 +152,6 @@ EMAIL_USE_SSL = False
 
 # API keys and secrets
 OPENROUTER_API_KEY = env('OPENROUTER_API_KEY')
+
+# Password reset settings
+PASSWORD_RESET_TIMEOUT = 60 * 60

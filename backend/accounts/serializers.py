@@ -1,14 +1,17 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_decode
 
 User = get_user_model()
 
 USERNAME_REGEX = r'^[\w.@+-]{3,}$'
-EMAIL_REGEX    = r'^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}(?:\.[A-Za-z]{2,})?$'
 PASSWORD_REGEX = r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -37,10 +40,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(
         validators=[
-            RegexValidator(
-                regex=EMAIL_REGEX,
-                message='Enter a valid email address.'
-            ),
             UniqueValidator(
                 queryset=User.objects.all(),
                 message="That email is already registered."
@@ -84,7 +83,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Email cannot be the same as confirm password.')
         if User.objects.filter(username=data.get('username')).exists():
             raise serializers.ValidationError('That username is already taken.')
-        if User.objects.filter(email=data.get('email')).exists():
+        if User.objects.filter(email__iexact=data.get('email')).exists():
             raise serializers.ValidationError('That email is already registered.')
         return data
 
@@ -119,3 +118,75 @@ class LoginSerializer(serializers.Serializer):
 class TokenSerializer(serializers.Serializer):
     refresh = serializers.CharField()
     access = serializers.CharField()
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        write_only=True,
+        help_text="The email address of the user requesting a password reset.",
+        error_messages={'required': 'Email is required.'}
+    )
+
+    def validate_email(self, value):
+        """
+        Ensure the email is associated with an existing user.
+        """
+        if not User.objects.filter(email__iexact=value).exists():
+            # If you prefer not to reveal that the email isn’t registered,
+            # you can skip this check and just return success anyway.
+            raise serializers.ValidationError("No account found with that email.")
+        return value
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(
+        write_only=True,
+        help_text="Base64‐encoded user ID from the reset link.",
+        error_messages={'required': 'UID is required.'}
+    )
+    token = serializers.CharField(
+        write_only=True,
+        help_text="Password reset token from the reset link.",
+        error_messages={'required': 'Token is required.'}
+    )
+    new_password = serializers.CharField(
+        write_only=True,
+        validators=[RegexValidator(
+            regex=PASSWORD_REGEX,
+            message='Password must be ≥8 chars, include a letter, number, and special char.'
+        )],
+        help_text="The new password.",
+        error_messages={'required': 'New password is required.'}
+    )
+    confirm_password = serializers.CharField(
+        write_only=True,
+        help_text="Re‐enter the new password for confirmation.",
+        error_messages={'required': 'Confirm password is required.'}
+    )
+
+    def validate(self, data):
+        """
+        - Check that `new_password` and `confirm_password` match.
+        - Decode `uid` and verify the `token`.
+        """
+        new_pw = data.get("new_password", "")
+        confirm_pw = data.get("confirm_password", "")
+        if new_pw != confirm_pw:
+            raise serializers.ValidationError("Passwords do not match.")
+
+        # Decode the UID to get the user
+        try:
+            uid_decoded = smart_str(urlsafe_base64_decode(data.get("uid")))
+            user = User.objects.get(pk=uid_decoded)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist, DjangoUnicodeDecodeError):
+            raise serializers.ValidationError("Invalid UID.")
+
+        # Check token validity (including TTL from settings.PASSWORD_RESET_TIMEOUT)
+        token = data.get("token", "")
+        token_generator = PasswordResetTokenGenerator()
+        if not token_generator.check_token(user, token):
+            raise serializers.ValidationError("Invalid or expired token.")
+
+        # Attach user to validated_data so the view can set the password
+        data["user"] = user
+        return data
