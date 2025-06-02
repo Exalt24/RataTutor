@@ -1,7 +1,7 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import AuthSwitcher from './components/AuthSwitcher'
+import Dashboard from './pages/Dashboard'
+import Home from './pages/Home'
 import { isLoggedIn } from './services/auth'
 
 function PrivateRoute({ children }) {
