@@ -2,7 +2,7 @@
 import React from 'react'
 import avatar from '../assets/r1.png'
 
-const ProfileScreen = ({ points, badges }) => (
+const ProfileScreen = ({ points, badges, onEditProfile }) => (
   <div className="space-y-4 text-xs sm:text-sm">
     {/* User Info Header */}
     <div className="exam-card exam-card--alt p-4 flex flex-col items-center space-y-2">
@@ -15,7 +15,12 @@ const ProfileScreen = ({ points, badges }) => (
         </div>
       <span className="exam-heading-mini label-text">Nikka Joie Mendoza</span>
       <span className="text-gray-500 label-text">@bananachips</span>
-      <button className="exam-button-mini py-1 px-3 text-xs sm:text-sm">Edit profile</button>
+      <button 
+        onClick={onEditProfile}
+        className="exam-button-mini py-1 px-3 text-xs sm:text-sm"
+      >
+        Edit profile
+      </button>
     </div>
 
     {/* Stats Cards */}
