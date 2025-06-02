@@ -1,7 +1,7 @@
 from django.core.validators import MinLengthValidator
 from rest_framework import serializers
 
-from models import File, Note, Flashcard, AIConversation
+from api.models import File, Note, Flashcard, AIConversation
 
 class NoteSerializer(serializers.ModelSerializer):
     file = serializers.PrimaryKeyRelatedField(
