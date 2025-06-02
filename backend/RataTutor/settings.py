@@ -15,6 +15,7 @@ DEBUG = env('DEBUG')
 
 if DEBUG:
     FRONTEND_URL = 'http://localhost:3000'
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -23,6 +24,7 @@ if DEBUG:
     STATIC_URL = '/dev-static/'
 else:
     FRONTEND_URL = 'https://ratatutor.onrender.com'
+    ALLOWED_HOSTS = ["ratatutor.onrender.com"]
     CORS_ALLOWED_ORIGINS = [
         "https://ratatutor.onrender.com",
     ]
