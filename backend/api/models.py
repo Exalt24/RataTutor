@@ -1,5 +1,3 @@
-# backend/accounts/models.py   (or wherever your “File” lives)
-
 from django.db import models
 from django.utils import timezone
 
@@ -23,7 +21,7 @@ class File(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        if not self.pk:  # Only when creating a brand-new File
+        if not self.pk:
             base_title = self.title
             counter = 1
             while File.objects.filter(title=self.title).exists():
