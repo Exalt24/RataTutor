@@ -1,6 +1,4 @@
-# backend/api/views/flashcards.py
-
-from rest_framework import viewsets
+from .imports import viewsets
 from ..models import Flashcard
 from ..serializers import FlashcardSerializer
 
