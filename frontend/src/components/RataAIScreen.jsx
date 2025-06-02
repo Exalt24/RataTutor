@@ -186,7 +186,7 @@ const RataAIScreen = () => {
         <div className="w-80 bg-white/50 border-l border-gray-200 flex flex-col h-full">
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Your Files</h2>
+              <h2 className="label-text text-lg font-semibold">Materials</h2>
               <div className="flex items-center">
                 {!isSearchExpanded ? (
                   <button
@@ -203,7 +203,7 @@ const RataAIScreen = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search files..."
-                        className="w-48 px-3 py-1 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-blue-400 transition-all duration-300 ease-in-out"
+                        className="label-text w-48 px-3 py-1 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-blue-400 transition-all duration-300 ease-in-out"
                         autoFocus
                       />
                       <button

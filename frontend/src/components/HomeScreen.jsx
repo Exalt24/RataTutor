@@ -10,7 +10,6 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
 
   return (
     <div className="space-y-4">
-      <h1 className="exam-greeting text-end sm:text-xl px-6">Welcome, Nikka!</h1>
       <section>
         <h2 className="exam-subheading sm:text-sm ">Create</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">

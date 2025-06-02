@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import EditProfileScreen from '../components/EditProfileScreen'
 import ExamsScreen from '../components/ExamsScreen'
 import ExploreScreen from '../components/ExploreScreen'
-import FilesScreen from '../components/FileScreen'
 import Header from '../components/Header'
 import HomeScreen from '../components/HomeScreen'
+import Materials from '../components/Materials'
 import ProfileScreen from '../components/ProfileScreen'
 import RataAIScreen from '../components/RataAIScreen'
 import SavedScreenEmptyState from '../components/SavedScreenEmptyState'
@@ -53,18 +53,17 @@ const Dashboard = () => {
     // …your generate logic (api.post) can stay commented if needed
   }
 
-  const gradientClass = () => {
+  const getBgColor = () => {
     switch(screen) {
       case 'home':    return 'bg-color-1'
-      case 'files':   return 'bg-color-2'
-      case 'saved':   return 'bg-color-3'
+      case 'materials':   return 'bg-color-2'
       case 'trash':   return 'bg-color-4'
+      case 'explore': return 'bg-color-1'
+      case 'rata':    return 'bg-color-3'
       case 'profile': return 'bg-color-2'
       case 'edit-profile': return 'bg-color-2'
       case 'streak':  return 'bg-color-3'
-      case 'exams':   return 'bg-color-4'
-      case 'explore': return 'bg-color-1'
-      case 'rata':    return 'bg-color-2'
+      case 'saved':   return 'bg-color-3'
       default:        return 'bg-color-1'
     }
   }
@@ -87,9 +86,9 @@ const Dashboard = () => {
           onProfile={showProfile}
           onStreak={showStreak}
         />
-        <main className={`flex-1 overflow-auto p-2 sm:p-4 ${gradientClass()}`}>
+        <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
           {screen==='home'   && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={generated}/>}
-          {screen==='files'  && <FilesScreen files={files}/>}
+          {screen==='materials'  && <Materials files={files}/>}
           {screen==='saved'  && <SavedScreenEmptyState/>}
           {screen==='trash'  && <TrashScreenEmptyState/>}
           {screen==='exams'  && <ExamsScreen/>}
