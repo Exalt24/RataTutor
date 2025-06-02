@@ -257,8 +257,8 @@
   left: 0;
   width: 100%;
   padding: 0.5rem;
-  font-family: var(--font-handwriting);
-  font-size: 1.4rem;
+  font-family: var(--font-handwriting-secondary);
+  font-size: 1rem;
   transform: rotate(-3deg);
   transition: all 0.3s ease;
   opacity: 0;

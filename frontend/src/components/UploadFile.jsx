@@ -66,7 +66,7 @@ const UploadFile = ({ isOpen, onClose }) => {
           <div className="bg-blue-100 rounded-full p-5 mb-4">
             <CloudUpload size={50} className="text-blue-600" />
           </div>
-          <h3 className="text-2xl font-semibold text-gray-800">
+          <h3 className="label-text text-2xl font-semibold text-gray-800">
             Drag & drop files here
           </h3>
           <p className="text-base text-gray-600 mt-2">
@@ -78,6 +78,7 @@ const UploadFile = ({ isOpen, onClose }) => {
         <button
           onClick={openFilePicker}
           className="exam-button w-4/5 flex justify-center mx-auto"
+          data-hover="Select files"
         >
           Select files
         </button>
@@ -130,6 +131,7 @@ const UploadFile = ({ isOpen, onClose }) => {
                 onClose();
               }}
               className="exam-button-mini"
+              data-hover="Upload"
             >
               Upload
             </button>

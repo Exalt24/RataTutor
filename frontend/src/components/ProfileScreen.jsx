@@ -18,6 +18,7 @@ const ProfileScreen = ({ points, badges, onEditProfile }) => (
       <button 
         onClick={onEditProfile}
         className="exam-button-mini py-1 px-3 text-xs sm:text-sm"
+        data-hover="Edit profile"
       >
         Edit profile
       </button>
@@ -43,7 +44,7 @@ const ProfileScreen = ({ points, badges, onEditProfile }) => (
     <div className="exam-card exam-card--alt p-4">
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-semibold">Badges</h3>
-        <button className="exam-button-mini py-1 px-3 text-xs sm:text-sm">View more</button>
+        <button data-hover="View more" className="exam-button-mini py-1 px-3 text-xs sm:text-sm">View more</button>
       </div>
       <div className="space-y-4">
         {badges.length > 0 ? badges.map((badge, i) => (
