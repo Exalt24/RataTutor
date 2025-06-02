@@ -72,7 +72,8 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 # EMAIL_HOST_PASSWORD=<your-google-api-app-password>  (Note: use app password for Google APIs, not your actual email password)
 # OPENROUTER_API_KEY=<your-api-key>
 
-cd ..
+# Apply database migrations
+python manage.py makemigrations && python manage.py migrate && cd ..
 ```
 
 ### 4. Set up the frontend
