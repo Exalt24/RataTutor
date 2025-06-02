@@ -1,5 +1,4 @@
 import {
-  AcademicCapIcon,
   BookmarkIcon,
   ClipboardDocumentListIcon,
   FolderIcon,
@@ -52,16 +51,6 @@ const Sidebar = ({ screen, setScreen }) => {
               {item.name}
             </button>
           ))}
-
-          {/* Classes section */}
-          <p className="sidebar-category">Classes</p>
-          <button
-            onClick={() => setScreen('class')}
-            className={`sidebar-menu-button ${screen === 'class' ? 'active' : ''}`}
-          >
-            <AcademicCapIcon />
-            Classes
-          </button>
 
           {/* Browse section */}
           <p className="sidebar-category">Browse</p>
