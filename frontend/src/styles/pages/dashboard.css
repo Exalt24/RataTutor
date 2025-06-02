@@ -131,18 +131,18 @@
   top: 100%; left: 0;
   width: 100%;
   padding: 0.4rem;                 
-  font-family: var(--font-handwriting);
-  font-size: 1.2rem;               
+  font-family: var(--font-handwriting-secondary);
+  font-size: 0.8rem;               
   transform: rotate(-3deg);
   transition: all 0.3s ease;
   opacity: 0;
-  background: var(--button-hover);
+  background: var(--button-primary);
   color: var(--white);
   z-index: 2;
 }
 
 .exam-button-mini:hover {
-  background: var(--button-hover);
+  background: var(--button-primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }

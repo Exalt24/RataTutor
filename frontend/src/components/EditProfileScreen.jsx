@@ -16,7 +16,7 @@ const EditProfileScreen = ({ onBack }) => (
           </button>
           <h2 className="text-xl">Edit Profile</h2>
         </div>
-        <button className="exam-button-mini py-1.5 px-4 text-xs sm:text-sm">
+        <button data-hover="Save Changes" className="exam-button-mini py-1.5 px-4 text-xs sm:text-sm">
           Save Changes
         </button>
       </div>

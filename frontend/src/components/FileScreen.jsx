@@ -6,12 +6,12 @@ const FilesScreen = ({ files }) => (
     <div className="flex justify-between items-center mb-2 text-xs sm:text-sm">
       <h1 className="exam-heading exam-heading-mini text-base">Your Files</h1>
       <div className="flex flex-wrap gap-2">
-        <button className="exam-button-mini py-1 px-2"><span className="flex items-center">Type<ChevronDown size={12} /></span></button>
-        <button className="exam-button-mini py-1 px-2"><span className="flex items-center">Updated<ChevronDown size={12} /></span></button>
-        <button className="exam-button-mini p-1"><Bookmark size={16} /></button>
-        <button className="exam-button-mini p-1"><Eye size={16} /></button>
-        <button className="exam-button-mini p-1"><Pin size={16} /></button>
-        <button className="exam-button-mini p-1"><MoreHorizontal size={16} /></button>
+        <button data-hover="Type" className="exam-button-mini py-1 px-2"><span className="flex items-center">Type<ChevronDown size={12} /></span></button>
+        <button data-hover="Updated" className="exam-button-mini py-1 px-2"><span className="flex items-center">Updated<ChevronDown size={12} /></span></button>
+        <button data-hover="Mark" className="exam-button-mini p-1"><Bookmark size={16} /></button>
+        <button data-hover="View" className="exam-button-mini p-1"><Eye size={16} /></button>
+        <button data-hover="Pin" className="exam-button-mini p-1"><Pin size={16} /></button>
+        <button data-hover="More" className="exam-button-mini p-1"><MoreHorizontal size={16} /></button>
       </div>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
