@@ -6,16 +6,10 @@ import os
 import mimetypes
 
 def custom_static_serve(request, path):
-    """Completely custom static handler - no Django serve()"""
-    print(f"🔥 CUSTOM STATIC REQUEST: {path}")
     
-    # Build file path
     file_path = os.path.join(settings.STATIC_ROOT, path)
-    print(f"🔥 CHECKING FILE: {file_path}")
     
-    # Check if file exists
     if os.path.exists(file_path) and os.path.isfile(file_path):
-        print(f"✅ FILE EXISTS, serving: {path}")
         try:
             with open(file_path, 'rb') as f:
                 content = f.read()
@@ -23,10 +17,8 @@ def custom_static_serve(request, path):
             response = HttpResponse(content, content_type=content_type or 'application/octet-stream')
             return response
         except:
-            print(f"❌ ERROR READING FILE, redirecting: {path}")
             return HttpResponseRedirect(settings.FRONTEND_URL)
     else:
-        print(f"❌ FILE DOES NOT EXIST, redirecting: {path}")
         return HttpResponseRedirect(settings.FRONTEND_URL)
 
 from .utils.redirects import smart_redirect, redirect_to_frontend
