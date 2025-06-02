@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ClassesScreen from '../components/ClassesScreen'
+import EditProfileScreen from '../components/EditProfileScreen'
+import ExamsScreen from '../components/ExamsScreen'
+import ExploreScreen from '../components/ExploreScreen'
 import FilesScreen from '../components/FileScreen'
 import Header from '../components/Header'
 import HomeScreen from '../components/HomeScreen'
 import ProfileScreen from '../components/ProfileScreen'
+import RataAIScreen from '../components/RataAIScreen'
 import SavedScreenEmptyState from '../components/SavedScreenEmptyState'
 import Sidebar from '../components/Sidebar'
 import StreakScreen from '../components/StreakScreen'
@@ -56,7 +61,12 @@ const Dashboard = () => {
       case 'saved':   return 'bg-color-3'
       case 'trash':   return 'bg-color-4'
       case 'profile': return 'bg-color-2'
+      case 'edit-profile': return 'bg-color-2'
       case 'streak':  return 'bg-color-3'
+      case 'class':   return 'bg-color-3'
+      case 'exams':   return 'bg-color-4'
+      case 'explore': return 'bg-color-1'
+      case 'rata':    return 'bg-color-2'
       default:        return 'bg-color-1'
     }
   }
@@ -84,7 +94,12 @@ const Dashboard = () => {
           {screen==='files'  && <FilesScreen files={files}/>}
           {screen==='saved'  && <SavedScreenEmptyState/>}
           {screen==='trash'  && <TrashScreenEmptyState/>}
-          {screen==='profile'&& <ProfileScreen points={points} badges={badges}/>}
+          {screen==='class'  && <ClassesScreen/>}
+          {screen==='exams'  && <ExamsScreen/>}
+          {screen==='explore'&& <ExploreScreen/>}
+          {screen==='rata'   && <RataAIScreen/>}
+          {screen==='profile'&& <ProfileScreen points={points} badges={badges} onEditProfile={() => setScreen('edit-profile')}/>}
+          {screen==='edit-profile' && <EditProfileScreen onBack={() => setScreen('profile')}/>}
           {screen==='streak' && <StreakScreen points={points} badges={badges}/>}
         </main>
       </div>
