@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ClassesScreen from '../components/ClassesScreen'
 import EditProfileScreen from '../components/EditProfileScreen'
 import ExamsScreen from '../components/ExamsScreen'
 import ExploreScreen from '../components/ExploreScreen'
@@ -63,7 +62,6 @@ const Dashboard = () => {
       case 'profile': return 'bg-color-2'
       case 'edit-profile': return 'bg-color-2'
       case 'streak':  return 'bg-color-3'
-      case 'class':   return 'bg-color-3'
       case 'exams':   return 'bg-color-4'
       case 'explore': return 'bg-color-1'
       case 'rata':    return 'bg-color-2'
@@ -94,7 +92,6 @@ const Dashboard = () => {
           {screen==='files'  && <FilesScreen files={files}/>}
           {screen==='saved'  && <SavedScreenEmptyState/>}
           {screen==='trash'  && <TrashScreenEmptyState/>}
-          {screen==='class'  && <ClassesScreen/>}
           {screen==='exams'  && <ExamsScreen/>}
           {screen==='explore'&& <ExploreScreen/>}
           {screen==='rata'   && <RataAIScreen/>}
