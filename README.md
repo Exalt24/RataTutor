@@ -208,7 +208,7 @@ RataTutor/
 
 ## 🚀 Features
 
-- **Note Upload & Processing**: Upload study materials in various formats (PDF, DOCX, TXT)
+- **Note Upload & Processing**: Upload study materials in various formats (PDF, DOCX, TXT, PPTX)
 - **AI-Powered Content Generation**:
   - Generate flashcards with question/answer pairs
   - Create concise summaries of key concepts
