@@ -1,10 +1,15 @@
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.conf import settings
 from django.views.decorators.cache import never_cache
 
 @never_cache
 def redirect_to_frontend(request):
-    return HttpResponseRedirect(settings.FRONTEND_URL)
+    """Catch-all for unknown routes"""
+    if settings.DEBUG:
+        return HttpResponseRedirect(settings.FRONTEND_URL)
+    else:
+        return render(request, 'index.html')
 
 @never_cache  
 def smart_redirect(request):
@@ -12,4 +17,7 @@ def smart_redirect(request):
         (request.user.is_staff or request.user.is_superuser)):
         return HttpResponseRedirect('/admin/')
     
-    return HttpResponseRedirect(settings.FRONTEND_URL)
+    if settings.DEBUG:
+        return HttpResponseRedirect(settings.FRONTEND_URL)
+    else:
+        return render(request, 'index.html')
