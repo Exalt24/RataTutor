@@ -1,12 +1,150 @@
-import { Compass } from 'lucide-react'
-import React from 'react'
+import { BookMarked, Compass, FileText, Search, StickyNote, X } from 'lucide-react'
+import React, { useState } from 'react'
+import ExploreCard from './ExploreCard'
 
-const ExploreScreen = () => (
-  <div className="text-center space-y-2 p-4 text-xs sm:text-sm">
-    <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center"><Compass size={52} /></div>
-    <h1 className="exam-heading exam-heading-mini text-lg">Start Exploring</h1>
-    <p>Discover new learning materials and resources here.</p>
-  </div>
-)
+const ExploreScreen = () => {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState('all')
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+
+  const categories = [
+    { id: 'all', name: 'All' },
+    { id: 'notes', name: 'Notes' },
+    { id: 'flashcards', name: 'Flashcards' },
+    { id: 'quizzes', name: 'Quizzes' }
+  ]
+
+  const featuredContent = [
+    {
+      id: 1,
+      title: 'Introduction to Calculus',
+      type: 'notes',
+      author: 'John Doe',
+      description: 'A comprehensive guide covering limits, derivatives, and integrals with practical examples.',
+      timeAgo: '2 days ago',
+      typeIcon: <StickyNote size={20} className="text-blue-500" />
+    },
+    {
+      id: 2,
+      title: 'World History Timeline',
+      type: 'flashcards',
+      author: 'Jane Smith',
+      description: 'Key events from ancient civilizations to modern times, perfect for quick review.',
+      timeAgo: '1 week ago',
+      typeIcon: <BookMarked size={20} className="text-green-500" />
+    },
+    {
+      id: 3,
+      title: 'Chemistry Fundamentals',
+      type: 'quizzes',
+      author: 'Mike Johnson',
+      description: 'Test your knowledge of atomic structure, chemical bonding, and reactions.',
+      timeAgo: '3 days ago',
+      typeIcon: <FileText size={20} className="text-purple-500" />
+    }
+  ]
+
+  const filteredContent = featuredContent.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesFilter = selectedFilter === 'all' || item.type === selectedFilter
+    return matchesSearch && matchesFilter
+  })
+
+  const handleCopy = (itemId) => {
+    // Handle the copy action
+    console.log(`Copying item ${itemId}`)
+  }
+
+  const clearSearch = () => {
+    setSearchQuery('')
+  }
+
+  return (
+    <div className="space-y-6 p-4">
+      {/* Search and Filter Section */}
+      <div className="flex flex-col justify-between sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative w-full max-w-md mx-auto sm:mx-0">
+          <div className={`
+            relative flex items-center
+            transition-all duration-200
+            ${isSearchFocused ? 'ring-2 ring-blue-400' : ''}
+            rounded-full border border-gray-200
+            bg-white
+          `}>
+            <Search 
+              className={`
+                absolute left-4
+                transition-colors duration-200
+                ${isSearchFocused ? 'text-blue-500' : 'text-gray-400'}
+              `} 
+              size={20} 
+            />
+            <input
+              type="text"
+              placeholder="Search notes, flashcards, and quizzes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              className="w-full pl-12 pr-12 py-3 rounded-full focus:outline-none text-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={16} className="text-gray-400" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="mt-1 text-xs text-gray-500 text-center sm:text-left">
+              Found {filteredContent.length} results
+            </p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          {categories.map(category => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedFilter(category.id)}
+              data-hover={category.name}
+              className={`exam-button-mini ${
+                selectedFilter === category.id
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Featured Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredContent.map(item => (
+          <ExploreCard
+            key={item.id}
+            file={item}
+            onCopy={handleCopy}
+          />
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filteredContent.length === 0 && (
+        <div className="text-center space-y-2 p-8">
+          <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center bg-gray-100">
+            <Compass size={40} className="text-gray-400" />
+          </div>
+          <h2 className="text-xl font-semibold">No results found</h2>
+          <p className="text-gray-600">Try adjusting your search or filters</p>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default ExploreScreen 
