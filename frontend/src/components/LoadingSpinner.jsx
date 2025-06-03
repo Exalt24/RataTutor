@@ -1,5 +1,5 @@
 import React from 'react';
-import './LoadingSpinner.css';
+import '../styles/components/loading-spinner.css'; // Adjust path to your actual CSS file
 import hamsterGif from '../assets/hamster.gif'; // Adjust path to your actual file location
 
 const LoadingSpinner = () => {
