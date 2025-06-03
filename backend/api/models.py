@@ -2,7 +2,7 @@ import os
 import uuid
 from django.db import models
 from django.utils import timezone
-from django.conf import settings
+from django.contrib.auth.models import User
 
 def attachment_upload_to(instance, filename):
     ext = filename.split('.')[-1]
@@ -11,7 +11,7 @@ def attachment_upload_to(instance, filename):
 
 class Material(models.Model):
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name="materials",
         help_text="The user who owns this material."
