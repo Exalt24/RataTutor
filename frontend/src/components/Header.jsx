@@ -52,11 +52,6 @@ const Header = ({
 
         {/* Actions & Stats + Profile */}
         <div className="flex items-center space-x-3">
-          {/* Create */}
-          <button className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-400 hover:bg-teal-500 transition">
-            <Plus size={18} className="text-white" />
-          </button>
-
           {/* Streak */}
           <button
             onClick={() => setShowStreakModal(true)}

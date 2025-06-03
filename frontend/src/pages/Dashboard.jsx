@@ -67,12 +67,6 @@ const Dashboard = () => {
     }
   }
 
-  const files = [
-    { title:'Scripts sa IOT', updated:'270d ago', tag:'Flashcards (33)' },
-    { title:'Untitled',        updated:'270d ago', tag:'Note' },
-    { title:'(Draft) 5 Testing', updated:'367d ago', tag:'Flashcards (14)' }
-  ]
-
   return (
     <div className="flex h-screen text-xs sm:text-sm">
       <Sidebar screen={screen} setScreen={setScreen}/>
@@ -87,7 +81,7 @@ const Dashboard = () => {
         />
         <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
           {screen==='home'   && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={generated}/>}
-          {screen==='materials'  && <MaterialsScreen files={files}/>}
+          {screen==='materials'  && <MaterialsScreen />}
           {screen==='trash'  && <TrashScreenEmptyState/>}
           {screen==='exams'  && <ExamsScreen/>}
           {screen==='explore'&& <ExploreScreen/>}
