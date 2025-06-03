@@ -2,12 +2,11 @@ import { BookOpen, ChevronDown, ChevronRight, FileText, MoreHorizontal, Search, 
 import React, { useEffect, useRef, useState } from 'react'
 
 const RataAIScreen = () => {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hello! I\'m Rata AI, your learning companion. How can I help you today?' }
-  ])
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [expandedFolders, setExpandedFolders] = useState({})
   const [selectedFile, setSelectedFile] = useState(null)
+  const [selectedMaterial, setSelectedMaterial] = useState(null)
   const [isPanelVisible, setIsPanelVisible] = useState(true)
   const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -98,48 +97,81 @@ const RataAIScreen = () => {
     fileInputRef.current.click()
   }
 
+  const handleMaterialSelect = (material) => {
+    setSelectedFile(null)
+    setSelectedMaterial(material)
+    setMessages([{
+      role: 'assistant',
+      content: `Hello! I'm here to help you with "${material.name}". Feel free to ask me any questions about this material.`
+    }])
+  }
+
+  const handleFileSelect = (file, material) => {
+    setSelectedFile(file)
+    setSelectedMaterial(material)
+    setMessages([{
+      role: 'assistant',
+      content: `Hello! I'm here to help you with "${file.title}" from "${material.name}". Feel free to ask me any questions about this content.`
+    }])
+  }
+
   return (
     <div className="flex h-full">
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Toggle Button */}
-        <div className="flex justify-end p-2">
+      <div className={`flex-1 flex flex-col shadow-lg overflow-hidden ${
+        isPanelVisible ? 'rounded-l-xl' : 'rounded-xl'
+      }`}>
+        {/* Header */}
+        <div className="h-16 px-4 border-b border-gray-200 bg-white flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-800 label-text">
+            {selectedMaterial ? `Chatting about: ${selectedMaterial.name}` : 'Select a material to start chatting'}
+          </h2>
           <button
             onClick={() => setIsPanelVisible(!isPanelVisible)}
-            className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-colors"
+            className="bg-gray-50 rounded-full p-2 shadow-sm hover:bg-gray-100 transition-colors"
           >
             <MoreHorizontal size={20} className="text-gray-600" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 break-words ${
-                  message.role === 'user'
-                    ? 'text-white'
-                    : 'text-gray-800'
-                }`}
-                style={{ 
-                  backgroundColor: message.role === 'user' ? 'var(--pastel-blue)' : 'white',
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word'
-                }}
-              >
-                {message.content}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+          {messages.length === 0 && !selectedMaterial ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-gray-500 max-w-md">
+                <BookOpen size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-lg font-medium text-gray-700">No material selected</p>
+                <p className="text-sm text-gray-500 mt-2">Select a material from the panel to start chatting with Rata AI</p>
               </div>
             </div>
-          ))}
+          ) : (
+            messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-xl p-4 break-words shadow-sm label-text ${
+                    message.role === 'user'
+                      ? 'text-white'
+                      : 'text-gray-800 bg-white'
+                  }`}
+                  style={{ 
+                    backgroundColor: message.role === 'user' ? 'var(--pastel-blue)' : 'white',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word'
+                  }}
+                >
+                  {message.content}
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 p-4 bg-white/50">
-          <div className="flex items-center gap-2">
+        <div className="border-t border-gray-200 p-4 bg-white">
+          <div className="flex items-center gap-3 max-w-4xl mx-auto">
             <button
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               title="Upload file"
@@ -154,26 +186,27 @@ const RataAIScreen = () => {
               style={{ display: 'none' }}
               onChange={handleFileUpload}
             />
-            <div className="flex-1 relative">
+            <div className="flex-1 relative label-text">
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                className="w-full p-2 pr-12 rounded-lg border border-gray-200 focus:outline-none focus:border-blue-400 resize-none min-h-[40px] max-h-[120px]"
+                placeholder={selectedMaterial ? "Type your message..." : "Select a material to start chatting"}
+                className="w-full p-3 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none min-h-[40px] max-h-[120px] bg-gray-50 overflow-hidden"
                 rows={1}
+                disabled={!selectedMaterial}
                 style={{ 
-                  overflowY: 'auto',
                   transition: 'height 0.1s ease-out'
                 }}
               />
             </div>
             <button
               onClick={handleSend}
-              className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors"
+              className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm"
               title="Send message"
               style={{ backgroundColor: 'var(--pastel-blue)' }}
+              disabled={!selectedMaterial}
             >
               <Send size={20} />
             </button>
@@ -183,15 +216,15 @@ const RataAIScreen = () => {
 
       {/* Files Panel */}
       {isPanelVisible && (
-        <div className="w-80 bg-white/50 border-l border-gray-200 flex flex-col h-full">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="label-text text-lg font-semibold">Materials</h2>
-              <div className="flex items-center">
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-lg rounded-r-xl overflow-hidden">
+          <div className="h-16 px-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center h-full relative">
+              <h2 className="label-text text-lg font-semibold text-gray-800">Materials</h2>
+              <div className="absolute right-0">
                 {!isSearchExpanded ? (
                   <button
                     onClick={() => setIsSearchExpanded(true)}
-                    className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                    className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors shadow-sm"
                   >
                     <Search size={16} className="text-gray-600" />
                   </button>
@@ -203,7 +236,7 @@ const RataAIScreen = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search files..."
-                        className="label-text w-48 px-3 py-1 text-sm rounded-lg border border-gray-200 focus:outline-none focus:border-blue-400 transition-all duration-300 ease-in-out"
+                        className="label-text w-48 px-3 py-1.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all duration-300 ease-in-out bg-gray-50"
                         autoFocus
                       />
                       <button
@@ -221,76 +254,89 @@ const RataAIScreen = () => {
               </div>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-4 transition-all duration-300 ease-in-out">
-              {filteredFiles.map((file, fileIndex) => (
-                <div 
-                  key={fileIndex} 
-                  className="exam-card exam-card--alt p-3 transition-all duration-300 ease-in-out"
-                >
-                  <h3 className="font-medium mb-2">{file.name}</h3>
-                  
-                  {/* Flashcards Folder */}
-                  <div className="mb-2">
-                    <button
-                      onClick={() => toggleFolder(fileIndex, 'flashcards')}
-                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-                    >
-                      {expandedFolders[`${fileIndex}-flashcards`] ? (
-                        <ChevronDown size={16} />
-                      ) : (
-                        <ChevronRight size={16} />
-                      )}
-                      <BookOpen size={16} />
-                      <span>Flashcards</span>
-                    </button>
-                    {expandedFolders[`${fileIndex}-flashcards`] && (
-                      <div className="ml-6 mt-2 space-y-2">
-                        {file.flashcards.map((card, cardIndex) => (
-                          <div
-                            key={cardIndex}
-                            className="text-xs p-2 hover:bg-gray-100 rounded cursor-pointer"
-                            onClick={() => setSelectedFile(card)}
-                          >
-                            <div className="font-medium">{card.title}</div>
-                            <div className="text-gray-500 text-[10px]">Created {card.created}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Notes Folder */}
-                  <div>
-                    <button
-                      onClick={() => toggleFolder(fileIndex, 'notes')}
-                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-                    >
-                      {expandedFolders[`${fileIndex}-notes`] ? (
-                        <ChevronDown size={16} />
-                      ) : (
-                        <ChevronRight size={16} />
-                      )}
-                      <FileText size={16} />
-                      <span>Notes</span>
-                    </button>
-                    {expandedFolders[`${fileIndex}-notes`] && (
-                      <div className="ml-6 mt-2 space-y-2">
-                        {file.notes.map((note, noteIndex) => (
-                          <div
-                            key={noteIndex}
-                            className="text-xs p-2 hover:bg-gray-100 rounded cursor-pointer"
-                            onClick={() => setSelectedFile(note)}
-                          >
-                            <div className="font-medium">{note.title}</div>
-                            <div className="text-gray-500 text-[10px]">Created {note.created}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <div className="space-y-4">
+              {filteredFiles.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-gray-500 max-w-md">
+                    <FileText size={48} className="mx-auto mb-4 text-gray-400" />
+                    <p className="text-lg font-medium text-gray-700">No materials yet</p>
+                    <p className="text-sm text-gray-500 mt-2">Go to Materials to add your study materials</p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                filteredFiles.map((file, fileIndex) => (
+                  <div 
+                    key={fileIndex} 
+                    className={`exam-card exam-card--alt p-4 transition-all duration-300 ease-in-out cursor-pointer hover:bg-white rounded-xl border border-gray-200 ${
+                      selectedMaterial?.name === file.name ? 'bg-white shadow-sm' : 'bg-white/50'
+                    }`}
+                    onClick={() => handleMaterialSelect(file)}
+                  >
+                    <h3 className="font-medium mb-3 text-gray-800">{file.name}</h3>
+                    
+                    {/* Flashcards Folder */}
+                    <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => toggleFolder(fileIndex, 'flashcards')}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        {expandedFolders[`${fileIndex}-flashcards`] ? (
+                          <ChevronDown size={16} />
+                        ) : (
+                          <ChevronRight size={16} />
+                        )}
+                        <BookOpen size={16} />
+                        <span>Flashcards</span>
+                      </button>
+                      {expandedFolders[`${fileIndex}-flashcards`] && (
+                        <div className="ml-6 mt-2 space-y-2">
+                          {file.flashcards.map((card, cardIndex) => (
+                            <div
+                              key={cardIndex}
+                              className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                              onClick={() => handleFileSelect(card, file)}
+                            >
+                              <div className="font-medium text-gray-800">{card.title}</div>
+                              <div className="text-gray-500 text-[10px]">Created {card.created}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Notes Folder */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => toggleFolder(fileIndex, 'notes')}
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        {expandedFolders[`${fileIndex}-notes`] ? (
+                          <ChevronDown size={16} />
+                        ) : (
+                          <ChevronRight size={16} />
+                        )}
+                        <FileText size={16} />
+                        <span>Notes</span>
+                      </button>
+                      {expandedFolders[`${fileIndex}-notes`] && (
+                        <div className="ml-6 mt-2 space-y-2">
+                          {file.notes.map((note, noteIndex) => (
+                            <div
+                              key={noteIndex}
+                              className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                              onClick={() => handleFileSelect(note, file)}
+                            >
+                              <div className="font-medium text-gray-800">{note.title}</div>
+                              <div className="text-gray-500 text-[10px]">Created {note.created}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
