@@ -1,5 +1,3 @@
-// src/pages/Register.jsx
-
 import React, { useEffect, useState, useRef } from "react";
 import { register } from "../services/auth";
 import { useToast } from "../components/Toast/ToastContext";

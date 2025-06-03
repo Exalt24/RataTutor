@@ -1,48 +1,38 @@
+// src/pages/ForgotPassword.jsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/auth";
-import { useToast } from "../components/Toast/ToastContext";
-import { User, Lock, ArrowRight } from "lucide-react";
+import { requestPasswordReset } from "../services/auth";
+import { Mail } from "lucide-react";
 import Form from "../components/Form";
-import "../styles/pages/login.css";
+import { useToast } from "../components/Toast/ToastContext";
+import "../styles/pages/forgot-password.css";
 
-const loginFields = [
+const forgotPasswordFields = [
   {
-    name: "username",
-    label: "Username",
-    icon: User,
-    placeholder: "Enter your username",
-  },
-  {
-    name: "password",
-    type: "password",
-    label: "Password",
-    icon: Lock,
-    placeholder: "Enter your password",
+    name: "email",
+    label: "Email",
+    icon: Mail,
+    placeholder: "Enter your email",
   },
 ];
 
-export default function Login({ isActive, onGoRegister }) {
-  const [formData, setFormData] = useState({ username: "", password: "" });
-  const [bannerErrors, setBannerErrors] = useState([]);
-  const [validities, setValidities] = useState({
-    username: false,
-    password: false,
-  });
+export default function ForgotPassword() {
+  const [formData, setFormData] = useState({ email: "" });
+  const [validities, setValidities] = useState({ email: false });
   const [isOpen, setIsOpen] = useState(false);
   const [isPulledOut, setIsPulledOut] = useState(false);
+
   const nav = useNavigate();
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (isActive) {
-      setFormData({ username: "", password: "" });
-      setBannerErrors([]);
-      setValidities({ username: false, password: false });
-      setIsOpen(false);
-      setIsPulledOut(false);
-    }
-  }, [isActive]);
+    // reset state when this component mounts
+    setFormData({ email: "" });
+    setValidities({ email: false });
+    setIsOpen(false);
+    setIsPulledOut(false);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,50 +47,47 @@ export default function Login({ isActive, onGoRegister }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setBannerErrors([]);
 
     try {
-      await login(formData);
-
+      await requestPasswordReset({ email: formData.email });
       showToast({
         variant: "success",
-        title: "Login successful!",
-        subtitle: `Welcome back, ${formData.username}!`,
+        title: "Email Sent",
+        subtitle:
+          "If an account with that email exists, you’ll receive a reset link.",
       });
-
-      nav("/dashboard", { replace: true });
     } catch (err) {
       const data = err.response?.data || {};
       const msgs = [];
-
       Object.entries(data).forEach(([key, val]) => {
         if (Array.isArray(val)) val.forEach((m) => msgs.push(m));
         else if (typeof val === "string") msgs.push(val);
       });
-
-      setBannerErrors(msgs);
+      showToast({
+        variant: "error",
+        title: "Unable to send reset link",
+        subtitle: msgs.join(" "),
+      });
     }
   };
 
-  const isDisabled = !validities.username || !validities.password;
+  const isDisabled = !validities.email;
 
   const handlePaperClick = (e) => {
     e.stopPropagation();
     if (isOpen && !isPulledOut) setIsPulledOut(true);
   };
-
   const handleOutsideClick = () => {
     if (isPulledOut) {
       setIsPulledOut(false);
       setIsOpen(false);
-      setFormData({ username: "", password: "" });
-      setBannerErrors([]);
-      setValidities({ username: false, password: false });
+      setFormData({ email: "" });
+      setValidities({ email: false });
     }
   };
 
   return (
-    <div className="login-container" onClick={handleOutsideClick}>
+    <div className="forgot-password-container" onClick={handleOutsideClick}>
       <div
         className={`envelope ${isOpen ? "open" : ""} ${
           isPulledOut ? "form-pulled" : ""
@@ -124,27 +111,27 @@ export default function Login({ isActive, onGoRegister }) {
             <Form
               wrapperClass="letter"
               enableTilt={true}
-              title="Welcome Back!"
-              titleKey={isActive}
-              fields={loginFields}
+              title="Forgot Password"
+              titleKey={0}
+              fields={forgotPasswordFields}
               formData={formData}
               onChange={handleChange}
               validities={validities}
               onValidityChange={handleValidityChange}
-              bannerErrors={bannerErrors}
+              bannerErrors={[]}
               onSubmit={handleSubmit}
               submitDisabled={isDisabled}
-              submitText="Sign In"
-              submitTextDataHover="Welcome back!"
+              submitText="Send Reset Link"
+              submitTextDataHover="Check your email"
             />
 
             <div className="mt-4 text-center">
               <button
                 type="button"
                 className="text-sm text-blue-600 hover:underline focus:outline-none"
-                onClick={() => nav("/forgot-password", { replace: true })}
+                onClick={() => nav("/login")}
               >
-                Forgot password?
+                Back to Login
               </button>
             </div>
           </div>
@@ -155,36 +142,6 @@ export default function Login({ isActive, onGoRegister }) {
         <div className="envelope-front"></div>
         <div className="envelope-flap"></div>
       </div>
-
-      <div
-        className="slide-arrow"
-        onClick={(e) => {
-          e.stopPropagation();
-          onGoRegister();
-        }}
-      >
-        <div role="button" aria-label="Go to Register">
-          <ArrowRight size={24} strokeWidth={2} />
-        </div>
-
-        <div className="slide-tag">
-          <span>No account yet?</span>
-          <button
-            type="button"
-            className="slide-tag-link"
-            onClick={(e) => {
-              e.stopPropagation();
-              onGoRegister();
-            }}
-          >
-            Register here
-          </button>
-        </div>
-      </div>
-
-      <a href="/" className="fixed bottom-5 left-5 z-50">
-        <button className="exam-button-mini">Back to Home</button>
-      </a>
     </div>
   );
 }
