@@ -1,52 +1,56 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { login } from "../services/auth";
-import { useToast } from "../components/Toast/ToastContext";
-import { User, Lock, ArrowRight } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { confirmPasswordReset } from "../services/auth";
+import { Lock } from "lucide-react";
 import Form from "../components/Form";
-import "../styles/pages/login.css";
+import { useToast } from "../components/Toast/ToastContext";
+import "../styles/pages/password-reset.css";
 
-const loginFields = [
-  {
-    name: "username",
-    label: "Username",
-    icon: User,
-    placeholder: "Enter your username",
-  },
+const resetFields = [
   {
     name: "password",
     type: "password",
-    label: "Password",
+    label: "New Password",
     icon: Lock,
-    placeholder: "Enter your password",
+    placeholder: "Enter new password",
+  },
+  {
+    name: "confirmPassword",
+    type: "password",
+    label: "Confirm Password",
+    icon: Lock,
+    placeholder: "Re-enter new password",
   },
 ];
 
-export default function Login({ isActive, onGoRegister }) {
-  const [formData, setFormData] = useState({ username: "", password: "" });
-  const [bannerErrors, setBannerErrors] = useState([]);
-  const [validities, setValidities] = useState({
-    username: false,
-    password: false,
+export default function PasswordReset() {
+  const [formData, setFormData] = useState({
+    password: "",
+    confirmPassword: "",
   });
+  const [validities, setValidities] = useState({
+    password: false,
+    confirmPassword: false,
+  });
+  const [bannerErrors, setBannerErrors] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isPulledOut, setIsPulledOut] = useState(false);
+
   const nav = useNavigate();
+  const { uid, token } = useParams();
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (isActive) {
-      setFormData({ username: "", password: "" });
-      setBannerErrors([]);
-      setValidities({ username: false, password: false });
-      setIsOpen(false);
-      setIsPulledOut(false);
-    }
-  }, [isActive]);
+    setFormData({ password: "", confirmPassword: "" });
+    setValidities({ password: false, confirmPassword: false });
+    setBannerErrors([]);
+    setIsOpen(false);
+    setIsPulledOut(false);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((f) => ({ ...f, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleValidityChange = (field, ok) => {
@@ -59,16 +63,26 @@ export default function Login({ isActive, onGoRegister }) {
     e.preventDefault();
     setBannerErrors([]);
 
+    if (formData.password !== formData.confirmPassword) {
+      setBannerErrors(["New password and confirmation must match."]);
+      return;
+    }
+
     try {
-      await login(formData);
+      await confirmPasswordReset({
+        uid,
+        token,
+        new_password: formData.password,
+        confirm_password: formData.confirmPassword,
+      });
 
       showToast({
         variant: "success",
-        title: "Login successful!",
-        subtitle: `Welcome back, ${formData.username}!`,
+        title: "Password Reset",
+        subtitle: "Your password has been reset. Please log in.",
       });
 
-      nav("/dashboard", { replace: true });
+      nav("/login");
     } catch (err) {
       const data = err.response?.data || {};
       const msgs = [];
@@ -78,11 +92,11 @@ export default function Login({ isActive, onGoRegister }) {
         else if (typeof val === "string") msgs.push(val);
       });
 
-      setBannerErrors(msgs);
+      setBannerErrors(msgs.length > 0 ? msgs : ["Reset failed. Try again."]);
     }
   };
 
-  const isDisabled = !validities.username || !validities.password;
+  const isDisabled = !validities.password || !validities.confirmPassword;
 
   const handlePaperClick = (e) => {
     e.stopPropagation();
@@ -93,14 +107,14 @@ export default function Login({ isActive, onGoRegister }) {
     if (isPulledOut) {
       setIsPulledOut(false);
       setIsOpen(false);
-      setFormData({ username: "", password: "" });
+      setFormData({ password: "", confirmPassword: "" });
+      setValidities({ password: false, confirmPassword: false });
       setBannerErrors([]);
-      setValidities({ username: false, password: false });
     }
   };
 
   return (
-    <div className="login-container" onClick={handleOutsideClick}>
+    <div className="password-reset-container" onClick={handleOutsideClick}>
       <div
         className={`envelope ${isOpen ? "open" : ""} ${
           isPulledOut ? "form-pulled" : ""
@@ -124,9 +138,9 @@ export default function Login({ isActive, onGoRegister }) {
             <Form
               wrapperClass="letter"
               enableTilt={true}
-              title="Welcome Back!"
-              titleKey={isActive}
-              fields={loginFields}
+              title="Password Reset"
+              titleKey={0}
+              fields={resetFields}
               formData={formData}
               onChange={handleChange}
               validities={validities}
@@ -134,17 +148,17 @@ export default function Login({ isActive, onGoRegister }) {
               bannerErrors={bannerErrors}
               onSubmit={handleSubmit}
               submitDisabled={isDisabled}
-              submitText="Sign In"
-              submitTextDataHover="Welcome back!"
+              submitText="Change Password"
+              submitTextDataHover="Submit"
             />
 
             <div className="mt-4 text-center">
               <button
                 type="button"
                 className="text-sm text-blue-600 hover:underline focus:outline-none"
-                onClick={() => nav("/forgot-password", { replace: true })}
+                onClick={() => nav("/login")}
               >
-                Forgot password?
+                Back to Login
               </button>
             </div>
           </div>
@@ -155,36 +169,6 @@ export default function Login({ isActive, onGoRegister }) {
         <div className="envelope-front"></div>
         <div className="envelope-flap"></div>
       </div>
-
-      <div
-        className="slide-arrow"
-        onClick={(e) => {
-          e.stopPropagation();
-          onGoRegister();
-        }}
-      >
-        <div role="button" aria-label="Go to Register">
-          <ArrowRight size={24} strokeWidth={2} />
-        </div>
-
-        <div className="slide-tag">
-          <span>No account yet?</span>
-          <button
-            type="button"
-            className="slide-tag-link"
-            onClick={(e) => {
-              e.stopPropagation();
-              onGoRegister();
-            }}
-          >
-            Register here
-          </button>
-        </div>
-      </div>
-
-      <a href="/" className="fixed bottom-5 left-5 z-50">
-        <button className="exam-button-mini">Back to Home</button>
-      </a>
     </div>
   );
 }

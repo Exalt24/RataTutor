@@ -33,7 +33,7 @@ class PasswordResetRequestView(APIView):
         token = token_generator.make_token(user)
         uid = urlsafe_base64_encode(smart_bytes(user.pk))
 
-        reset_link = f"{settings.FRONTEND_URL}/reset-password-confirm/{uid}/{token}/"
+        reset_link = f"{settings.FRONTEND_URL}/password-reset-confirm/{uid}/{token}/"
 
         # -------------- Render HTML email template ----------------
         subject = "Reset Your Password"
@@ -90,7 +90,7 @@ class PasswordResetConfirmView(APIView):
       "confirm_password": "NewPass123!"
     }
     """
-    permission_classes = []  # Allow any
+    permission_classes = []
 
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
