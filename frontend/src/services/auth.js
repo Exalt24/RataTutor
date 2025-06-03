@@ -38,7 +38,12 @@ export async function login({ username, password }) {
  * Register endpoint (POST /register/).
  * Expects { username, email, password, confirm_password }.
  */
-export async function register({ username, email, password, confirm_password }) {
+export async function register({
+  username,
+  email,
+  password,
+  confirm_password,
+}) {
   const res = await axios.post(`${AUTH_URL}register/`, {
     username,
     email,
@@ -112,5 +117,55 @@ export async function confirmPasswordReset({
     new_password,
     confirm_password,
   });
+  return res.data;
+}
+
+/**
+ * Get current user profile (GET /profile/).
+ * Sends Authorization: Bearer <access> in headers.
+ */
+export async function getProfile() {
+  const access = localStorage.getItem("access_token");
+
+  const res = await axios.get(`${AUTH_URL}profile/`, {
+    headers: {
+      Authorization: `Bearer ${access}`,
+    },
+  });
+
+  return res.data;
+}
+
+/**
+ * Update current user profile (PATCH /profile-update/).
+ * Sends Authorization: Bearer <access> in headers.
+ * Payload: { username, email, full_name, bio, avatar }
+ */
+export async function updateProfile({
+  username,
+  email,
+  full_name,
+  bio,
+  avatar,
+}) {
+  const access = localStorage.getItem("access_token");
+
+  const res = await axios.post(
+    `${AUTH_URL}profile-update/`,
+    {
+      username,
+      email,
+      full_name,
+      bio,
+      avatar,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${access}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
   return res.data;
 }
