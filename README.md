@@ -71,10 +71,18 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 # EMAIL_HOST_USER=<your-email>
 # EMAIL_HOST_PASSWORD=<your-google-api-app-password>  (Note: use app password for Google APIs, not your actual email password)
 # OPENROUTER_API_KEY=<your-api-key>
+# CLOUDINARY_CLOUD_NAME=<your-cloudinary-cloud-name>
+# CLOUDINARY_API_KEY=<your-cloudinary-api-key>
+# CLOUDINARY_API_SECRET=<your-cloudinary-api-secret>
 
 # Apply database migrations
 python manage.py makemigrations && python manage.py migrate && cd ..
 ```
+
+**Development Test User:** When running the development environment (`npm run dev`), a test user is automatically created for testing purposes with the following credentials:
+- **Username:** `testuser`
+- **Email:** `testuser@gmail.com`
+- **Password:** `t@st12345`
 
 ### 4. Set up the frontend
 
@@ -153,14 +161,18 @@ docker run --rm -it -p 8000:8000 \
   -e EMAIL_HOST_USER="<your-email>" \
   -e EMAIL_HOST_PASSWORD="<your-google-api-app-password>" \
   -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
+  -e CLOUDINARY_CLOUD_NAME="<your-cloudinary-cloud-name>" \
+  -e CLOUDINARY_API_KEY="<your-cloudinary-api-key>" \
+  -e CLOUDINARY_API_SECRET="<your-cloudinary-api-secret>" \
   ratatutor
 ```
 
-Then verify these three things work:
+Then verify these things work:
 
 1. **Database migrations** completed without errors
 2. **API test endpoint** works at [http://localhost:8000/api/ping/](http://localhost:8000/api/ping/)
 3. **Frontend** loads at [http://localhost:3000](http://localhost:3000) displaying "Backend says: pong"
+4. **Test user** is automatically created and you can log in with credentials (`testuser` / `t@st12345`)
 
 If any step fails, report an issue before continuing your work.
 
@@ -275,6 +287,9 @@ RataTutor/
      -e DEBUG=True \
      -e DATABASE_URL="sqlite:///db.sqlite3" \
      -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
+     -e CLOUDINARY_CLOUD_NAME="<your-cloudinary-cloud-name>" \
+     -e CLOUDINARY_API_KEY="<your-cloudinary-api-key>" \
+     -e CLOUDINARY_API_SECRET="<your-cloudinary-api-secret>" \
      ratatutor
    ```
 3. **Verify**
@@ -297,7 +312,7 @@ Render will build your Docker image and deploy one service for both backend and 
 
    * **Environment:** Docker
    * **Root Directory:** *leave blank* (Dockerfile in repo root)
-   * **Env Vars:** set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `OPENROUTER_API_KEY`
+   * **Env Vars:** set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `OPENROUTER_API_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 3. **Create** and let Render build/deploy
 
 Your service URL:
