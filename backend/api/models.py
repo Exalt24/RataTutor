@@ -4,11 +4,6 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 
-def attachment_upload_to(instance, filename):
-    ext = filename.split('.')[-1]
-    unique_name = f"{uuid.uuid4().hex}.{ext}"
-    return f"uploads/material_{instance.material.id}/{unique_name}"
-
 class Material(models.Model):
     owner = models.ForeignKey(
         User,
@@ -57,11 +52,14 @@ class Material(models.Model):
 
 class Attachment(models.Model):
     material = models.ForeignKey(
-        Material,
+        'Material',
         on_delete=models.CASCADE,
-        related_name="attachments"
+        related_name='attachments'
     )
-    file = models.FileField(upload_to=attachment_upload_to)
+    file = models.FileField(
+        upload_to='attachments/',
+        help_text="Upload your file (DOCX, PPTX, TXT, PDF)."
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
