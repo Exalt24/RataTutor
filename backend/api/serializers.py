@@ -1,7 +1,16 @@
 from django.core.validators import MinLengthValidator
 from rest_framework import serializers
 
-from api.models import Material, Attachment, Note, Flashcard, AIConversation, Quiz, QuizQuestion
+from api.models import (
+    Material,
+    Attachment,
+    Note,
+    FlashcardSet,
+    Flashcard,
+    AIConversation,
+    Quiz,
+    QuizQuestion,
+)
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
@@ -24,22 +33,40 @@ class NoteSerializer(serializers.ModelSerializer):
         queryset=Material.objects.all(),
         help_text="ID of an existing Material to which this note belongs.",
     )
+    title = serializers.CharField(
+        max_length=255,
+        validators=[MinLengthValidator(1, message="Note title cannot be empty.")],
+        help_text="A short title for this note. Must be at least 1 character.",
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="(Optional) Longer explanation or details for this note."
+    )
     content = serializers.CharField(
-        max_length=2000,
         validators=[MinLengthValidator(1, message="Note content cannot be empty.")],
-        help_text="The text content of the note. Must be at least 1 character.",
+        help_text="The main text content of the note. Must be at least 1 character.",
     )
 
     class Meta:
         model = Note
-        fields = ["id", "material", "content"]
-        read_only_fields = ["id"]
+        fields = ["id", "material", "title", "description", "content", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_title(self, value):
+        clean = value.strip()
+        if not clean:
+            raise serializers.ValidationError("Note title cannot be blank or whitespace.")
+        return clean
+
+    def validate_description(self, value):
+        return value.strip()
 
     def validate_content(self, value):
-        text = value.strip()
-        if not text:
+        clean = value.strip()
+        if not clean:
             raise serializers.ValidationError("Note content cannot be just whitespace.")
-        return text
+        return clean
 
     def validate(self, data):
         request = self.context.get("request")
@@ -50,49 +77,93 @@ class NoteSerializer(serializers.ModelSerializer):
         return data
 
 
-class FlashcardSerializer(serializers.ModelSerializer):
+class FlashcardSetSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
-        help_text="ID of an existing Material to which this flashcard belongs.",
+        help_text="ID of the Material this flashcard set belongs to."
+    )
+    title = serializers.CharField(
+        max_length=255,
+        validators=[MinLengthValidator(1, message="Flashcard set title cannot be empty.")],
+        help_text="Title of the flashcard set."
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="(Optional) Description or notes about this flashcard set."
+    )
+    flashcards = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = FlashcardSet
+        fields = ["id", "material", "title", "description", "flashcards", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_flashcards(self, obj):
+        flashcards = obj.cards.all()
+        return FlashcardSerializer(flashcards, many=True).data
+
+    def validate_title(self, value):
+        clean = value.strip()
+        if not clean:
+            raise serializers.ValidationError("Flashcard set title cannot be blank or whitespace.")
+        return clean
+
+    def validate_description(self, value):
+        return value.strip()
+
+    def validate(self, data):
+        request = self.context.get("request")
+        mat = data.get("material")
+        if request and hasattr(request, "user"):
+            if hasattr(mat, "owner") and mat.owner != request.user:
+                raise serializers.ValidationError("You do not have permission to create flashcard sets for this Material.")
+        return data
+
+
+class FlashcardSerializer(serializers.ModelSerializer):
+    flashcard_set = serializers.PrimaryKeyRelatedField(
+        queryset=FlashcardSet.objects.all(),
+        help_text="ID of the flashcard set this card belongs to."
     )
     question = serializers.CharField(
-        max_length=2000,
         validators=[MinLengthValidator(1, message="Flashcard question cannot be empty.")],
-        help_text="The question text for this flashcard.",
+        help_text="The question text for this flashcard."
     )
     answer = serializers.CharField(
-        max_length=2000,
         validators=[MinLengthValidator(1, message="Flashcard answer cannot be empty.")],
-        help_text="The answer text for this flashcard.",
+        help_text="The answer text for this flashcard."
     )
 
     class Meta:
         model = Flashcard
-        fields = ["id", "material", "question", "answer"]
-        read_only_fields = ["id"]
+        fields = ["id", "flashcard_set", "question", "answer", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_question(self, value):
-        text = value.strip()
-        if not text:
+        clean = value.strip()
+        if not clean:
             raise serializers.ValidationError("Flashcard question cannot be just whitespace.")
-        return text
+        return clean
 
     def validate_answer(self, value):
-        text = value.strip()
-        if not text:
+        clean = value.strip()
+        if not clean:
             raise serializers.ValidationError("Flashcard answer cannot be just whitespace.")
-        return text
+        return clean
 
     def validate(self, data):
         q = data.get("question", "").strip()
         a = data.get("answer", "").strip()
         if q == a:
             raise serializers.ValidationError("Flashcard question and answer cannot be identical.")
+
         request = self.context.get("request")
-        mat = data.get("material")
-        if request and hasattr(request, "user"):
+        flashcard_set = data.get("flashcard_set")
+        if request and hasattr(request, "user") and flashcard_set:
+            mat = flashcard_set.material
             if hasattr(mat, "owner") and mat.owner != request.user:
-                raise serializers.ValidationError("You do not have permission to add flashcards to this Material.")
+                raise serializers.ValidationError("You do not have permission to add flashcards to this Flashcard Set.")
         return data
 
 
@@ -130,10 +201,10 @@ class AIConversationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "messages", "created_at", "updated_at"]
 
     def validate_last_user_message(self, value):
-        text = value.strip()
-        if not text:
+        clean = value.strip()
+        if not clean:
             raise serializers.ValidationError("last_user_message cannot be blank or whitespace.")
-        return text
+        return clean
 
     def validate(self, data):
         request = self.context.get("request")
@@ -207,7 +278,6 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
             mat = quiz_obj.material
             if hasattr(mat, "owner") and mat.owner != request.user:
                 raise serializers.ValidationError("You do not have permission to add questions to this Quiz.")
-
         return data
 
 
@@ -219,14 +289,19 @@ class QuizSerializer(serializers.ModelSerializer):
     title = serializers.CharField(
         max_length=255,
         validators=[MinLengthValidator(1, message="Quiz title cannot be empty.")],
-        help_text="A title or description for this quiz.",
+        help_text="A title for this Quiz.",
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="(Optional) Additional instructions or description for this quiz."
     )
 
     questions = QuizQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ["id", "material", "title", "questions", "created_at", "updated_at"]
+        fields = ["id", "material", "title", "description", "questions", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_title(self, value):
@@ -235,10 +310,12 @@ class QuizSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Quiz title cannot be blank or just whitespace.")
         return clean
 
+    def validate_description(self, value):
+        return value.strip()
+
     def validate(self, data):
         request = self.context.get("request")
         mat = data.get("material")
-
         if request and hasattr(request, "user"):
             if hasattr(mat, "owner") and mat.owner != request.user:
                 raise serializers.ValidationError("You do not have permission to create a quiz for this Material.")
@@ -246,9 +323,6 @@ class QuizSerializer(serializers.ModelSerializer):
 
 
 class MaterialSerializer(serializers.ModelSerializer):
-    """
-    Expose 'pinned' and 'public' on Material, so clients can set or filter.
-    """
     title = serializers.CharField(
         max_length=255,
         validators=[MinLengthValidator(1, message="Title cannot be blank or whitespace.")],
@@ -265,8 +339,6 @@ class MaterialSerializer(serializers.ModelSerializer):
         default="active",
         help_text="Must be one of: 'active' or 'trash'.",
     )
-
-    # The two new fields:
     pinned = serializers.BooleanField(
         help_text="Whether this Material is pinned (e.g. shown at top)."
     )
@@ -276,7 +348,7 @@ class MaterialSerializer(serializers.ModelSerializer):
 
     attachments = AttachmentSerializer(many=True, read_only=True)
     notes = NoteSerializer(many=True, read_only=True)
-    flashcards = FlashcardSerializer(many=True, read_only=True)
+    flashcard_sets = FlashcardSetSerializer(many=True, read_only=True)
     quizzes = QuizSerializer(many=True, read_only=True)
 
     class Meta:
@@ -290,7 +362,7 @@ class MaterialSerializer(serializers.ModelSerializer):
             "public",
             "attachments",
             "notes",
-            "flashcards",
+            "flashcard_sets",
             "quizzes",
             "created_at",
             "updated_at",
@@ -301,6 +373,16 @@ class MaterialSerializer(serializers.ModelSerializer):
         clean = value.strip()
         if not clean:
             raise serializers.ValidationError("Title cannot be blank or just whitespace.")
+
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            user = request.user
+            qs = Material.objects.filter(owner=user, title__iexact=clean)
+            # Exclude the current instance to allow updates without false conflict
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError("You already have a Material with this title.")
         return clean
 
     def validate_description(self, value):
