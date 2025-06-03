@@ -1,8 +1,10 @@
 import { ChevronDown } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import CreateMaterialModal from './CreateMaterialModal'
 import MaterialCard from './MaterialCard'
 
-const MaterialsScreen = ({ files }) => {
+const MaterialsScreen = ({ files: initialFiles }) => {
+  const [files, setFiles] = useState(initialFiles)
   const [pinnedFiles, setPinnedFiles] = useState(() => {
     // Initialize from localStorage if available
     const savedPins = localStorage.getItem('pinnedMaterials')
@@ -18,6 +20,7 @@ const MaterialsScreen = ({ files }) => {
     const savedVisibility = localStorage.getItem('materialsVisibility')
     return savedVisibility ? JSON.parse(savedVisibility) : {}
   })
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const typeDropdownRef = useRef(null)
   const updatedDropdownRef = useRef(null)
@@ -143,11 +146,22 @@ const MaterialsScreen = ({ files }) => {
     console.log('Exporting:', fileTitle)
   }
 
+  const handleCreateMaterial = (newMaterial) => {
+    setFiles(prevFiles => [newMaterial, ...prevFiles])
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4 text-xs sm:text-sm">
         <h1 className="exam-heading exam-heading-mini text-base">Your Materials</h1>
         <div className="flex flex-wrap gap-2">
+          <button 
+            data-hover="Create Material"
+            className="exam-button-mini py-1 px-2 flex items-center gap-1"
+            onClick={() => setShowCreateModal(true)}
+          >
+            Create Material
+          </button>
           <div className="relative" ref={typeDropdownRef}>
             <button 
               data-hover="Type" 
@@ -296,6 +310,12 @@ const MaterialsScreen = ({ files }) => {
           ))}
         </div>
       </div>
+
+      <CreateMaterialModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateMaterial}
+      />
     </div>
   )
 }

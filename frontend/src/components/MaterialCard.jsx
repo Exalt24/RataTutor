@@ -117,7 +117,6 @@ const MaterialCard = ({
     )
   }
 
-  // Explore variant
   return (
     <div className="exam-card p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between mb-3">
