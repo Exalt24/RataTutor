@@ -130,15 +130,11 @@ input:not(:checked) + label.card .description {
   left: 40%;
   transform: translate(-50%, -50%);
   text-align: start;
-
-  opacity: 0;
   visibility: hidden;
-  transition: opacity 0.6s cubic-bezier(0.28, -0.03, 0, 0.99),
-    visibility 0.6s ease;
+  transition: visibility 0.6s ease;
 }
 
 input:checked + label.card .hero-center {
-  opacity: 1;
   visibility: visible;
 }
 
@@ -193,4 +189,146 @@ input:not(:checked) + label.card .row .description {
   outline: none;
   border-color: var(--button-primary);
   box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
+}
+
+.image-clicked {
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.text-glow {
+  color: #000;
+  transition: all 0.3s ease;
+}
+
+.text-glow:hover {
+  animation: darkGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes darkGlow {
+  0%, 100% {
+    text-shadow:
+      0 0 6px #d6b3ff,   
+      0 0 12px #bb88ff,  
+      0 0 18px #a366ff,  
+      0 0 24px #8041d9;  
+  }
+  50% {
+    text-shadow:
+      0 0 10px #e0ccff, 
+      0 0 20px #c299ff,  
+      0 0 30px #a366ff,
+      0 0 40px #8041d9;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.2;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.2;
+  }
+}
+
+
+@keyframes rotateIn {
+  0% {
+    transform: translate(2500px, 1000px) rotate(-180deg);
+  }
+  50% {
+    transform: translate(0, 400px) rotate(-62deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes rotateOut {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(0, -400px) rotate(90deg);
+  }
+  100% {
+    transform: translate(0, -1000px) rotate(180deg);
+  }
+}
+
+.rotate-in {
+  animation: rotateIn 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.rotate-out {
+  animation: rotateOut 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* LeftImage */
+@keyframes swipeInTop {
+  0% {
+    transform: translate(50vw, -100vh) rotate(-90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes swipeOutTop {
+  0% {
+    transform: translate(0, 0) rotate(-10deg);
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate(-50vw, 100vh) rotate(135deg);
+    opacity: 0;
+  }
+}
+
+.swipe-in-top {
+  animation: swipeInTop 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.swipe-out-top {
+  animation: swipeOutTop 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Right Image */
+@keyframes swipeIn {
+  0% {
+    transform: translate(-100vw, 100vh) rotate(-45deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes swipeOut {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100vw, -100vh) rotate(135deg);
+    opacity: 0;
+  }
+}
+
+.swipe-in {
+  animation: swipeIn 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.swipe-out {
+  animation: swipeOut 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
