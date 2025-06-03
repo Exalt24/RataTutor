@@ -12,15 +12,19 @@ from api.models import (
     QuizQuestion,
 )
 
+def validate_file_extension(value):
+    import os
+    ext = os.path.splitext(value.name)[1]
+    valid_extensions = ['.docx', '.pptx', '.txt', '.pdf']
+    if not ext.lower() in valid_extensions:
+        raise serializers.ValidationError('Unsupported file extension.')
 
 class AttachmentSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
         help_text="ID of the Material to which this file belongs.",
     )
-    file = serializers.FileField(
-        help_text="The uploaded file (PDF, DOCX, TXT, or PPTX)."
-    )
+    file = serializers.FileField(validators=[validate_file_extension])
 
     class Meta:
         model = Attachment
