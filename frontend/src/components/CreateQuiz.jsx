@@ -1,8 +1,12 @@
-import { ArrowLeft, ArrowUpDown, Globe, GripVertical, Lock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Globe, GripVertical, Lock, Plus, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 
-const CreateFlashcards = ({ onClose }) => {
-  const [items, setItems] = useState([{ front: '', back: '' }]);
+const CreateQuiz = ({ onClose }) => {
+  const [items, setItems] = useState([{ 
+    question: '', 
+    choices: ['', ''], 
+    correctAnswer: 0 
+  }]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -11,7 +15,11 @@ const CreateFlashcards = ({ onClose }) => {
   const MAX_DESCRIPTION_LENGTH = 100;
 
   const addNewItem = () => {
-    setItems([...items, { front: '', back: '' }]);
+    setItems([...items, { 
+      question: '', 
+      choices: ['', ''], 
+      correctAnswer: 0 
+    }]);
   };
 
   const updateItem = (index, field, value) => {
@@ -20,16 +28,30 @@ const CreateFlashcards = ({ onClose }) => {
     setItems(newItems);
   };
 
-  const removeItem = (index) => {
-    const newItems = items.filter((_, i) => i !== index);
+  const updateChoice = (itemIndex, choiceIndex, value) => {
+    const newItems = [...items];
+    newItems[itemIndex].choices[choiceIndex] = value;
     setItems(newItems);
   };
 
-  const swapFields = (index) => {
+  const addChoice = (itemIndex) => {
     const newItems = [...items];
-    const temp = newItems[index].front;
-    newItems[index].front = newItems[index].back;
-    newItems[index].back = temp;
+    newItems[itemIndex].choices.push('');
+    setItems(newItems);
+  };
+
+  const removeChoice = (itemIndex, choiceIndex) => {
+    const newItems = [...items];
+    newItems[itemIndex].choices = newItems[itemIndex].choices.filter((_, i) => i !== choiceIndex);
+    // Adjust correctAnswer if needed
+    if (newItems[itemIndex].correctAnswer >= choiceIndex) {
+      newItems[itemIndex].correctAnswer = Math.max(0, newItems[itemIndex].correctAnswer - 1);
+    }
+    setItems(newItems);
+  };
+
+  const removeItem = (index) => {
+    const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
   };
 
@@ -76,7 +98,7 @@ const CreateFlashcards = ({ onClose }) => {
               <ArrowLeft size={24} />
             </button>
             <h2 className="text-3xl font-semibold label-text">
-              Create Flashcards
+              Create Quiz
             </h2>
           </div>
           <button
@@ -153,67 +175,93 @@ const CreateFlashcards = ({ onClose }) => {
                 draggedIndex === index ? 'shadow-lg' : ''
               }`}
             >
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-medium label-text">Item {index + 1}</h3>
+              <div className="flex items-center mb-6">
+                <div className="flex-1">
+                  <h3 className="text-xl font-medium label-text">Question {index + 1}</h3>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex-1 flex justify-center">
                   <GripVertical size={24} className="text-gray-400 rotate-90" />
-                  <button
-                    onClick={() => swapFields(index)}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
-                    title="Swap Term and Definition"
-                  >
-                    <ArrowUpDown size={20} />
-                  </button>
+                </div>
+                <div className="flex-1 flex justify-end">
                   {items.length > 1 && (
                     <button
                       onClick={() => removeItem(index)}
                       className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
-                      title="Remove Item"
+                      title="Remove Question"
                     >
                       <Trash2 size={20} />
                     </button>
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 <div>
                   <label className="label-text block text-sm font-medium text-gray-700 mb-2">
-                    Term
+                    Question
                   </label>
                   <textarea
-                    value={item.front}
-                    onChange={(e) => updateItem(index, 'front', e.target.value)}
+                    value={item.question}
+                    onChange={(e) => updateItem(index, 'question', e.target.value)}
                     className="w-full p-4 border border-gray-200 rounded-lg label-text bg-white focus:bg-white focus:ring-2 focus:ring-[#7BA7CC]/30 focus:border-[#1b81d4] transition-colors outline-none"
-                    rows={4}
-                    placeholder="Enter term..."
+                    rows={3}
+                    placeholder="Enter your question..."
                   />
                 </div>
                 <div>
                   <label className="label-text block text-sm font-medium text-gray-700 mb-2">
-                    Definition
+                    Choices
                   </label>
-                  <textarea
-                    value={item.back}
-                    onChange={(e) => updateItem(index, 'back', e.target.value)}
-                    className="w-full p-4 border border-gray-200 rounded-lg label-text bg-white focus:bg-white focus:ring-2 focus:ring-[#7BA7CC]/30 focus:border-[#1b81d4] transition-colors outline-none"
-                    rows={4}
-                    placeholder="Enter definition..."
-                  />
+                  <div className="space-y-3">
+                    {item.choices.map((choice, choiceIndex) => (
+                      <div key={choiceIndex} className="flex items-center gap-3 group relative">
+                        <input
+                          type="text"
+                          value={choice}
+                          onChange={(e) => updateChoice(index, choiceIndex, e.target.value)}
+                          className="flex-1 p-3 border border-gray-200 rounded-lg label-text bg-white focus:bg-white focus:ring-2 focus:ring-[#7BA7CC]/30 focus:border-[#1b81d4] transition-colors outline-none pr-16"
+                          placeholder={`Choice ${choiceIndex + 1}`}
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                          <input
+                            type="radio"
+                            name={`correct-answer-${index}`}
+                            checked={item.correctAnswer === choiceIndex}
+                            onChange={() => updateItem(index, 'correctAnswer', choiceIndex)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                          />
+                          {item.choices.length > 2 && (
+                            <button
+                              onClick={() => removeChoice(index, choiceIndex)}
+                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                              title="Remove Choice"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addChoice(index)}
+                      className="flex items-center gap-2 text-[#1b81d4] hover:text-blue-700"
+                    >
+                      <Plus size={18} />
+                      <span>Add Choice</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between items-center mt-8">
           <button
             onClick={addNewItem}
             className="exam-button-mini"
-            data-hover="Add New"
+            data-hover="Add New Question"
           >
-            Add New Flashcard
+            Add New Question
           </button>
           <div className="space-x-4">
             <button
@@ -236,4 +284,4 @@ const CreateFlashcards = ({ onClose }) => {
   );
 };
 
-export default CreateFlashcards; 
+export default CreateQuiz; 

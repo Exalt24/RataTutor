@@ -309,8 +309,8 @@ const CreateNotes = ({ onClose }) => {
               </>
             ) : (
               <>
-                <Globe size={20} className="text-blue-600" />
-                <span className="text-blue-600 font-medium">Public</span>
+                <Globe size={20} className="text-[#1b81d4]" />
+                <span className="text-[#1b81d4] font-medium">Public</span>
               </>
             )}
           </button>
