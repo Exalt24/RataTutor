@@ -5,10 +5,9 @@ import ExamsScreen from '../components/ExamsScreen'
 import ExploreScreen from '../components/ExploreScreen'
 import Header from '../components/Header'
 import HomeScreen from '../components/HomeScreen'
-import Materials from '../components/Materials'
+import MaterialsScreen from '../components/MaterialsScreen'
 import ProfileScreen from '../components/ProfileScreen'
 import RataAIScreen from '../components/RataAIScreen'
-import SavedScreenEmptyState from '../components/SavedScreenEmptyState'
 import Sidebar from '../components/Sidebar'
 import StreakScreen from '../components/StreakScreen'
 import TrashScreenEmptyState from '../components/TrashScreenEmptyState'
@@ -88,8 +87,7 @@ const Dashboard = () => {
         />
         <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
           {screen==='home'   && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={generated}/>}
-          {screen==='materials'  && <Materials files={files}/>}
-          {screen==='saved'  && <SavedScreenEmptyState/>}
+          {screen==='materials'  && <MaterialsScreen files={files}/>}
           {screen==='trash'  && <TrashScreenEmptyState/>}
           {screen==='exams'  && <ExamsScreen/>}
           {screen==='explore'&& <ExploreScreen/>}

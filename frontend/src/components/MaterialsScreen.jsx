@@ -1,8 +1,8 @@
-import { ChevronDown, MoreVertical, Pin, Download, Globe, Lock, FileText } from 'lucide-react'
-import React, { useEffect, useState, useRef } from 'react'
+import { ChevronDown } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
 import MaterialCard from './MaterialCard'
 
-const Materials = ({ files }) => {
+const MaterialsScreen = ({ files }) => {
   const [pinnedFiles, setPinnedFiles] = useState(() => {
     // Initialize from localStorage if available
     const savedPins = localStorage.getItem('pinnedMaterials')
@@ -255,23 +255,22 @@ const Materials = ({ files }) => {
         </div>
       </div>
 
-      {/* Pinned Section */}
+      {/* Pinned Materials Section */}
       {pinnedMaterials.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="exam-subheading sm:text-sm">Pinned</h2>
-          </div>
+        <div className="mb-6">
+          <h2 className="text-sm font-medium text-gray-700 mb-3">Pinned</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pinnedMaterials.map(file => (
+            {pinnedMaterials.map((file) => (
               <MaterialCard
                 key={file.title}
                 file={file}
                 isPinned={true}
-                onPinToggle={togglePin}
-                onVisibilityToggle={toggleVisibility}
-                onExport={handleExport}
-                variant="materials"
-                isPublic={isPublic[file.title] || false}
+                onPinToggle={() => togglePin(file.title)}
+                onVisibilityToggle={() => toggleVisibility(file.title)}
+                onExport={() => handleExport(file.title)}
+                isPublic={isPublic[file.title]}
+                getTagColor={getTagColor}
+                getUpdatedLabel={getUpdatedLabel}
               />
             ))}
           </div>
@@ -279,40 +278,26 @@ const Materials = ({ files }) => {
       )}
 
       {/* Other Materials Section */}
-      {otherMaterials.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="exam-subheading sm:text-sm">Other Materials</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {otherMaterials.map(file => (
-              <MaterialCard
-                key={file.title}
-                file={file}
-                isPinned={false}
-                onPinToggle={togglePin}
-                onVisibilityToggle={toggleVisibility}
-                onExport={handleExport}
-                variant="materials"
-                isPublic={isPublic[file.title] || false}
-              />
-            ))}
-          </div>
+      <div>
+        <h2 className="text-sm font-medium text-gray-700 mb-3">All Materials</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {otherMaterials.map((file) => (
+            <MaterialCard
+              key={file.title}
+              file={file}
+              isPinned={false}
+              onPinToggle={() => togglePin(file.title)}
+              onVisibilityToggle={() => toggleVisibility(file.title)}
+              onExport={() => handleExport(file.title)}
+              isPublic={isPublic[file.title]}
+              getTagColor={getTagColor}
+              getUpdatedLabel={getUpdatedLabel}
+            />
+          ))}
         </div>
-      )}
-
-      {/* Empty State */}
-      {pinnedMaterials.length === 0 && otherMaterials.length === 0 && (
-        <div className="text-center space-y-2 p-8">
-          <div className="w-20 h-20 rounded-full mx-auto flex items-center justify-center bg-gray-100">
-            <FileText size={40} className="text-gray-400" />
-          </div>
-          <h2 className="text-xl font-semibold">No materials found</h2>
-          <p className="text-gray-600">Try adjusting your filters or add new materials</p>
-        </div>
-      )}
+      </div>
     </div>
   )
 }
 
-export default Materials
+export default MaterialsScreen 
