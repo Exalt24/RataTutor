@@ -1,11 +1,21 @@
+import os
+import uuid
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 def attachment_upload_to(instance, filename):
-    return f"uploads/material_{instance.material.id}/{filename}"
-
+    ext = filename.split('.')[-1]
+    unique_name = f"{uuid.uuid4().hex}.{ext}"
+    return f"uploads/material_{instance.material.id}/{unique_name}"
 
 class Material(models.Model):
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="materials",
+        help_text="The user who owns this material."
+    )
     STATUS_CHOICES = [
         ("active", "Active"),
         ("trash", "Trash"),
@@ -21,7 +31,6 @@ class Material(models.Model):
         choices=STATUS_CHOICES,
         default="active"
     )
-
     pinned = models.BooleanField(
         default=False,
         help_text="If true, this material is pinned (e.g. shown at top of lists)."
@@ -33,6 +42,11 @@ class Material(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['owner', 'title'], name='unique_owner_title')
+        ]
 
     def __str__(self):
         if self.description:
@@ -60,23 +74,24 @@ class Note(models.Model):
         on_delete=models.CASCADE,
         related_name="notes"
     )
+    title = models.CharField(
+        max_length=255,
+        help_text="A short title for this note.",
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="(Optional) A longer description or details for this note."
+    )
     content = models.TextField()
 
-    def __str__(self):
-        return f"Note for {self.material.title}"
-
-
-class Flashcard(models.Model):
-    material = models.ForeignKey(
-        Material,
-        on_delete=models.CASCADE,
-        related_name="flashcards"
-    )
-    question = models.TextField()
-    answer = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Flashcard for {self.material.title}"
+        if self.description:
+            short_desc = (self.description[:27] + "...") if len(self.description) > 30 else self.description
+            return f"Note '{self.title}' — {short_desc}"
+        return f"Note '{self.title}'"
 
 
 class AIConversation(models.Model):
@@ -117,11 +132,19 @@ class Quiz(models.Model):
         max_length=255,
         help_text="A title or description for this quiz."
     )
+    description = models.TextField(
+        blank=True,
+        help_text="(Optional) Additional instructions or description for this quiz."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Quiz '{self.title}' for {self.material.title}"
+        if self.description:
+            short_desc = (self.description[:27] + "...") if len(self.description) > 30 else self.description
+            return f"Quiz '{self.title}' — {short_desc}"
+        return f"Quiz '{self.title}'"
 
 
 class QuizQuestion(models.Model):
@@ -140,3 +163,45 @@ class QuizQuestion(models.Model):
 
     def __str__(self):
         return f"Question {self.id} for quiz '{self.quiz.title}'"
+
+
+class FlashcardSet(models.Model):
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name="flashcard_sets"
+    )
+    title = models.CharField(
+        max_length=255,
+        help_text="A short title for this flashcard set.",
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="(Optional) A longer description or instructions for this flashcard set."
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.description:
+            short_desc = (self.description[:27] + "...") if len(self.description) > 30 else self.description
+            return f"FlashcardSet '{self.title}' — {short_desc}"
+        return f"FlashcardSet '{self.title}'"
+
+
+class Flashcard(models.Model):
+    flashcard_set = models.ForeignKey(
+        FlashcardSet,
+        on_delete=models.CASCADE,
+        related_name="cards"
+    )
+    question = models.TextField()
+    answer = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        short_q = (self.question[:27] + "...") if len(self.question) > 30 else self.question
+        return f"Card for '{self.flashcard_set.title}': {short_q}"

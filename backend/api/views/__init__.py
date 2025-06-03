@@ -1,7 +1,7 @@
 from .conversations import CreateConversationView, ConversationChatView, RetrieveConversationView
 from .material import MaterialViewSet
-from .notes import NoteViewSet
-from .flashcards import FlashcardViewSet
+from .note import NoteViewSet
+from .flashcard import FlashcardSetViewSet, FlashcardViewSet 
 from .attachment import AttachmentUploadView
 from .quiz import QuizViewSet, QuizQuestionViewSet
 from .quiz_generation import QuizGenerationView

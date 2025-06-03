@@ -1,6 +1,5 @@
 import os
 import json
-from io import BytesIO
 from django.conf import settings
 from openai import OpenAI
 from docx import Document as DocxDocument
@@ -41,9 +40,6 @@ def extract_text_from_pptx(path_on_disk: str) -> str:
     return "\n\n".join(slides_text)
 
 def gather_material_text(material) -> str:
-    """
-    Concatenate all extractable text from the given Material’s attachments.
-    """
     texts = []
     for attachment in material.attachments.all():
         path = attachment.file.path
@@ -56,14 +52,9 @@ def gather_material_text(material) -> str:
             texts.append(read_text_file(path))
         elif ext == ".pptx":
             texts.append(extract_text_from_pptx(path))
-        else:
-            continue
     return "\n\n".join(texts).strip()
 
 def generate_ai_response(text: str) -> str:
-    """
-    Send a plain-text prompt to DeepSeek/OpenRouter and return the assistant’s reply.
-    """
     response = client.chat.completions.create(
         model="deepseek/deepseek-chat-v3-0324:free",
         messages=[{"role": "user", "content": text}],
@@ -71,70 +62,63 @@ def generate_ai_response(text: str) -> str:
     return response.choices[0].message.content
 
 def generate_ai_response_for_material(material, prompt: str) -> str:
-    """
-    1) Extract text from every attachment in this Material.
-    2) Append the user’s prompt.
-    3) Send the combined string to DeepSeek and return the assistant’s reply.
-    """
-    # 1) Pull raw text from all attachments
     text_body = gather_material_text(material)
     if not text_body:
         raise ValueError("No extractable text found in this Material’s attachments.")
 
-    # 2) Combine extracted text with the user’s prompt
     combined = f"{text_body}\n\nUser prompt:\n{prompt}"
 
-    # 3) Call DeepSeek/OpenRouter chat endpoint
     response = client.chat.completions.create(
         model="deepseek/deepseek-chat-v3-0324:free",
         messages=[{"role": "user", "content": combined}]
     )
     return response.choices[0].message.content
 
-
-def generate_quiz_from_material(material, num_questions: int = 5) -> list[dict]:
-    """
-    Exactly as before: prompt the model to return JSON with a 'questions' array.
-    """
+def generate_quiz_from_material(material, num_questions: int = 5) -> dict:
     text_body = gather_material_text(material)
     if not text_body:
         raise ValueError("No extractable text found in this Material’s attachments.")
 
     system_prompt = (
-        "You are an AI tutor. Generate exactly " + str(num_questions) + " multiple‐choice questions "
-        "based on the study material below. Each question must include:\n"
-        "- 'question_text': the question string\n"
-        "- 'choices': a JSON list of at least 4 options\n"
-        "- 'correct_answer': one of those options exactly\n"
-        "Return a single JSON object with key 'questions' mapping to a list of question objects. "
-        "DO NOT include any additional explanation—only valid JSON.\n\n"
-        "Example format:\n"
-        "{\n  \"questions\": [\n"
-        "    {\n      \"question_text\": \"...\",\n"
+        f"You are an AI tutor. Generate exactly {num_questions} multiple-choice questions "
+        "based on the study material below. Additionally, generate a title and a description "
+        "for the quiz. Return JSON with this structure:\n"
+        "{\n"
+        "  \"title\": \"<quiz title>\",\n"
+        "  \"description\": \"<quiz description>\",\n"
+        "  \"questions\": [\n"
+        "    {\n"
+        "      \"question_text\": \"...\",\n"
         "      \"choices\": [\"A\",\"B\",\"C\",\"D\"],\n"
-        "      \"correct_answer\": \"B\"\n    },\n"
-        "    … (total " + str(num_questions) + " questions)\n"
-        "  ]\n}\n\n"
-        "Now generate the JSON for the material below:\n"
-        f"\"\"\"\n{text_body}\n\"\"\"\n"
+        "      \"correct_answer\": \"B\"\n"
+        "    },\n"
+        f"    … (total {num_questions} questions)\n"
+        "  ]\n"
+        "}\n\n"
+        f"Material:\n\"\"\"\n{text_body}\n\"\"\"\n"
     )
 
     response = client.chat.completions.create(
         model="deepseek/deepseek-chat-v3-0324:free",
-        messages=[
-            {"role": "system", "content": system_prompt}
-        ],
+        messages=[{"role": "system", "content": system_prompt}],
     )
     raw = response.choices[0].message.content.strip()
 
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError as e:
-        raise ValueError(f"AI did not return valid JSON: {e}\n\n{raw}")
+        raise ValueError(f"AI did not return valid JSON for quiz: {e}\n\n{raw}")
 
+    title = parsed.get("title")
+    description = parsed.get("description")
     questions = parsed.get("questions")
+
+    if not isinstance(title, str) or not title.strip():
+        raise ValueError("AI did not return a valid 'title' for the quiz.")
+    if not isinstance(description, str):
+        description = ""
     if not isinstance(questions, list) or len(questions) < 1:
-        raise ValueError("AI JSON did not contain a 'questions' array.")
+        raise ValueError("AI JSON did not contain a valid 'questions' array.")
 
     validated = []
     for idx, qobj in enumerate(questions):
@@ -150,25 +134,32 @@ def generate_quiz_from_material(material, num_questions: int = 5) -> list[dict]:
             "choices": [c.strip() for c in ch],
             "correct_answer": ca,
         })
-    return validated
 
-def generate_notes_from_material(material) -> list[dict]:
-    """
-    1) Extract raw text from attachments.
-    2) Prompt the AI to produce a set of concise bullet-point notes, formatted as JSON.
-    3) Return a list of dicts: { 'note_text': "<some bullet or paragraph>" }.
-    """
+    return {
+        "title": title.strip(),
+        "description": description.strip(),
+        "questions": validated,
+    }
+
+def generate_notes_from_material(material) -> dict:
     text_body = gather_material_text(material)
     if not text_body:
         raise ValueError("No extractable text found in this Material’s attachments.")
 
     system_prompt = (
         "You are an AI study helper. Read the material below and produce a concise set of key points or "
-        "bullet-point notes that capture the core concepts. Return the notes as a JSON object with key 'notes' "
-        "mapping to a list of strings. Do NOT include any additional explanation—only valid JSON.\n\n"
-        "Example format:\n"
-        "{\n  \"notes\": [\n    \"First key point.\",\n    \"Second key point.\",\n    …\n  ]\n}\n\n"
-        "Material:\n\"\"\"\n" + text_body + "\n\"\"\"\n"
+        "bullet-point notes that capture the core concepts. Additionally, generate a title and a description "
+        "for the note set. Return JSON with this structure:\n"
+        "{\n"
+        "  \"title\": \"<note set title>\",\n"
+        "  \"description\": \"<note set description>\",\n"
+        "  \"notes\": [\n"
+        "    \"First key point.\",\n"
+        "    \"Second key point.\",\n"
+        "    …\n"
+        "  ]\n"
+        "}\n\n"
+        f"Material:\n\"\"\"\n{text_body}\n\"\"\"\n"
     )
 
     response = client.chat.completions.create(
@@ -182,38 +173,47 @@ def generate_notes_from_material(material) -> list[dict]:
     except json.JSONDecodeError as e:
         raise ValueError(f"AI did not return valid JSON for notes: {e}\n\n{raw}")
 
+    title = parsed.get("title")
+    description = parsed.get("description")
     notes = parsed.get("notes")
+
+    if not isinstance(title, str) or not title.strip():
+        raise ValueError("AI did not return a valid 'title' for the notes.")
+    if not isinstance(description, str):
+        description = ""
     if not isinstance(notes, list) or len(notes) < 1:
-        raise ValueError("AI JSON did not contain a 'notes' array.")
-    # Ensure each entry is a non-empty string
+        raise ValueError("AI JSON did not contain a valid 'notes' array.")
+
     output = []
     for idx, n in enumerate(notes):
         if not isinstance(n, str) or not n.strip():
             raise ValueError(f"Note #{idx+1} is not a valid non-empty string: {n}")
         output.append({"note_text": n.strip()})
-    return output
 
-def generate_flashcards_from_material(material, num_cards: int = 5) -> list[dict]:
-    """
-    1) Extract raw text from attachments.
-    2) Prompt the AI to produce exactly num_cards of simple Q&A flashcards, in JSON:
-       { 'flashcards': [ { 'question': "...", 'answer': "..." }, ... ] }
-    3) Return a list of dicts with keys 'question' and 'answer'.
-    """
+    return {
+        "title": title.strip(),
+        "description": description.strip(),
+        "notes": output,
+    }
+
+def generate_flashcards_from_material(material, num_cards: int = 5) -> dict:
     text_body = gather_material_text(material)
     if not text_body:
         raise ValueError("No extractable text found in this Material’s attachments.")
 
     system_prompt = (
-        "You are an AI study helper. From the following material, generate exactly " + str(num_cards) + 
-        " simple question–answer flashcards. Return as JSON with key 'flashcards' mapping to a list of objects "
-        "each having 'question' and 'answer' strings. Do NOT include any commentary—only valid JSON.\n\n"
-        "Example format:\n"
-        "{\n  \"flashcards\": [\n"
-        "    { \"question\": \"What is X?\", \"answer\": \"X is ...\" },\n"
-        "    … (total " + str(num_cards) + " cards) …\n"
-        "  ]\n}\n\n"
-        "Material:\n\"\"\"\n" + text_body + "\n\"\"\"\n"
+        f"You are an AI study helper. From the material below, generate exactly {num_cards} "
+        "simple question-answer flashcards. Additionally, generate a title and description "
+        "for the flashcard set. Return JSON with the following structure:\n"
+        "{\n"
+        "  \"title\": \"<title for flashcard set>\",\n"
+        "  \"description\": \"<description or instructions>\",\n"
+        "  \"flashcards\": [\n"
+        "    { \"question\": \"...\", \"answer\": \"...\" },\n"
+        "    ...\n"
+        "  ]\n"
+        "}\n\n"
+        f"Material:\n\"\"\"\n{text_body}\n\"\"\"\n"
     )
 
     response = client.chat.completions.create(
@@ -225,11 +225,19 @@ def generate_flashcards_from_material(material, num_cards: int = 5) -> list[dict
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError as e:
-        raise ValueError(f"AI did not return valid JSON for flashcards: {e}\n\n{raw}")
+        raise ValueError(f"AI did not return valid JSON for flashcards with metadata: {e}\n\n{raw}")
 
+    title = parsed.get("title")
+    description = parsed.get("description")
     cards = parsed.get("flashcards")
+
+    if not isinstance(title, str) or not title.strip():
+        raise ValueError("AI did not return a valid 'title' for the flashcard set.")
+    if not isinstance(description, str):
+        description = ""
     if not isinstance(cards, list) or len(cards) < 1:
-        raise ValueError("AI JSON did not contain a 'flashcards' array.")
+        raise ValueError("AI JSON did not contain a valid 'flashcards' array.")
+
     validated = []
     for idx, obj in enumerate(cards):
         q = obj.get("question", "").strip()
@@ -237,4 +245,9 @@ def generate_flashcards_from_material(material, num_cards: int = 5) -> list[dict
         if not q or not a:
             raise ValueError(f"Flashcard #{idx+1} missing question or answer: {obj}")
         validated.append({"question": q, "answer": a})
-    return validated
+
+    return {
+        "title": title.strip(),
+        "description": description.strip(),
+        "flashcards": validated,
+    }

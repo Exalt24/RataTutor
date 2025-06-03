@@ -1,11 +1,29 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import MaterialViewSet, NoteViewSet, FlashcardViewSet, QuizViewSet, QuizQuestionViewSet, AttachmentUploadView, CreateConversationView, ConversationChatView, RetrieveConversationView, NoteGenerationView, FlashcardGenerationView, QuizGenerationView, CopyMaterialView
+from .views import (
+    MaterialViewSet,
+    NoteViewSet,
+    FlashcardSetViewSet,
+    FlashcardViewSet,
+    QuizViewSet,
+    QuizQuestionViewSet,
+    AttachmentUploadView,
+    CreateConversationView,
+    ConversationChatView,
+    RetrieveConversationView,
+    NoteGenerationView,
+    FlashcardGenerationView,
+    QuizGenerationView,
+    CopyMaterialView,
+)
+
 app_name = "api"
+
 router = DefaultRouter()
 router.register(r"materials", MaterialViewSet, basename="material")
 router.register(r"notes", NoteViewSet, basename="note")
+router.register(r"flashcard-sets", FlashcardSetViewSet, basename="flashcardset")
 router.register(r"flashcards", FlashcardViewSet, basename="flashcard")
 router.register(r"quizzes", QuizViewSet, basename="quiz")
 router.register(r"quiz-questions", QuizQuestionViewSet, basename="quizquestion")
@@ -35,7 +53,7 @@ urlpatterns = [
         name="conv-detail"
     ),
 
-    # 3) AI‐powered generation endpoints:
+    # 3) AI-powered generation endpoints:
     path(
         "materials/<int:material_id>/generate-notes/",
         NoteGenerationView.as_view(),
@@ -52,12 +70,13 @@ urlpatterns = [
         name="generate-quiz"
     ),
 
+    # 4) Copy material
     path(
         "materials/<int:material_id>/copy/",
         CopyMaterialView.as_view(),
         name="material-copy"
     ),
 
-    # 4) CRUD for Material, Note, Flashcard, Quiz, QuizQuestion
+    # 5) CRUD routes from router
     path("", include(router.urls)),
 ]
