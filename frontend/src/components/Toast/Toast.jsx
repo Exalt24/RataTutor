@@ -1,4 +1,3 @@
-// src/components/Toast/Toast.jsx
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import '../../styles/components/toast.css';
