@@ -6,7 +6,6 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode
-import base64
 from .models import UserProfile
 
 User = get_user_model()
@@ -193,121 +192,14 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         data["user"] = user
         return data
 
-class UpdateProfileByEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField(
-        write_only=True,
-        help_text="Current email of the user.",
-        error_messages={'required': 'Email is required.'}
-    )
-    new_email = serializers.EmailField(required=False, help_text="New email to update to.")
-    username = serializers.CharField(required=False, max_length=150, help_text="New username.")
-    full_name = serializers.CharField(required=False, max_length=255, help_text="Full name of the user.")
-    bio = serializers.CharField(required=False, help_text="Bio of the user.")
-    avatar = serializers.CharField(required=False, help_text="Base64-encoded image string.")
-
-    def validate_email(self, value):
-        if not User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("No account found with that email.")
-        return value
-
-    def update_profile(self):
-        data = self.validated_data
-        email = data.get('email')
-        user = User.objects.get(email__iexact=email)
-
-        user.username = data.get('username', user.username)
-        user.email = data.get('new_email', user.email)
-        user.save()
-
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        profile.full_name = data.get('full_name', profile.full_name)
-        profile.bio = data.get('bio', profile.bio)
-
-        avatar_data = data.get('avatar')
-        if avatar_data:
-            try:
-                format, imgstr = avatar_data.split(';base64,')
-                ext = format.split('/')[-1]
-                file_name = f"{user.username}_avatar.{ext}"
-                profile.avatar.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
-            except Exception as e:
-                raise serializers.ValidationError({"avatar": f"Invalid avatar data: {str(e)}"})
-
-        profile.save()
-
-        return {
-            "message": "Profile updated successfully.",
-            "user": {
-                "username": user.username,
-                "email": user.email
-            },
-            "profile": {
-                "full_name": profile.full_name,
-                "bio": profile.bio,
-                "avatar": profile.avatar.url if profile.avatar else None
-            }
-        }
-
 class UpdateProfileSerializer(serializers.Serializer):
     username = serializers.CharField(required=False, max_length=150, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
     full_name = serializers.CharField(required=False, max_length=255, allow_blank=True)
     bio = serializers.CharField(required=False, allow_blank=True)
-    avatar = serializers.CharField(required=False, allow_blank=True, allow_null=True, help_text="Base64-encoded image string.")
-
-    def update_profile(self, validated_data):
-        user = self.context['request'].user
-        data = validated_data  # Pass it from the view!
-
-        user.username = data.get('username', user.username)
-        user.email = data.get('email', user.email)
-        user.save()
-
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        profile.full_name = data.get('full_name', profile.full_name)
-        profile.bio = data.get('bio', profile.bio)
-
-        avatar_data = data.get('avatar')
-        if avatar_data and isinstance(avatar_data, str) and avatar_data.strip().startswith('data:'):
-            try:
-                format, imgstr = avatar_data.split(';base64,')
-                ext = format.split('/')[-1]
-                file_name = f"{user.username}_avatar.{ext}"
-                profile.avatar.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
-            except Exception as e:
-                raise serializers.ValidationError({"avatar": f"Invalid avatar data: {str(e)}"})
-
-        profile.save()
-
-
-
-
-    # def update_profile(self):
-    #     user = self.context['request'].user
-    #     data = self.validated_data
-
-    #     # Update user fields
-    #     user.username = data.get('username', user.username)
-    #     user.email = data.get('email', user.email)
-    #     user.save()
-
-    #     # Update profile
-    #     profile, _ = UserProfile.objects.get_or_create(user=user)
-    #     profile.full_name = data.get('full_name', profile.full_name)
-    #     profile.bio = data.get('bio', profile.bio)
-
-    #     avatar_data = data.get('avatar')
-    #     avatar_data = data.get('avatar')
-    #     print("Received avatar_data:", repr(avatar_data))
-    #     if avatar_data:
-    #         avatar_data = avatar_data.strip()
-    #         if avatar_data:
-    #             try:
-    #                 format, imgstr = avatar_data.split(';base64,')
-    #                 ext = format.split('/')[-1]
-    #                 file_name = f"{user.username}_avatar.{ext}"
-    #                 profile.avatar.save(file_name, ContentFile(base64.b64decode(imgstr)), save=True)
-    #             except Exception as e:
-    #                 raise serializers.ValidationError({"avatar": f"Invalid avatar data: {str(e)}"})
-
-        profile.save()
+    avatar = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        help_text="Identifier or URL string for the selected premade avatar."
+    )

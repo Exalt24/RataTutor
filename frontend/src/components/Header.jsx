@@ -47,7 +47,7 @@ const Header = ({
       <header className="relative flex items-center justify-between bg-white px-4 py-4 shadow text-xs sm:text-sm">
         {/* Welcome Message */}
         <div className="flex items-center">
-         <h1 className="label-text text-xl">Welcome, {profile.full_name}!</h1>
+         <h1 className="label-text text-xl">Welcome, {profile.username}!</h1>
         </div>
 
         {/* Actions & Stats + Profile */}

@@ -133,6 +133,10 @@ export async function getProfile() {
     },
   });
 
+  console.log("Profile data:", res.data);
+  if (!res.data) {
+    throw new Error("Failed to fetch profile data");
+  }
   return res.data;
 }
 
