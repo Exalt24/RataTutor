@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpDown, GripVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, Globe, GripVertical, Lock, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 
 const CreateFlashcards = ({ onClose }) => {
@@ -6,6 +6,7 @@ const CreateFlashcards = ({ onClose }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [isPrivate, setIsPrivate] = useState(true);
 
   const MAX_DESCRIPTION_LENGTH = 100;
 
@@ -65,17 +66,40 @@ const CreateFlashcards = ({ onClose }) => {
 
   return (
     <div className="letter-no-lines">
-      <div className="max-w-[90rem] mx-auto p-4">
-        <div className="flex items-center mb-8">
+      <div className="max-w-[90rem] mx-auto px-10 py-3">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-4"
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <h2 className="text-3xl font-semibold label-text">
+              Create Flashcards
+            </h2>
+          </div>
           <button
-            onClick={onClose}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-4"
+            onClick={() => setIsPrivate(!isPrivate)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 ${
+              isPrivate 
+                ? 'bg-white border-gray-300 hover:bg-gray-50' 
+                : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+            }`}
+            title={isPrivate ? "Make Public" : "Make Private"}
           >
-            <ArrowLeft size={24} />
+            {isPrivate ? (
+              <>
+                <Lock size={20} className="text-gray-600" />
+                <span className="text-gray-600 font-medium">Private</span>
+              </>
+            ) : (
+              <>
+                <Globe size={20} className="text-blue-600" />
+                <span className="text-blue-600 font-medium">Public</span>
+              </>
+            )}
           </button>
-          <h2 className="text-3xl font-semibold label-text">
-            Create Flashcards
-          </h2>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all mb-8">
@@ -131,10 +155,10 @@ const CreateFlashcards = ({ onClose }) => {
             >
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
-                  <GripVertical size={20} className="text-gray-400" />
                   <h3 className="text-xl font-medium label-text">Item {index + 1}</h3>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <GripVertical size={24} className="text-gray-400 rotate-90" />
                   <button
                     onClick={() => swapFields(index)}
                     className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
