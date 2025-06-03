@@ -1,4 +1,4 @@
-import { Clock, Copy, Download, Globe, Lock, MoreVertical, Pin } from 'lucide-react'
+import { Clock, Copy, Delete, Download, Globe, Lock, MoreVertical, Pin, Trash } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 export const defaultFiles = [
@@ -133,8 +133,8 @@ const MaterialCard = ({
                       setShowMenu(false)
                     }}
                   >
-                    <Download size={14} />
-                    Export Material
+                    <Trash size={14} />
+                    Delete
                   </button>
                   <button
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
