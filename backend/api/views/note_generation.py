@@ -29,6 +29,7 @@ class NoteGenerationView(APIView):
                     "title": result.get("title", "AI-generated note"),
                     "description": result.get("description", ""),
                     "content": nd["note_text"] if isinstance(nd, dict) else nd,
+                    "public": False
                 },
                 context={"request": request}
             )

@@ -33,7 +33,8 @@ class FlashcardGenerationView(APIView):
         flashcard_set = FlashcardSet.objects.create(
             material=material,
             title=result["title"],
-            description=result["description"]
+            description=result["description"],
+            public=False
         )
 
         for fc in result["flashcards"]:

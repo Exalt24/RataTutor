@@ -33,7 +33,8 @@ class QuizGenerationView(APIView):
         quiz = Quiz.objects.create(
             material=material,
             title=result["title"],
-            description=result["description"]
+            description=result["description"],
+            public=False
         )
 
         for qd in result["questions"]:

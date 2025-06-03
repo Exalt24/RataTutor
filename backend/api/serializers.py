@@ -51,10 +51,14 @@ class NoteSerializer(serializers.ModelSerializer):
         validators=[MinLengthValidator(1, message="Note content cannot be empty.")],
         help_text="The main text content of the note. Must be at least 1 character.",
     )
+    public = serializers.BooleanField(
+        default=False,
+        help_text="Whether this note is shared publicly."
+    )
 
     class Meta:
         model = Note
-        fields = ["id", "material", "title", "description", "content", "created_at", "updated_at"]
+        fields = ["id", "material", "title", "description", "content", "public", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_title(self, value):
@@ -96,11 +100,15 @@ class FlashcardSetSerializer(serializers.ModelSerializer):
         allow_blank=True,
         help_text="(Optional) Description or notes about this flashcard set."
     )
+    public = serializers.BooleanField(
+        default=False,
+        help_text="Whether this flashcard set is shared publicly."
+    )
     flashcards = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = FlashcardSet
-        fields = ["id", "material", "title", "description", "flashcards", "created_at", "updated_at"]
+        fields = ["id", "material", "title", "description", "public", "flashcards", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def get_flashcards(self, obj):
@@ -300,12 +308,16 @@ class QuizSerializer(serializers.ModelSerializer):
         allow_blank=True,
         help_text="(Optional) Additional instructions or description for this quiz."
     )
+    public = serializers.BooleanField(
+        default=False,
+        help_text="Whether this quiz is shared publicly."
+    )
 
     questions = QuizQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ["id", "material", "title", "description", "questions", "created_at", "updated_at"]
+        fields = ["id", "material", "title", "description", "public", "questions", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_title(self, value):
