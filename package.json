@@ -1,8 +1,9 @@
 {
   "scripts": {
     "backend": "cd backend && python manage.py runserver",
+    "create-test-user": "cd backend && python manage.py create_test_user",
     "frontend": "cd frontend && npm run dev",
-    "dev": "concurrently --kill-others \"npm run backend\" \"npm run frontend\""
+    "dev": "concurrently --kill-others \"npm run create-test-user && npm run backend\" \"npm run frontend\""
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
