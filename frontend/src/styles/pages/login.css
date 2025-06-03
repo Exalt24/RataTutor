@@ -201,6 +201,20 @@
   background-size: 100% 1.2em;
 }
 
+.letter-no-lines {
+  margin: 0 auto;
+  top: 0;
+  left: 0;
+  width: 90%;
+  height: auto;
+  background: #fff;
+  padding: 3rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background-image: linear-gradient(#eee 0.1em, transparent 0.1em);
+  background-size: 100% 1.2em;
+}
+
 @keyframes slideToTop {
   0% {
     transform: translateY(0);
