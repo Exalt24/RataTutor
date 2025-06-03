@@ -81,7 +81,8 @@ class CopyMaterialView(APIView):
                 material=new_material,
                 title=note.title,
                 description=note.description,
-                content=note.content
+                content=note.content,
+                public=False  # force new notes to be private
             )
 
         # 7) Duplicate flashcard sets and their nested flashcards
@@ -89,7 +90,8 @@ class CopyMaterialView(APIView):
             new_set = FlashcardSet.objects.create(
                 material=new_material,
                 title=flashcard_set.title,
-                description=flashcard_set.description
+                description=flashcard_set.description,
+                public=False  # force new sets to be private
             )
             for card in flashcard_set.cards.all():
                 Flashcard.objects.create(
@@ -103,7 +105,8 @@ class CopyMaterialView(APIView):
             new_quiz = Quiz.objects.create(
                 material=new_material,
                 title=quiz.title,
-                description=quiz.description
+                description=quiz.description,
+                public=False  # force new quizzes to be private
             )
             for q in quiz.questions.all():
                 QuizQuestion.objects.create(

@@ -81,6 +81,10 @@ class Note(models.Model):
         help_text="(Optional) A longer description or details for this note."
     )
     content = models.TextField()
+    public = models.BooleanField(
+        default=False,
+        help_text="If true, this note is shared publicly; otherwise it’s private."
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -134,6 +138,10 @@ class Quiz(models.Model):
         blank=True,
         help_text="(Optional) Additional instructions or description for this quiz."
     )
+    public = models.BooleanField(
+        default=False,
+        help_text="If true, this quiz is shared publicly; otherwise it’s private."
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -176,6 +184,10 @@ class FlashcardSet(models.Model):
     description = models.TextField(
         blank=True,
         help_text="(Optional) A longer description or instructions for this flashcard set."
+    )
+    public = models.BooleanField(
+        default=False,
+        help_text="If true, this flashcard set is shared publicly; otherwise it’s private."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
