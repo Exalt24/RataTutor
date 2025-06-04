@@ -1,14 +1,14 @@
-import { ChevronDown, FileQuestion, RefreshCw } from 'lucide-react'
+import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, X } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { useLoading } from '../components/Loading/LoadingContext'
+import { useToast } from '../components/Toast/ToastContext'
+import { deleteMaterial, getMaterials, toggleMaterialPin, toggleMaterialVisibility, updateMaterial } from '../services/apiService'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
 import CreateQuiz from './CreateQuiz'
 import MaterialCard from './MaterialCard'
 import MaterialContent from './MaterialContent'
-import { getMaterials, updateMaterial, deleteMaterial, toggleMaterialPin, toggleMaterialVisibility } from '../services/apiService'
-import { useLoading } from '../components/Loading/LoadingContext'
-import { useToast } from '../components/Toast/ToastContext'
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
@@ -44,6 +44,8 @@ const MaterialsScreen = () => {
   const [showMaterialContent, setShowMaterialContent] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
   const [isFromExplore, setIsFromExplore] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
 
   const typeDropdownRef = useRef(null)
   const updatedDropdownRef = useRef(null)
@@ -193,7 +195,9 @@ const MaterialsScreen = () => {
   const filteredMaterials = materials.filter(m => 
     m.status === 'active' && 
     filterByTime(m) && 
-    filterByType(m)
+    filterByType(m) &&
+    (m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     m.description?.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   const pinnedMaterials = filteredMaterials.filter(m => m.pinned)
@@ -339,6 +343,10 @@ const MaterialsScreen = () => {
     }
   }
 
+  const clearSearch = () => {
+    setSearchQuery('')
+  }
+
   // Show initial loading state
   if (initialLoading) {
     return <LoadingState />
@@ -398,8 +406,47 @@ const MaterialsScreen = () => {
         />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-4 text-xs sm:text-sm">
-            <h1 className="exam-heading exam-heading-mini text-base">Your Materials</h1>
+          <div className="flex justify-between items-center mb-4 text-xs sm:text-sm p-4">
+            <div className="relative w-full max-w-md">
+              <div className={`
+                relative flex items-center
+                transition-all duration-200
+                ${isSearchFocused ? 'ring-2 ring-blue-400' : ''}
+                rounded-full border border-gray-200
+                bg-white
+              `}>
+                <Search 
+                  className={`
+                    absolute left-4
+                    transition-colors duration-200
+                    ${isSearchFocused ? 'text-blue-500' : 'text-gray-400'}
+                  `} 
+                  size={20} 
+                />
+                <input
+                  type="text"
+                  placeholder="Search your materials..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className="label-text w-full pl-12 pr-12 py-3 rounded-full focus:outline-none text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={16} className="text-gray-400" />
+                  </button>
+                )}
+              </div>
+              {searchQuery && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Found {filteredMaterials.length} results
+                </p>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               <button 
                 data-hover="Create Material"
@@ -411,7 +458,7 @@ const MaterialsScreen = () => {
               <button 
                 data-hover="Refresh"
                 className="exam-button-mini py-1 px-2 flex items-center gap-1"
-                onClick={() => loadMaterials(false)} // Refresh with global loading
+                onClick={() => loadMaterials(false)}
               >
                 <RefreshCw size={14} />
                 Refresh
@@ -529,8 +576,11 @@ const MaterialsScreen = () => {
             <>
               {/* Pinned Materials Section */}
               {pinnedMaterials.length > 0 && (
-                <div className="mb-6">
-                  <h2 className="text-sm font-medium text-gray-700 mb-3">Pinned</h2>
+                <div className="mb-6 px-4">
+                  <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
+                    <Pin size={18} className="text-[#FF6B6B]" />
+                    Pinned
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {pinnedMaterials.map((material) => (
                       <MaterialCard
@@ -556,8 +606,11 @@ const MaterialsScreen = () => {
 
               {/* Other Materials Section */}
               {otherMaterials.length > 0 && (
-                <div>
-                  <h2 className="exam-subheading sm:text-sm">All Materials</h2>
+                <div className='px-4'>
+                  <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
+                    <Folder size={18} className="text-[#4ECDC4]" />
+                    All Materials
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {otherMaterials.map((material) => (
                       <MaterialCard

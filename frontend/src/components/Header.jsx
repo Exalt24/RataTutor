@@ -33,7 +33,7 @@ const Header = ({
             className="flex items-center space-x-1 hover:opacity-75 transition-opacity"
           >
             <span className="text-lg">🔥</span>
-            <span className="font-medium">{profileData.streak.count} Days</span>
+            <span className="font-medium label-text">{profileData.streak.count} Days</span>
           </button>
 
 

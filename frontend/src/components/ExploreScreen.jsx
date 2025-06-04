@@ -54,7 +54,7 @@ const ExploreScreen = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
-              className="w-full pl-12 pr-12 py-3 rounded-full focus:outline-none text-sm"
+              className="label-text w-full pl-12 pr-12 py-3 rounded-full focus:outline-none text-sm"
             />
             {searchQuery && (
               <button
