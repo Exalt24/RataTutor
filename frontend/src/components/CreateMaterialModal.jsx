@@ -117,7 +117,7 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
     }
   };
 
-  const isDisabled = !validities.title || submitting;
+  const isDisabled = !validities.materialTitle || submitting;
 
   if (!isOpen) return null;
 
