@@ -1,44 +1,22 @@
-// src/screens/ProfileScreen.jsx
-import React from 'react'
-import avatar from '../assets/r1.png'
-import { getProfile, updateProfile } from "../services/authService";
-import { useEffect, useState } from 'react';
+import avatarPlaceholder from '../assets/r1.png';
 
-const ProfileScreen = ({ points, badges, onEditProfile }) => {
-  const [profile, setProfile] = useState({
-    full_name: '',
-    username: '',
-  });
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile(); // Assuming this returns { full_name: "John Doe", username: "johndoe" }
-        setProfile(data);
-      } catch (error) {
-        console.error('Failed to fetch profile:', error);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
+const ProfileScreen = ({ onEditProfile, profileData }) => {
   return (
     <div className="space-y-4 text-xs sm:text-sm">
       {/* User Info Header */}
       <div className="exam-card exam-card--alt p-4 flex flex-col items-center space-y-2">
         <div className="w-24 h-24 rounded-full overflow-hidden">
           <img
-            src={avatar}
+            src={profileData.avatar || avatarPlaceholder}
             alt="User Avatar"
             className="w-full h-full object-cover"
           />
         </div>
         <span className="exam-heading-mini label-text">
-          {profile.full_name || 'Loading...'}
+          {profileData.full_name || 'Anonymous User'}
         </span>
         <span className="text-gray-500 label-text">
-          @{profile.username || 'Loading...'}
+          @{profileData.username || 'anonymous'}
         </span>
         <button 
           onClick={onEditProfile}
@@ -49,24 +27,17 @@ const ProfileScreen = ({ points, badges, onEditProfile }) => {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <div className="exam-card p-3 text-center">
-          <h3 className="font-semibold">Level 1</h3>
-          <p className="mt-1 text-sm">35/60XP <span className="pixel-accent">2</span></p>
-        </div>
-        <div className="exam-card p-3 text-center">
-          <h3 className="font-semibold">Streak</h3>
-          <p className="mt-1 text-2xl">🔥 0</p>
-        </div>
-        <div className="exam-card p-3 text-center">
-          <h3 className="font-semibold">Coins</h3>
-          <p className="mt-1 text-2xl">🪙 35</p>
-        </div>
+      {/* Bio Section */}
+      <div className="exam-card p-4">
+        <h3 className="font-semibold mb-2">Bio</h3>
+        <p className="text-sm text-gray-700">
+          {profileData.bio || "No bio available. Update your bio!"}
+        </p>
       </div>
 
       {/* Badges Section */}
-      <div className="exam-card exam-card--alt p-4">
+      {/* The badges section is commented out for now. You can uncomment and adjust when ready */}
+      {/* <div className="exam-card exam-card--alt p-4">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-semibold">Badges</h3>
           <button data-hover="View more" className="exam-button-mini py-1 px-3 text-xs sm:text-sm">
@@ -94,7 +65,7 @@ const ProfileScreen = ({ points, badges, onEditProfile }) => {
             <p>No badges yet</p>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

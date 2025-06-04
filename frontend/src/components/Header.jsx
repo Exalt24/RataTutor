@@ -2,7 +2,7 @@
 import { Flame, LogOut, Plus, User } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import StreakModal from "./StreakModal";
-import { getProfile, updateProfile } from "../services/authService";
+
 const Header = ({
   streak = 5,
   level,
@@ -10,6 +10,7 @@ const Header = ({
   onLogout,
   onProfile,
   onStreak,
+  profileData
 }) => {
   const [open, setOpen] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
@@ -17,19 +18,6 @@ const Header = ({
     full_name: "",
     username: "",
   });
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile(); // Assuming this returns { full_name: "John Doe", username: "johndoe" }
-        setProfile(data);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
-      }
-    };
-
-    fetchProfile();
-  }, []);
 
   const streakData = {
     current: streak,
@@ -47,7 +35,7 @@ const Header = ({
       <header className="relative flex items-center justify-between bg-white px-4 py-4 shadow text-xs sm:text-sm">
         {/* Welcome Message */}
         <div className="flex items-center">
-         <h1 className="label-text text-xl">Welcome, {profile.username}!</h1>
+         <h1 className="label-text text-xl">Welcome, {profileData.username || "User"}!</h1>
         </div>
 
         {/* Actions & Stats + Profile */}
