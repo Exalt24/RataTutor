@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
-import { ArrowLeft, X} from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import { updateProfile } from "../services/authService";
+import ValidatedInput from '../components/ValidatedInput';
 
 // Import your local avatar images
 import avatar1 from '../assets/avatar1.png'
@@ -37,7 +38,7 @@ const generateAvatarCombinations = () => {
         backgroundColor: bg.hex,
         backgroundName: bg.name,
         displayName: `${avatar.name} - ${bg.name}`,
-        isFree: true // You can adjust this logic
+        isFree: true
       });
     });
   });
@@ -197,39 +198,169 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
   );
 };
 
-const EditProfileScreen = ({ onBack }) => {
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(avatarCombinations[0]);
-
-  const handleAvatarSave = (avatar) => {
-    setSelectedAvatar(avatar);
+const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
+  // Initialize avatar from existing profile data or default to first combination
+  const getCurrentAvatar = () => {
+    if (profileData.avatar) {
+      // If avatar exists in profile data, try to find matching combination
+      const existingAvatar = avatarCombinations.find(combo => 
+        combo.id === parseInt(profileData.avatar) || 
+        combo.displayName === profileData.avatar
+      );
+      return existingAvatar || avatarCombinations[0];
+    }
+    return avatarCombinations[0];
   };
 
-  const handleSaveChanges = () => {
-    console.log('Saving changes...', {
-      avatar: selectedAvatar
+  const [selectedAvatar, setSelectedAvatar] = useState(getCurrentAvatar());
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: profileData.full_name || '',
+    username: profileData.username || '',
+    email: profileData.email || '',
+    bio: profileData.bio || '',
+    avatar: profileData.avatar || selectedAvatar.id.toString(),
+  });
+  const [validities, setValidities] = useState({
+    full_name: !!(profileData.full_name),
+    username: !!(profileData.username),
+    email: !!(profileData.email),
+    bio: true, // Bio is optional
+  });
+  const [serverErrors, setServerErrors] = useState({});
+
+  const { showLoading, hideLoading } = useLoading();
+  const { showToast } = useToast();
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear server error for this field when user starts typing
+    if (serverErrors[name]) {
+      setServerErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  // Handle validation state changes
+  const handleValidityChange = (field, isValid) => {
+    setValidities(prev => ({ ...prev, [field]: isValid }));
+  };
+
+  // Handle avatar selection
+  const handleAvatarSave = (avatar) => {
+    setSelectedAvatar(avatar);
+    setFormData(prev => ({ ...prev, avatar: avatar.id.toString() }));
+  };
+
+  // Check if form data has changed from original
+  const hasChanges = () => {
+    const originalData = {
+      full_name: profileData.full_name || '',
+      username: profileData.username || '',
+      email: profileData.email || '',
+      bio: profileData.bio || '',
+      avatar: profileData.avatar || getCurrentAvatar().id.toString(),
+    };
+
+    return Object.keys(formData).some(key => 
+      formData[key] !== originalData[key]
+    );
+  };
+
+  // Check if all required fields are valid
+  const allRequiredFieldsValid = () => {
+    return Object.entries(validities).every(([field, isValid]) => {
+      if (field === 'bio') return true; // Bio is optional
+      return isValid;
     });
+  };
+
+  // Determine if save button should be disabled
+  const isDisabled = !hasChanges() || !allRequiredFieldsValid();
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Early return if button should be disabled (safety check)
+    if (isDisabled) return;
+
+    setServerErrors({}); // Clear previous server errors
+    showLoading();
+
+    try {
+      // Update the profile data
+      await updateProfile(formData);
+
+      // Refetch profile data after successful update
+      await fetchProfileData();
+
+      showToast({
+        variant: 'success',
+        title: 'Profile updated successfully!',
+        subtitle: 'Your profile has been updated.',
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error.response?.data || error);
+      
+      // Handle server validation errors
+      const errorData = error.response?.data || {};
+      const fieldErrors = {};
+      
+      Object.entries(errorData).forEach(([key, val]) => {
+        if (Array.isArray(val)) {
+          fieldErrors[key] = val[0]; // Take first error message
+        } else if (typeof val === 'string') {
+          fieldErrors[key] = val;
+        }
+      });
+      
+      if (Object.keys(fieldErrors).length > 0) {
+        setServerErrors(fieldErrors);
+        showToast({
+          variant: 'error',
+          title: 'Validation Error',
+          subtitle: 'Please fix the errors below.',
+        });
+      } else {
+        showToast({
+          variant: 'error',
+          title: 'Failed to update profile!',
+          subtitle: 'Please try again later.',
+        });
+      }
+    } finally {
+      hideLoading();
+    }
   };
 
   return (
     <>
       <div className="space-y-6 text-xs sm:text-sm max-w-6xl mx-auto px-4">
-        {/* Edit Profile Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-8">
+        <div className="exam-card exam-card--alt p-8 space-y-8">
           <div className="flex items-center justify-between border-b border-gray-200 pb-6">
             <div className="flex space-x-3">
               <button 
                 onClick={onBack}
-                className="flex items-center justify-center w-12 h-12 rounded-full hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition"
               >
-                <ArrowLeft size={24} className="text-gray-600" />
+                <ArrowLeft size={28} className="text-gray-600" />
               </button>
-              <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
+              <h2 className="text-xl">Edit Profile</h2>
             </div>
             <button 
-              data-hover="Save Changes"
-              className="exam-button-mini px-6 py-3"
-              onClick={handleSaveChanges}
+              onClick={handleSubmit}
+              disabled={isDisabled}
+              data-hover={isDisabled ? 
+                (!hasChanges() ? "No changes to save" : "Fix errors to save") : 
+                "Are you sure?"
+              }
+              className={`exam-button-mini py-1.5 px-4 text-xs sm:text-sm transition-all ${
+                isDisabled ? 
+                'opacity-50 cursor-not-allowed' : 
+                'hover:scale-105'
+              }`}
             >
               Save Changes
             </button>
@@ -238,11 +369,11 @@ const EditProfileScreen = ({ onBack }) => {
           {/* Avatar Upload */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative group">
-              {/* Gradient ring effect - behind everything */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full opacity-20 blur-md group-hover:opacity-30 transition-opacity pointer-events-none -z-10"></div>
+              {/* Gradient ring effect */}
+              <div className="absolute -inset-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full opacity-20 blur-md group-hover:opacity-30 transition-opacity pointer-events-none"></div>
               
               <div 
-                className="relative w-40 h-40 rounded-full overflow-hidden cursor-pointer shadow-2xl border-4 border-white transition-all duration-300 group-hover:scale-105 z-10"
+                className="relative w-32 h-32 rounded-full overflow-hidden cursor-pointer shadow-xl border-4 border-white transition-all duration-300 group-hover:scale-105"
                 style={{ backgroundColor: selectedAvatar.backgroundColor }}
                 onClick={() => setIsAvatarModalOpen(true)}
               >
@@ -250,7 +381,7 @@ const EditProfileScreen = ({ onBack }) => {
                   <img
                     src={selectedAvatar.avatarUrl}
                     alt="User Avatar"
-                    className="w-32 h-32 object-cover rounded-full z-10 relative"
+                    className="w-24 h-24 object-cover rounded-full z-10 relative"
                     style={{ 
                       filter: 'contrast(1.2) brightness(1.1)',
                       transform: 'scale(1.1)'
@@ -270,80 +401,60 @@ const EditProfileScreen = ({ onBack }) => {
                 </div>
               </div>
             </div>
-            
-            <div className="text-center">
-              <p className="text-gray-600 text-sm font-medium">Tap to change your avatar</p>
-              <p className="text-gray-400 text-xs mt-1">Choose from our collection of avatar combinations</p>
-            </div>
+            <p className="text-gray-500 text-xs">Click to change profile picture</p>
           </div>
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Full Name</label>
-                <input
-                  type="text"
-                  defaultValue="Nikka Joie Mendoza"
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Username</label>
-                <input
-                  type="text"
-                  defaultValue="@bananachips"
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                />
-              </div>
+              <ValidatedInput
+                variant="profile"
+                label="Full Name"
+                name="full_name"
+                type="text"
+                value={formData.full_name}
+                onChange={handleChange}
+                onValidityChange={handleValidityChange}
+                errorMessage={serverErrors.full_name}
+                required
+              />
+              <ValidatedInput
+                variant="profile"
+                label="Username"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={handleChange}
+                onValidityChange={handleValidityChange}
+                errorMessage={serverErrors.username}
+                required
+              />
             </div>
 
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Email</label>
-                <input
-                  type="email"
-                  defaultValue="nikka@example.com"
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Bio</label>
-                <textarea
-                  defaultValue="Student and aspiring developer"
-                  rows="4"
-                  className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none bg-gray-50 focus:bg-white"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Settings */}
-          <div className="pt-8 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">Preferences</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-                <div>
-                  <p className="font-semibold text-gray-800">Email Notifications</p>
-                  <p className="text-sm text-gray-600 mt-1">Receive updates about your account</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" defaultChecked />
-                  <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600"></div>
-                </label>
-              </div>
-              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100">
-                <div>
-                  <p className="font-semibold text-gray-800">Dark Mode</p>
-                  <p className="text-sm text-gray-600 mt-1">Switch to dark theme</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" />
-                  <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-600"></div>
-                </label>
-              </div>
+              <ValidatedInput
+                variant="profile"
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                onValidityChange={handleValidityChange}
+                errorMessage={serverErrors.email}
+                required
+              />
+              <ValidatedInput
+                variant="profile"
+                label="Bio"
+                name="bio"
+                type="textarea"
+                value={formData.bio}
+                onChange={handleChange}
+                onValidityChange={handleValidityChange}
+                errorMessage={serverErrors.bio}
+                placeholder="Tell us about yourself..."
+                rows={3}
+              />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 export const USERNAME_REGEX = /^[\w.@+-]{3,}$/
-export const EMAIL_REGEX    = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}(?:\.[A-Za-z]{2,})?$/
+export const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/
+export const FULL_NAME_REGEX = /^[a-zA-Z\s\-'\.]+$/
 
 export const defaultValidators = {
   // Auth validators
@@ -80,6 +81,13 @@ export const defaultValidators = {
     return '';
   },
 
+  flashcardSetDescription: v => {
+    if (v && v.length > 500) {
+      return 'Description must be less than 500 characters';
+    }
+    return '';
+  },
+
   flashcardQuestion: v => {
     if (!v || v.trim().length === 0) {
       return 'Question is required';
@@ -146,4 +154,19 @@ export const defaultValidators = {
     }
     return '';
   },
+
+  full_name: (value) => {
+    if (!value?.trim()) return "Full name is required.";
+    if (value.trim().length < 2) return "Full name must be at least 2 characters.";
+    if (value.trim().length > 255) return "Full name cannot exceed 255 characters.";
+    if (!FULL_NAME_REGEX.test(value.trim())) return "Full name can only contain letters, spaces, hyphens, apostrophes, and periods.";
+    return "";
+  },
+
+  bio: (value) => {
+    // Bio is optional, so empty is fine
+    if (!value) return "";
+    if (value.length > 500) return "Bio cannot exceed 500 characters.";
+    return "";
+  }
 }
