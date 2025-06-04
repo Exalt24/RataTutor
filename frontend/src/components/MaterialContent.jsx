@@ -12,6 +12,7 @@ import {
   Paperclip
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useToast } from '../components/Toast/ToastContext';
 import MaterialFile from "./MaterialFile";
 import ViewFlashcards from "./ViewFlashcards";
 import ViewNotes from "./ViewNotes";
@@ -113,8 +114,13 @@ const MaterialContent = ({
   onCreateQuiz,
   onBack,
   onTitleChange,
+  onMaterialUpdate,
   readOnly = false
 }) => {
+  const { showToast } = useToast();
+  
+  // Local material state for optimistic updates
+  const [localMaterial, setLocalMaterial] = useState(material);
   const [showViewFlashcards, setShowViewFlashcards] = useState(false);
   const [showViewQuiz, setShowViewQuiz] = useState(false);
   const [showViewNotes, setShowViewNotes] = useState(false);
@@ -131,11 +137,19 @@ const MaterialContent = ({
     Attachments: true
   });
 
-  // Extract content from API data structure
-  const flashcardSets = material?.flashcard_sets || [];
-  const notes = material?.notes || [];
-  const quizzes = material?.quizzes || [];
-  const attachments = material?.attachments || [];
+  // Update local state when prop changes (from parent updates)
+  useEffect(() => {
+    setLocalMaterial(material);
+    setIsMaterialPublic(isPublic);
+    setEditedTitle(material?.title || "");
+    setEditedDescription(material?.description || "");
+  }, [isPublic, material]);
+
+  // Extract content from local material state
+  const flashcardSets = localMaterial?.flashcard_sets || [];
+  const notes = localMaterial?.notes || [];
+  const quizzes = localMaterial?.quizzes || [];
+  const attachments = localMaterial?.attachments || [];
 
   const handleViewContent = (item, type) => {
     setSelectedContent(item);
@@ -166,11 +180,34 @@ const MaterialContent = ({
     }
   };
 
-  const handleTitleSave = () => {
-    if (editedTitle.trim() && editedTitle !== material?.title) {
-      onTitleChange(editedTitle, editedDescription);
+  const handleTitleSave = async () => {
+    if (editedTitle.trim() && (editedTitle !== localMaterial?.title || editedDescription !== localMaterial?.description)) {
+      try {
+        // Optimistically update local state immediately
+        const updatedMaterial = {
+          ...localMaterial,
+          title: editedTitle,
+          description: editedDescription
+        };
+        setLocalMaterial(updatedMaterial);
+        
+        // Call parent's update function (this updates MaterialsScreen and Dashboard state)
+        await onTitleChange(editedTitle, editedDescription);
+        
+      } catch (error) {
+        // If API call fails, revert to original values
+        setEditedTitle(material?.title || "");
+        setEditedDescription(material?.description || "");
+        setLocalMaterial(material);
+        
+        showToast({
+          variant: "error",
+          title: "Update failed",
+          subtitle: "Failed to update material. Please try again.",
+        });
+      }
     } else {
-      setEditedTitle(material?.title || "");
+      setEditedTitle(localMaterial?.title || "");
     }
     setIsEditingTitle(false);
   };
@@ -180,7 +217,7 @@ const MaterialContent = ({
       handleTitleSave();
     } else if (e.key === 'Escape') {
       setIsEditingTitle(false);
-      setEditedTitle(material?.title || "");
+      setEditedTitle(localMaterial?.title || "");
     }
   };
 
@@ -190,11 +227,34 @@ const MaterialContent = ({
     }
   };
 
-  const handleDescriptionSave = () => {
-    if (editedDescription !== material?.description) {
-      onTitleChange(editedTitle, editedDescription);
+  const handleDescriptionSave = async () => {
+    if (editedDescription !== localMaterial?.description || editedTitle !== localMaterial?.title) {
+      try {
+        // Optimistically update local state immediately
+        const updatedMaterial = {
+          ...localMaterial,
+          title: editedTitle,
+          description: editedDescription
+        };
+        setLocalMaterial(updatedMaterial);
+        
+        // Call parent's update function
+        await onTitleChange(editedTitle, editedDescription);
+        
+      } catch (error) {
+        // If API call fails, revert to original values
+        setEditedTitle(localMaterial?.title || "");
+        setEditedDescription(localMaterial?.description || "");
+        setLocalMaterial(material);
+        
+        showToast({
+          variant: "error",
+          title: "Update failed",
+          subtitle: "Failed to update material. Please try again.",
+        });
+      }
     } else {
-      setEditedDescription(material?.description || "");
+      setEditedDescription(localMaterial?.description || "");
     }
     setIsEditingDescription(false);
   };
@@ -204,7 +264,7 @@ const MaterialContent = ({
       handleDescriptionSave();
     } else if (e.key === 'Escape') {
       setIsEditingDescription(false);
-      setEditedDescription(material?.description || "");
+      setEditedDescription(localMaterial?.description || "");
     }
   };
 
@@ -251,17 +311,33 @@ const MaterialContent = ({
     }
   };
 
-  // Update local state when prop changes
-  useEffect(() => {
-    setIsMaterialPublic(isPublic);
-    setEditedTitle(material?.title || "");
-    setEditedDescription(material?.description || "");
-  }, [isPublic, material]);
-
   if (showViewFlashcards) {
     return (
-      <ViewFlashcards material={selectedContent} onClose={handleCloseView} readOnly={readOnly} />
-    );
+    <ViewFlashcards
+      mainMaterial={localMaterial}
+      material={selectedContent} 
+      onClose={handleCloseView} 
+      readOnly={readOnly}
+      onSuccess={(updatedFlashcardSet) => {
+        // Update the local material state with the updated flashcard set
+        const updatedMaterial = {
+            ...localMaterial,
+            flashcard_sets: localMaterial.flashcard_sets.map(set =>
+              set.id === updatedFlashcardSet.id ? updatedFlashcardSet : set
+            )
+          };
+          setLocalMaterial(updatedMaterial);
+          
+          // Also update the selected content to reflect changes
+          setSelectedContent(updatedFlashcardSet);
+          
+          // Call parent's update function to sync with Dashboard
+          if (onMaterialUpdate) {
+            onMaterialUpdate(updatedMaterial);
+          }
+      }}
+    />
+  );
   }
 
   if (showViewQuiz) {
@@ -302,7 +378,7 @@ const MaterialContent = ({
                       />
                     ) : (
                       <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                        {material?.title || "Material"}
+                        {localMaterial?.title || "Material"}
                       </h1>
                     )}
                     {!readOnly && (
@@ -351,7 +427,7 @@ const MaterialContent = ({
                       />
                     ) : (
                       <p className="text-sm text-gray-500 label-text">
-                        {material?.description || "View and manage your content"}
+                        {localMaterial?.description || "View and manage your content"}
                       </p>
                     )}
                     {!readOnly && (
@@ -368,7 +444,7 @@ const MaterialContent = ({
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => onExport(material)}
+                  onClick={() => onExport(localMaterial)}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                   title="Export Material"
                   aria-label="Export Material"
@@ -380,7 +456,7 @@ const MaterialContent = ({
                     <div className="h-6 w-px bg-gray-200"></div>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateFlashcards(material)}
+                      onClick={() => onCreateFlashcards(localMaterial)}
                       data-hover="Create Flashcards"
                     >
                       <BookOpen size={16} />
@@ -388,7 +464,7 @@ const MaterialContent = ({
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateNotes(material)}
+                      onClick={() => onCreateNotes(localMaterial)}
                       data-hover="Create Notes"
                     >
                       <FileText size={16} />
@@ -396,7 +472,7 @@ const MaterialContent = ({
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateQuiz(material)}
+                      onClick={() => onCreateQuiz(localMaterial)}
                       data-hover="Create Quiz"
                     >
                       <HelpCircle size={16} />
@@ -443,7 +519,7 @@ const MaterialContent = ({
                     />
                   ) : (
                     <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                      {material?.title || "Material"}
+                      {localMaterial?.title || "Material"}
                     </h1>
                   )}
                   {!readOnly && (
@@ -492,7 +568,7 @@ const MaterialContent = ({
                     />
                   ) : (
                     <p className="text-sm text-gray-500 label-text">
-                      {material?.description || "View and manage your content"}
+                      {localMaterial?.description || "View and manage your content"}
                     </p>
                   )}
                   {!readOnly && (
@@ -509,7 +585,7 @@ const MaterialContent = ({
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => onExport(material)}
+                onClick={() => onExport(localMaterial)}
                 className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                 title="Export Material"
                 aria-label="Export Material"
@@ -521,7 +597,7 @@ const MaterialContent = ({
                   <div className="h-6 w-px bg-gray-200"></div>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateFlashcards(material)}
+                    onClick={() => onCreateFlashcards(localMaterial)}
                     data-hover="Create Flashcards"
                   >
                     <BookOpen size={16} />
@@ -529,7 +605,7 @@ const MaterialContent = ({
                   </button>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateNotes(material)}
+                    onClick={() => onCreateNotes(localMaterial)}
                     data-hover="Create Notes"
                   >
                     <FileText size={16} />
@@ -537,7 +613,7 @@ const MaterialContent = ({
                   </button>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateQuiz(material)}
+                    onClick={() => onCreateQuiz(localMaterial)}
                     data-hover="Create Quiz"
                   >
                     <HelpCircle size={16} />
@@ -602,8 +678,8 @@ const MaterialContent = ({
                             )}
                             
                             <div className="flex items-center justify-between text-sm text-gray-500">
-                              <span>{flashcardSet.cards?.length || 0} cards</span>
-                              <span>{formatDate(flashcardSet.created_at)}</span>
+                              <span>{flashcardSet.flashcards?.length || 0} cards</span>
+                              <span>{formatDate(flashcardSet.updated_at)}</span>
                             </div>
                           </div>
                         </div>

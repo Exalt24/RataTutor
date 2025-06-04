@@ -4,12 +4,12 @@ import Confetti from 'react-confetti';
 import '../styles/components/flashcards.css';
 import CreateFlashcards from './CreateFlashcards';
 
-const ViewFlashcards = ({ material, onClose }) => {
+const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onSuccess }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(true);
   const [isShuffled, setIsShuffled] = useState(false);
+  const [shuffledOrder, setShuffledOrder] = useState([]); // Store shuffled indices
   const [showCreateFlashcards, setShowCreateFlashcards] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -38,37 +38,100 @@ const ViewFlashcards = ({ material, onClose }) => {
     }
   }, [isFinished]);
 
-  // Use material's flashcards if available, otherwise use sample data
-  const flashcards = material?.flashcards || [
-    { front: "What is the capital of France?", back: "Paris" },
-    { front: "What is the largest planet in our solar system?", back: "Jupiter" },
-    { front: "Who painted the Mona Lisa?", back: "Leonardo da Vinci" },
-    { front: "What is the chemical symbol for gold?", back: "Au" },
-    { front: "Which planet is known as the Red Planet?", back: "Mars" }
-  ];
+  // Use material's cards (flashcard set object has cards array)
+  const flashcards = material?.flashcards || [];
+
+  // Convert API format to component format
+  const originalFlashcards = flashcards.map(card => ({
+    front: card.question,
+    back: card.answer,
+    id: card.id
+  }));
+
+  // Use shuffled order if shuffled, otherwise original order
+  const formattedFlashcards = isShuffled && shuffledOrder.length > 0
+    ? shuffledOrder.map(index => originalFlashcards[index]).filter(Boolean)
+    : originalFlashcards;
+
+  // Reset shuffle order when original cards change (after edit)
+  useEffect(() => {
+    if (originalFlashcards.length > 0) {
+      // If we were shuffled, create new shuffle order for the updated cards
+      if (isShuffled) {
+        const newIndices = Array.from({ length: originalFlashcards.length }, (_, i) => i);
+        const shuffled = [...newIndices].sort(() => Math.random() - 0.5);
+        setShuffledOrder(shuffled);
+      }
+      
+      // Handle index bounds
+      if (currentIndex >= originalFlashcards.length) {
+        setCurrentIndex(Math.max(0, originalFlashcards.length - 1));
+        setShowAnswer(false);
+        setIsFinished(false);
+      }
+    } else {
+      setCurrentIndex(0);
+      setShowAnswer(false);
+      setIsFinished(false);
+      setIsShuffled(false);
+      setShuffledOrder([]);
+    }
+  }, [originalFlashcards.length]);
+
+  // Separate effect for currentIndex bounds checking
+  useEffect(() => {
+    if (formattedFlashcards.length > 0 && currentIndex >= formattedFlashcards.length) {
+      setCurrentIndex(Math.max(0, formattedFlashcards.length - 1));
+      setShowAnswer(false);
+      setIsFinished(false);
+    }
+  }, [formattedFlashcards.length, currentIndex]);
 
   const handleNext = () => {
+    if (formattedFlashcards.length === 0) return;
+    
     setShowAnswer(false);
-    if (currentIndex === flashcards.length - 1) {
+    if (currentIndex === formattedFlashcards.length - 1) {
       setIsFinished(true);
     } else {
-      setCurrentIndex((prev) => (prev + 1) % flashcards.length);
+      setCurrentIndex((prev) => {
+        const next = (prev + 1) % formattedFlashcards.length;
+        return Math.min(next, formattedFlashcards.length - 1);
+      });
     }
   };
 
   const handlePrevious = () => {
+    if (formattedFlashcards.length === 0) return;
+    
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+    setCurrentIndex((prev) => {
+      const previous = (prev - 1 + formattedFlashcards.length) % formattedFlashcards.length;
+      return Math.max(0, previous);
+    });
     setIsFinished(false);
   };
 
   const handleShuffle = () => {
-    const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
-    flashcards.splice(0, flashcards.length, ...shuffled);
-    setCurrentIndex(0);
-    setShowAnswer(false);
-    setIsShuffled(true);
-    setIsFinished(false);
+    if (originalFlashcards.length <= 1) return;
+
+    if (isShuffled) {
+      // Unshuffle: return to original order
+      setIsShuffled(false);
+      setShuffledOrder([]);
+      setCurrentIndex(0);
+      setShowAnswer(false);
+      setIsFinished(false);
+    } else {
+      // Shuffle: create new random order
+      const indices = Array.from({ length: originalFlashcards.length }, (_, i) => i);
+      const shuffled = [...indices].sort(() => Math.random() - 0.5);
+      setShuffledOrder(shuffled);
+      setIsShuffled(true);
+      setCurrentIndex(0);
+      setShowAnswer(false);
+      setIsFinished(false);
+    }
   };
 
   const handleFlip = () => {
@@ -76,15 +139,39 @@ const ViewFlashcards = ({ material, onClose }) => {
     setTimeout(() => {
       setShowAnswer(!showAnswer);
       setIsFlipping(false);
-    }, 150); // Half of the animation duration
+    }, 150);
   };
 
   const handleEdit = () => {
-    setShowCreateFlashcards(true);
+    if (!readOnly) {
+      setShowCreateFlashcards(true);
+    }
+  };
+
+  const handleEditSuccess = (updatedFlashcardSet) => {
+    if (onSuccess) {
+      onSuccess(updatedFlashcardSet);
+    }
+    
+    // Reset viewing state to provide clean UX after editing
+    setCurrentIndex(0);
+    setShowAnswer(false);
+    setIsFinished(false);
+    setIsShuffled(false);
+    setShuffledOrder([]);
+    setShowCreateFlashcards(false);
   };
 
   if (showCreateFlashcards) {
-    return <CreateFlashcards material={material} onClose={() => setShowCreateFlashcards(false)} />;
+    return (
+      <CreateFlashcards
+        mainMaterial={mainMaterial}
+        material={material} 
+        flashcardSet={material}
+        onClose={() => setShowCreateFlashcards(false)}
+        onSuccess={handleEditSuccess}
+      />
+    );
   }
 
   return (
@@ -113,39 +200,25 @@ const ViewFlashcards = ({ material, onClose }) => {
                 <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
                   {material?.title || 'Flashcards'}
                 </h1>
-                <p className="text-sm text-gray-500 label-text">Study and review your flashcards</p>
+                <p className="text-sm text-gray-500 label-text">
+                  {material?.description || 'Study and review your flashcards'} • {formattedFlashcards.length} cards
+                  {isShuffled && <span className="ml-2 text-blue-600">• Shuffled</span>}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsPrivate(!isPrivate)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 hover:scale-105 ${
-                  isPrivate 
-                    ? 'bg-white border-gray-300 hover:bg-gray-50' 
-                    : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                }`}
-                title={isPrivate ? "Make Public" : "Make Private"}
-              >
-                {isPrivate ? (
-                  <>
-                    <Lock size={20} className="text-gray-600" />
-                    <span className="text-gray-600 font-medium label-text">Private</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe size={20} className="text-[#1b81d4]" />
-                    <span className="text-[#1b81d4] font-medium label-text">Public</span>
-                  </>
-                )}
-              </button>
-              <div className="h-6 w-px bg-gray-200"></div>
-              <button
-                onClick={handleEdit}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
-              >
-                <Edit size={16} />
-                <span className="label-text">Edit</span>
-              </button>
+              {!readOnly && (
+                <>
+                  <div className="h-6 w-px bg-gray-200"></div>
+                  <button
+                    onClick={handleEdit}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                  >
+                    <Edit size={16} />
+                    <span className="label-text">Edit</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -154,7 +227,7 @@ const ViewFlashcards = ({ material, onClose }) => {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 py-4 h-full">
-          {flashcards.length > 0 ? (
+          {formattedFlashcards.length > 0 ? (
             <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
               {/* Progress */}
               <div className="flex items-center justify-between mb-8">
@@ -163,19 +236,23 @@ const ViewFlashcards = ({ material, onClose }) => {
                     <BookOpen size={20} className="text-[#1b81d4]" />
                   </div>
                   <span className="text-sm font-medium text-gray-700 label-text">
-                    {isFinished ? "Finished" : `${currentIndex + 1} of ${flashcards.length}`}
+                    {isFinished ? "Finished" : `${currentIndex + 1} of ${formattedFlashcards.length}`}
                   </span>
                 </div>
                 <button
                   onClick={handleShuffle}
+                  disabled={formattedFlashcards.length <= 1}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 ${
-                    isShuffled
-                      ? 'bg-blue-50 text-[#1b81d4]'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    formattedFlashcards.length <= 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : isShuffled
+                        ? 'bg-blue-50 text-[#1b81d4] border border-blue-200'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                   }`}
+                  title={isShuffled ? "Return to original order" : "Shuffle cards"}
                 >
                   <Shuffle size={20} />
-                  <span className="label-text">Shuffle</span>
+                  <span className="label-text">{isShuffled ? "Unshuffle" : "Shuffle"}</span>
                 </button>
               </div>
 
@@ -188,19 +265,37 @@ const ViewFlashcards = ({ material, onClose }) => {
                         Congratulations!
                       </h2>
                       <p className="text-lg text-gray-600 label-text mb-6">
-                        You've completed reviewing all {flashcards.length} flashcards
+                        You've completed reviewing all {formattedFlashcards.length} flashcards
+                        {isShuffled && <span className="block text-sm mt-2 text-blue-600">in shuffled order</span>}
                       </p>
-                      <button
-                        onClick={() => {
-                          setCurrentIndex(0);
-                          setIsFinished(false);
-                          setShowAnswer(false);
-                        }}
-                        className="exam-button-mini"
-                        data-hover="Review Again"
-                      >
-                        Review Again
-                      </button>
+                      <div className="flex gap-3 justify-center">
+                        <button
+                          onClick={() => {
+                            setCurrentIndex(0);
+                            setIsFinished(false);
+                            setShowAnswer(false);
+                          }}
+                          className="exam-button-mini"
+                          data-hover="Review Again"
+                        >
+                          Review Again
+                        </button>
+                        {isShuffled && (
+                          <button
+                            onClick={() => {
+                              setIsShuffled(false);
+                              setShuffledOrder([]);
+                              setCurrentIndex(0);
+                              setIsFinished(false);
+                              setShowAnswer(false);
+                            }}
+                            className="exam-button-mini bg-blue-600 hover:bg-blue-700"
+                            data-hover="Review Original Order"
+                          >
+                            Original Order
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -229,7 +324,7 @@ const ViewFlashcards = ({ material, onClose }) => {
                     >
                       <div className="text-center px-12">
                         <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                          {flashcards[currentIndex].front}
+                          {formattedFlashcards[currentIndex]?.front || 'Loading...'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-6 label-text">Click to show answer</p>
                       </div>
@@ -246,7 +341,7 @@ const ViewFlashcards = ({ material, onClose }) => {
                     >
                       <div className="text-center px-12">
                         <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                          {flashcards[currentIndex].back}
+                          {formattedFlashcards[currentIndex]?.back || 'Loading...'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-6 label-text">Click to show question</p>
                       </div>
@@ -256,18 +351,31 @@ const ViewFlashcards = ({ material, onClose }) => {
               )}
 
               {/* Controls */}
-              {!isFinished && (
+              {!isFinished && formattedFlashcards.length > 0 && (
                 <div className="flex items-center justify-between">
                   <button
                     onClick={handlePrevious}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                    disabled={formattedFlashcards.length <= 1}
+                    className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:scale-105 ${
+                      formattedFlashcards.length <= 1 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
                   >
                     <ArrowLeft size={20} />
                     <span className="label-text">Previous</span>
                   </button>
+                  <div className="text-sm text-gray-500 label-text">
+                    Card {Math.min(currentIndex + 1, formattedFlashcards.length)} of {formattedFlashcards.length}
+                  </div>
                   <button
                     onClick={handleNext}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                    disabled={formattedFlashcards.length <= 1}
+                    className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:scale-105 ${
+                      formattedFlashcards.length <= 1 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
                   >
                     <span className="label-text">Next</span>
                     <ArrowRight size={20} />
@@ -281,7 +389,16 @@ const ViewFlashcards = ({ material, onClose }) => {
                 <BookOpen size={48} className="text-gray-400" />
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-2 label-text">No flashcards available</h3>
-              <p className="text-gray-600 label-text">Create some flashcards to get started.</p>
+              <p className="text-gray-600 label-text">This flashcard set is empty.</p>
+              {!readOnly && (
+                <button
+                  onClick={handleEdit}
+                  className="mt-4 exam-button-mini"
+                  data-hover="Add Flashcards"
+                >
+                  Add Flashcards
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -290,4 +407,4 @@ const ViewFlashcards = ({ material, onClose }) => {
   );
 };
 
-export default ViewFlashcards; 
+export default ViewFlashcards;

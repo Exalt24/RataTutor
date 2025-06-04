@@ -84,58 +84,10 @@ class NoteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("You do not have permission to add notes to this Material.")
         return data
 
-
-class FlashcardSetSerializer(serializers.ModelSerializer):
-    material = serializers.PrimaryKeyRelatedField(
-        queryset=Material.objects.all(),
-        help_text="ID of the Material this flashcard set belongs to."
-    )
-    title = serializers.CharField(
-        max_length=255,
-        validators=[MinLengthValidator(1, message="Flashcard set title cannot be empty.")],
-        help_text="Title of the flashcard set."
-    )
-    description = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        help_text="(Optional) Description or notes about this flashcard set."
-    )
-    public = serializers.BooleanField(
-        default=False,
-        help_text="Whether this flashcard set is shared publicly."
-    )
-    flashcards = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = FlashcardSet
-        fields = ["id", "material", "title", "description", "public", "flashcards", "created_at", "updated_at"]
-        read_only_fields = ["id", "created_at", "updated_at"]
-
-    def get_flashcards(self, obj):
-        flashcards = obj.cards.all()
-        return FlashcardSerializer(flashcards, many=True).data
-
-    def validate_title(self, value):
-        clean = value.strip()
-        if not clean:
-            raise serializers.ValidationError("Flashcard set title cannot be blank or whitespace.")
-        return clean
-
-    def validate_description(self, value):
-        return value.strip()
-
-    def validate(self, data):
-        request = self.context.get("request")
-        mat = data.get("material")
-        if request and hasattr(request, "user"):
-            if hasattr(mat, "owner") and mat.owner != request.user:
-                raise serializers.ValidationError("You do not have permission to create flashcard sets for this Material.")
-        return data
-
-
 class FlashcardSerializer(serializers.ModelSerializer):
     flashcard_set = serializers.PrimaryKeyRelatedField(
         queryset=FlashcardSet.objects.all(),
+        required=False,
         help_text="ID of the flashcard set this card belongs to."
     )
     question = serializers.CharField(
@@ -178,6 +130,91 @@ class FlashcardSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("You do not have permission to add flashcards to this Flashcard Set.")
         return data
 
+class FlashcardSetSerializer(serializers.ModelSerializer):
+    material = serializers.PrimaryKeyRelatedField(
+        queryset=Material.objects.all(),
+        help_text="ID of the Material this flashcard set belongs to."
+    )
+    title = serializers.CharField(
+        max_length=255,
+        validators=[MinLengthValidator(1, message="Flashcard set title cannot be empty.")],
+        help_text="Title of the flashcard set."
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="(Optional) Description or notes about this flashcard set."
+    )
+    public = serializers.BooleanField(
+        default=False,
+        help_text="Whether this flashcard set is shared publicly."
+    )
+    # Make flashcards writable and required, using 'cards' as the model field name
+    flashcards = FlashcardSerializer(
+        many=True, 
+        required=True, 
+        source='cards',
+        help_text="List of flashcards for this set. At least one flashcard is required."
+    )
+
+    class Meta:
+        model = FlashcardSet
+        fields = ["id", "material", "title", "description", "public", "flashcards", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_title(self, value):
+        clean = value.strip()
+        if not clean:
+            raise serializers.ValidationError("Flashcard set title cannot be blank or whitespace.")
+        return clean
+
+    def validate_description(self, value):
+        return value.strip()
+
+    def validate_flashcards(self, value):
+        if not value or len(value) == 0:
+            raise serializers.ValidationError("A flashcard set must have at least one flashcard.")
+        return value
+
+    def validate(self, data):
+        request = self.context.get("request")
+        mat = data.get("material")
+        if request and hasattr(request, "user"):
+            if hasattr(mat, "owner") and mat.owner != request.user:
+                raise serializers.ValidationError("You do not have permission to create flashcard sets for this Material.")
+        return data
+
+    def create(self, validated_data):
+        flashcards_data = validated_data.pop('cards')
+        flashcard_set = FlashcardSet.objects.create(**validated_data)
+        
+        for flashcard_data in flashcards_data:
+            # Remove flashcard_set from flashcard_data if it exists (it shouldn't, but just in case)
+            flashcard_data.pop('flashcard_set', None)
+            Flashcard.objects.create(flashcard_set=flashcard_set, **flashcard_data)
+        
+        return flashcard_set
+
+    def update(self, instance, validated_data):
+        # Handle flashcards if they're provided in the update
+        flashcards_data = validated_data.pop('cards', None)
+        
+        # Update the flashcard set fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # If flashcards data is provided, replace all existing flashcards
+        if flashcards_data is not None:
+            # Delete existing flashcards
+            instance.cards.all().delete()
+            
+            # Create new flashcards
+            for flashcard_data in flashcards_data:
+                flashcard_data.pop('flashcard_set', None)
+                Flashcard.objects.create(flashcard_set=instance, **flashcard_data)
+        
+        return instance
 
 class AIConversationSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
@@ -232,6 +269,7 @@ class AIConversationSerializer(serializers.ModelSerializer):
 class QuizQuestionSerializer(serializers.ModelSerializer):
     quiz = serializers.PrimaryKeyRelatedField(
         queryset=Quiz.objects.all(),
+        required=False,  # Make optional for nested creation
         help_text="ID of the Quiz to which this question belongs.",
     )
     question_text = serializers.CharField(
@@ -284,12 +322,14 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
         if correct not in choices:
             raise serializers.ValidationError("Correct answer must match exactly one of the provided choices.")
 
-        request = self.context.get("request")
+        # Only validate permissions if quiz is provided (not in nested creation)
         quiz_obj = data.get("quiz")
-        if request and hasattr(request, "user"):
-            mat = quiz_obj.material
-            if hasattr(mat, "owner") and mat.owner != request.user:
-                raise serializers.ValidationError("You do not have permission to add questions to this Quiz.")
+        if quiz_obj:
+            request = self.context.get("request")
+            if request and hasattr(request, "user"):
+                mat = quiz_obj.material
+                if hasattr(mat, "owner") and mat.owner != request.user:
+                    raise serializers.ValidationError("You do not have permission to add questions to this Quiz.")
         return data
 
 
@@ -312,8 +352,12 @@ class QuizSerializer(serializers.ModelSerializer):
         default=False,
         help_text="Whether this quiz is shared publicly."
     )
-
-    questions = QuizQuestionSerializer(many=True, read_only=True)
+    # Make questions writable and required
+    questions = QuizQuestionSerializer(
+        many=True, 
+        required=True,
+        help_text="List of questions for this quiz. At least one question is required."
+    )
 
     class Meta:
         model = Quiz
@@ -329,6 +373,11 @@ class QuizSerializer(serializers.ModelSerializer):
     def validate_description(self, value):
         return value.strip()
 
+    def validate_questions(self, value):
+        if not value or len(value) == 0:
+            raise serializers.ValidationError("A quiz must have at least one question.")
+        return value
+
     def validate(self, data):
         request = self.context.get("request")
         mat = data.get("material")
@@ -337,6 +386,37 @@ class QuizSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("You do not have permission to create a quiz for this Material.")
         return data
 
+    def create(self, validated_data):
+        questions_data = validated_data.pop('questions')
+        quiz = Quiz.objects.create(**validated_data)
+        
+        for question_data in questions_data:
+            # Remove quiz from question_data if it exists (it shouldn't, but just in case)
+            question_data.pop('quiz', None)
+            QuizQuestion.objects.create(quiz=quiz, **question_data)
+        
+        return quiz
+
+    def update(self, instance, validated_data):
+        # Handle questions if they're provided in the update
+        questions_data = validated_data.pop('questions', None)
+        
+        # Update the quiz fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # If questions data is provided, replace all existing questions
+        if questions_data is not None:
+            # Delete existing questions
+            instance.questions.all().delete()
+            
+            # Create new questions
+            for question_data in questions_data:
+                question_data.pop('quiz', None)
+                QuizQuestion.objects.create(quiz=instance, **question_data)
+        
+        return instance
 
 class MaterialSerializer(serializers.ModelSerializer):
     title = serializers.CharField(
