@@ -4,9 +4,6 @@ import React, { useState, useEffect } from "react";
 import StreakModal from "./StreakModal";
 
 const Header = ({
-  streak = 5,
-  level,
-  points,
   onLogout,
   onProfile,
   onStreak,
@@ -14,16 +11,6 @@ const Header = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
-  const [profile, setProfile] = useState({
-    full_name: "",
-    username: "",
-  });
-
-  const streakData = {
-    current: profileData.streak.count,
-    longest: profileData.streak.longest_streak, // This should come from props or API
-    total: profileData.streak.total_days, // This should come from props or API
-  };
 
   const handleStreakClick = () => {
     setShowStreakModal(true);
@@ -46,21 +33,9 @@ const Header = ({
             className="flex items-center space-x-1 hover:opacity-75 transition-opacity"
           >
             <span className="text-lg">🔥</span>
-            <span className="font-medium">{streakData.current}</span>
+            <span className="font-medium">{profileData.streak.count} Days</span>
           </button>
 
-          {/* Level */}
-          <div className="flex items-center space-x-1">
-            <span className="px-1 py-0.5 bg-purple-600 text-white text-[10px] rounded">
-              LV {level}
-            </span>
-          </div>
-
-          {/* Coins */}
-          <div className="flex items-center space-x-1">
-            <span className="text-lg">🪙</span>
-            <span className="font-medium">{points}</span>
-          </div>
 
           {/* Profile Menu */}
           <div className="relative">
@@ -112,7 +87,7 @@ const Header = ({
       {showStreakModal && (
         <StreakModal
           onClose={() => setShowStreakModal(false)}
-          streakData={streakData}
+          profileData={profileData}
         />
       )}
     </>

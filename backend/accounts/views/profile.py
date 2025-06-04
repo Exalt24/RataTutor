@@ -1,8 +1,6 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from .imports import APIView, Response
 from django.contrib.auth import get_user_model
-from ..serializers import UpdateProfileSerializer, UserProfileSerializer
+from ..serializers import UpdateProfileSerializer, UserProfileSerializer, StreakSerializer
 from rest_framework.permissions import IsAuthenticated
 from ..models import UserProfile, Streak
 
@@ -19,7 +17,13 @@ class GetProfileView(APIView):
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         streak, _ = Streak.objects.get_or_create(profile=profile)
         serializer = UserProfileSerializer(profile)
-        return Response(serializer.data)
+        
+        # Adding streak data to the serialized profile
+        profile_data = serializer.data
+        profile_data['streak'] = StreakSerializer(streak).data  # Serialize streak separately
+        
+        return Response(profile_data)
+
 
 class UpdateProfileView(APIView):
     """
