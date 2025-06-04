@@ -14,6 +14,88 @@ const ExploreScreen = () => {
     { id: 'quizzes', name: 'Quizzes' }
   ]
 
+  const defaultFiles = [
+    { 
+      id: '1',
+      title: 'Scripts sa IOT', 
+      updated: '270d ago', 
+      description: 'Collection of scripts and notes for Internet of Things course',
+      content: [
+        {
+          id: '1-1',
+          title: 'Introduction to Calculus',
+          author: 'John Doe',
+          description: 'A comprehensive guide covering limits, derivatives, and integrals with practical examples and exercises.',
+          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          tags: ['Flashcard'],
+          flashcards: [
+            { front: 'What is a derivative?', back: 'The rate of change of a function with respect to its variable' },
+            { front: 'What is an integral?', back: 'The area under a curve or the accumulation of a quantity' },
+            { front: 'What is a limit?', back: 'The value that a function approaches as the input approaches some value' }
+          ]
+        },
+        {
+          id: '1-2',
+          title: 'Linear Algebra Fundamentals',
+          author: 'Jane Smith',
+          description: 'An introduction to vectors, matrices, and linear transformations.',
+          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          tags: ['Notes'],
+          content: `# Linear Algebra Fundamentals
+  
+  ## Vectors and Matrices
+  - Vectors: Ordered lists of numbers representing magnitude and direction
+  - Matrices: Rectangular arrays of numbers
+  - Operations: Addition, multiplication, and transformations
+  
+  ## Linear Transformations
+  - Matrix multiplication as transformation
+  - Determinants and their geometric meaning
+  - Eigenvalues and eigenvectors
+  
+  ## Applications
+  - Computer graphics
+  - Machine learning
+  - Quantum mechanics`
+        },
+        {
+          id: '1-3',
+          title: 'Calculus Quiz',
+          author: 'John Doe',
+          description: 'Test your knowledge of calculus fundamentals.',
+          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          tags: ['Quiz'],
+          questions: [
+            {
+              question: 'What is the derivative of f(x) = x²?',
+              options: ['2x', 'x²', '2', 'x'],
+              correctAnswer: 0
+            },
+            {
+              question: 'What is the integral of 2x?',
+              options: ['x²', 'x² + C', '2x²', '2x² + C'],
+              correctAnswer: 1
+            }
+          ]
+        }
+      ]
+    },
+    { 
+      id: '2',
+      title: 'Untitled', 
+      updated: '270d ago', 
+      description: 'Quick notes and ideas',
+      content: []
+    },
+    { 
+      id: '3',
+      title: '(Draft) 5 Testing', 
+      updated: '367d ago', 
+      description: 'Testing concepts and methodologies',
+      content: []
+    }
+  ]
+
   // Filter materials based on search query and selected filter
   const filteredContent = defaultFiles.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
