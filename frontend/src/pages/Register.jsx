@@ -11,27 +11,23 @@ const registerFields = [
     name: "username",
     label: "Username",
     icon: User,
-    placeholder: "e.g. Rata123",
   },
   {
     name: "email",
     label: "Email",
     icon: Mail,
-    placeholder: "e.g. someone@example.com",
   },
   {
     name: "password",
     type: "password",
     label: "Password",
     icon: Lock,
-    placeholder: "e.g. D@ntTe11",
   },
   {
     name: "confirmPassword",
     type: "password",
     label: "Confirm Password",
     icon: Lock,
-    placeholder: "Confirm your password",
   },
 ];
 

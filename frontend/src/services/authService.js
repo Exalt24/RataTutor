@@ -20,34 +20,38 @@ export function clearTokens() {
 /**
  * Returns true if an access token exists in localStorage.
  */
-// authService.js
-
 export function isLoggedIn() {
   const token = localStorage.getItem("access_token");
 
   if (!token) return false; // No token means the user is not logged in
 
-  const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT token to access the payload
+  try {
+    const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT token to access the payload
 
-  // Check if the token has expired
-  const currentTime = Date.now() / 1000; // Get the current time in seconds (JWT expiration is in seconds)
+    // Check if the token has expired
+    const currentTime = Date.now() / 1000; // Get the current time in seconds (JWT expiration is in seconds)
 
-  if (decoded.exp < currentTime) {
-    // Token has expired, clear both tokens from localStorage
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    if (decoded.exp < currentTime) {
+      // Token has expired, clear both tokens from localStorage
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      return false;
+    }
+
+    return true; // Token is still valid
+  } catch (error) {
+    // Token is malformed, clear tokens
+    clearTokens();
     return false;
   }
-
-  return true; // Token is still valid
 }
 
 /**
- * Login endpoint (POST /login/).
+ * Login endpoint (POST /token/) - CHANGED TO USE JWT TOKEN ENDPOINT
  * Expects { username, password }, stores returned tokens on success.
  */
 export async function login({ username, password }) {
-  const res = await axios.post(`${AUTH_URL}login/`, { username, password });
+  const res = await axios.post(`${AUTH_URL}token/`, { username, password });
   saveTokens(res.data);
   return res.data;
 }
@@ -112,7 +116,7 @@ export async function refreshToken() {
 
 /**
  * Request password-reset (POST /password-reset/).
- * Expects { email }; returns 200 even if email doesn’t exist.
+ * Expects { email }; returns 200 even if email doesn't exist.
  */
 export async function requestPasswordReset({ email }) {
   const res = await axios.post(`${AUTH_URL}password-reset/`, { email });

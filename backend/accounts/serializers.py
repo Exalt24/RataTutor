@@ -1,9 +1,9 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode
 from .models import Streak, UserProfile
@@ -92,30 +92,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('confirm_password')
         return User.objects.create_user(**validated_data)
 
-
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        trim_whitespace=True,
-        allow_blank=False,
-        error_messages={
-            'blank': 'Username cannot be blank.',
-            'required': 'Username is required.'
-        }
-    )
-    password = serializers.CharField(
-        write_only=True,
-        error_messages={'required': 'Password is required.'}
-    )
-
-    def validate(self, data):
-        from django.contrib.auth import authenticate
-        user = authenticate(**data)
-        if not user:
-            raise serializers.ValidationError('Invalid username or password.')
-        tokens = RefreshToken.for_user(user)
-        return {'refresh': str(tokens), 'access': str(tokens.access_token)}
-
-
 class TokenSerializer(serializers.Serializer):
     refresh = serializers.CharField()
     access = serializers.CharField()
@@ -193,15 +169,52 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return data
 
 class UpdateProfileSerializer(serializers.Serializer):
-    username = serializers.CharField(required=False, max_length=150, allow_blank=True)
-    email = serializers.EmailField(required=False, allow_blank=True)
-    full_name = serializers.CharField(required=False, max_length=255, allow_blank=True)
-    bio = serializers.CharField(required=False, allow_blank=True)
-    avatar = serializers.CharField(
-        required=False,
+    username = serializers.CharField(
+        required=True, 
+        max_length=150, 
+        allow_blank=False,
+        error_messages={
+            'required': 'Username is required.',
+            'blank': 'Username cannot be blank.',
+            'max_length': 'Username cannot exceed 150 characters.',
+        }
+    )
+    email = serializers.EmailField(
+        required=True, 
+        allow_blank=False,
+        error_messages={
+            'required': 'Email is required.',
+            'blank': 'Email cannot be blank.',
+            'invalid': 'Please enter a valid email address.',
+        }
+    )
+    full_name = serializers.CharField(
+        required=True, 
+        max_length=255, 
+        allow_blank=False,
+        error_messages={
+            'required': 'Full name is required.',
+            'blank': 'Full name cannot be blank.',
+            'max_length': 'Full name cannot exceed 255 characters.',
+        }
+    )
+    bio = serializers.CharField(
+        required=False, 
         allow_blank=True,
-        allow_null=True,
-        help_text="Identifier or URL string for the selected premade avatar."
+        error_messages={
+            'max_length': 'Bio is too long.',
+        }
+    )
+    avatar = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Identifier or URL string for the selected premade avatar.",
+        error_messages={
+            'required': 'Avatar selection is required.',
+            'blank': 'Please select an avatar.',
+            'null': 'Avatar cannot be null.',
+        }
     )
 
 class StreakSerializer(serializers.ModelSerializer):
@@ -211,8 +224,38 @@ class StreakSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.EmailField(source='user.email', read_only=True)
+    username = serializers.CharField(
+        source='user.username', 
+        read_only=True
+    )
+    email = serializers.EmailField(
+        source='user.email', 
+        read_only=True
+    )
+    full_name = serializers.CharField(
+        required=True, 
+        allow_blank=False,
+        error_messages={
+            'required': 'Full name is required.',
+            'blank': 'Full name cannot be blank.',
+            'max_length': 'Full name cannot exceed 255 characters.',
+        }
+    )
+    bio = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={
+            'max_length': 'Bio is too long.',
+        }
+    )
+    avatar = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        error_messages={
+            'max_length': 'Avatar identifier is too long.',
+        }
+    )
     streak = StreakSerializer(read_only=True)
 
     class Meta:

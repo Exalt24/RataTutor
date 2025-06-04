@@ -1,10 +1,13 @@
-import { ChevronDown, FileQuestion } from 'lucide-react'
+import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, X } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { useLoading } from '../components/Loading/LoadingContext'
+import { useToast } from '../components/Toast/ToastContext'
+import { deleteMaterial, getMaterials, toggleMaterialPin, toggleMaterialVisibility, updateMaterial } from '../services/apiService'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
 import CreateQuiz from './CreateQuiz'
-import MaterialCard, { defaultFiles } from './MaterialCard'
+import MaterialCard from './MaterialCard'
 import MaterialContent from './MaterialContent'
 
 const EmptyState = () => (
@@ -13,29 +16,27 @@ const EmptyState = () => (
     <h3 className="label-text text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
       No Materials Yet
     </h3>
-    <p className="text-gray-600 text-center max-w-md leading-relaxed">
+    <p className="text-gray-600 text-center max-w-md leading-relaxed mb-6">
       Create your first material to start organizing your study content. You can add flashcards, notes, and quizzes to help you learn effectively.
     </p>
   </div>
 );
 
+const LoadingState = () => (
+  <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
+    <RefreshCw size={48} className="text-[#1b81d4] mb-4 animate-spin" />
+    <p className="text-gray-600">Loading your materials...</p>
+  </div>
+);
+
 const MaterialsScreen = () => {
-  const [files, setFiles] = useState(defaultFiles)
-  const [pinnedFiles, setPinnedFiles] = useState(() => {
-    // Initialize from localStorage if available
-    const savedPins = localStorage.getItem('pinnedMaterials')
-    return savedPins ? JSON.parse(savedPins) : []
-  })
+  const [materials, setMaterials] = useState([])
+  const [initialLoading, setInitialLoading] = useState(true) // Renamed for clarity
+  const [error, setError] = useState(null)
   const [showUpdatedDropdown, setShowUpdatedDropdown] = useState(false)
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all')
   const [selectedTypeFilter, setSelectedTypeFilter] = useState('all')
-  const [showMenuFor, setShowMenuFor] = useState(null)
-  const [isPublic, setIsPublic] = useState(() => {
-    // Initialize from localStorage if available
-    const savedVisibility = localStorage.getItem('materialsVisibility')
-    return savedVisibility ? JSON.parse(savedVisibility) : {}
-  })
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showFlashcards, setShowFlashcards] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
@@ -43,10 +44,18 @@ const MaterialsScreen = () => {
   const [showMaterialContent, setShowMaterialContent] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
   const [isFromExplore, setIsFromExplore] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
 
   const typeDropdownRef = useRef(null)
   const updatedDropdownRef = useRef(null)
-  const menuRef = useRef(null)
+  const { showLoading, hideLoading } = useLoading()
+  const { showToast } = useToast()
+
+  // Load materials on component mount
+  useEffect(() => {
+    loadMaterials(true) // Pass true for initial load
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -56,9 +65,6 @@ const MaterialsScreen = () => {
       if (updatedDropdownRef.current && !updatedDropdownRef.current.contains(event.target)) {
         setShowUpdatedDropdown(false)
       }
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenuFor(null)
-      }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
@@ -67,15 +73,34 @@ const MaterialsScreen = () => {
     }
   }, [])
 
-  // Save to localStorage whenever pinnedFiles changes
-  useEffect(() => {
-    localStorage.setItem('pinnedMaterials', JSON.stringify(pinnedFiles))
-  }, [pinnedFiles])
-
-  // Save to localStorage whenever isPublic changes
-  useEffect(() => {
-    localStorage.setItem('materialsVisibility', JSON.stringify(isPublic))
-  }, [isPublic])
+  const loadMaterials = async (isInitialLoad = false) => {
+    try {
+      setError(null)
+      
+      // Use different loading indicators based on context
+      if (isInitialLoad) {
+        setInitialLoading(true) // Full page loading state
+      } else {
+        showLoading() // Global loading overlay for refresh
+      }
+      
+      const response = await getMaterials()
+      setMaterials(response.data)
+    } catch (err) {
+      setError('Failed to load materials. Please try again.')
+      showToast({
+        variant: "error",
+        title: "Error loading materials",
+        subtitle: "Please refresh the page or try again later.",
+      })
+    } finally {
+      if (isInitialLoad) {
+        setInitialLoading(false)
+      } else {
+        hideLoading()
+      }
+    }
+  }
 
   const getTagColor = (tag) => {
     if (tag.toLowerCase().includes('flashcards')) {
@@ -88,109 +113,181 @@ const MaterialsScreen = () => {
     return 'bg-[#F0F0F0] text-[#4A4A4A]' // Soft gray
   }
 
-  const togglePin = (fileTitle) => {
-    setPinnedFiles(prev => {
-      if (prev.includes(fileTitle)) {
-        return prev.filter(title => title !== fileTitle)
-      } else {
-        return [...prev, fileTitle]
-      }
-    })
+  const togglePin = async (material) => {
+    try {
+      showLoading()
+      const response = await toggleMaterialPin(material.id)
+      
+      setMaterials(prev => 
+        prev.map(m => 
+          m.id === material.id 
+            ? response.data
+            : m
+        )
+      )
+
+      showToast({
+        variant: "success",
+        title: response.data.pinned ? "Material pinned" : "Material unpinned",
+        subtitle: `"${material.title}" has been ${response.data.pinned ? 'pinned' : 'unpinned'}.`,
+      })
+    } catch (err) {
+      showToast({
+        variant: "error",
+        title: "Error updating material",
+        subtitle: "Failed to update pin status. Please try again.",
+      })
+    } finally {
+      hideLoading()
+    }
   }
 
-  const filterByTime = (file) => {
-    const updated = file.updated.toLowerCase()
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60))
+    
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`
+    } else if (diffInMinutes < 1440) { // 24 hours
+      return `${Math.floor(diffInMinutes / 60)}h ago`
+    } else {
+      return `${Math.floor(diffInMinutes / 1440)}d ago`
+    }
+  }
+
+  const filterByTime = (material) => {
+    const updatedAgo = formatTimeAgo(material.updated_at)
+    
     switch (selectedTimeFilter) {
       case 'today':
-        return updated.includes('h ago') || updated.includes('today')
+        return updatedAgo.includes('h ago') || updatedAgo.includes('m ago')
       case 'week':
-        return updated.includes('d ago') && parseInt(updated) <= 7
+        const dayMatch = updatedAgo.match(/(\d+)d ago/)
+        return dayMatch ? parseInt(dayMatch[1]) <= 7 : updatedAgo.includes('h ago') || updatedAgo.includes('m ago')
       case 'month':
-        return updated.includes('d ago') && parseInt(updated) <= 30
+        const dayMatch2 = updatedAgo.match(/(\d+)d ago/)
+        return dayMatch2 ? parseInt(dayMatch2[1]) <= 30 : updatedAgo.includes('h ago') || updatedAgo.includes('m ago')
       default:
         return true
     }
   }
 
-  const filterByType = (file) => {
-    if (!file.content) return true;
-    
+  const filterByType = (material) => {
+    // For now, return true since we need to implement content counting
+    // TODO: Implement filtering based on related content (notes, flashcards, quizzes)
     switch (selectedTypeFilter) {
       case 'flashcards':
-        return file.content.some(item => item.tags?.includes('Flashcard'));
+        // Check if material has flashcard sets
+        return material.flashcard_sets && material.flashcard_sets.length > 0
       case 'notes':
-        return file.content.some(item => item.tags?.includes('Notes'));
+        // Check if material has notes
+        return material.notes && material.notes.length > 0
       case 'quizzes':
-        return file.content.some(item => item.tags?.includes('Quiz'));
+        // Check if material has quizzes
+        return material.quizzes && material.quizzes.length > 0
       default:
-        return true;
+        return true
     }
   }
 
-  // Separate pinned and unpinned files with both filters
-  const pinnedMaterials = files.filter(f => 
-    pinnedFiles.includes(f.title) && 
-    filterByTime(f) && 
-    filterByType(f)
-  )
-  const otherMaterials = files.filter(f => 
-    !pinnedFiles.includes(f.title) && 
-    filterByTime(f) && 
-    filterByType(f)
+  // Separate pinned and unpinned materials with filters
+  const filteredMaterials = materials.filter(m => 
+    m.status === 'active' && 
+    filterByTime(m) && 
+    filterByType(m) &&
+    (m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     m.description?.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
-  const getUpdatedLabel = (updated) => {
-    const updatedLower = updated.toLowerCase()
-    if (updatedLower.includes('h ago') || updatedLower.includes('today')) {
+  const pinnedMaterials = filteredMaterials.filter(m => m.pinned)
+  const otherMaterials = filteredMaterials.filter(m => !m.pinned)
+
+  const getUpdatedLabel = (dateString) => {
+    const timeAgo = formatTimeAgo(dateString)
+    
+    if (timeAgo.includes('m ago') || timeAgo.includes('h ago')) {
       return 'Updated today'
-    } else if (updatedLower.includes('d ago')) {
-      const days = parseInt(updatedLower)
+    } else if (timeAgo.includes('d ago')) {
+      const days = parseInt(timeAgo)
       if (days <= 7) {
         return 'Updated this week'
       } else if (days <= 30) {
         return 'Updated this month'
       }
     }
-    return `Updated ${updated}`
+    return `Updated ${timeAgo}`
   }
 
-  const toggleVisibility = (fileTitle) => {
-    setIsPublic(prev => {
-      const newState = {
-        ...prev,
-        [fileTitle]: !prev[fileTitle]
-      }
-      return newState
+  const toggleVisibility = async (material) => {
+    try {
+      showLoading()
+      const response = await toggleMaterialVisibility(material.id)
+      
+      setMaterials(prev => 
+        prev.map(m => 
+          m.id === material.id 
+            ? response.data
+            : m
+        )
+      )
+
+      showToast({
+        variant: "success",
+        title: response.data.public ? "Material made public" : "Material made private",
+        subtitle: `"${material.title}" is now ${response.data.public ? 'public' : 'private'}.`,
+      })
+    } catch (err) {
+      showToast({
+        variant: "error",
+        title: "Error updating material",
+        subtitle: "Failed to update visibility. Please try again.",
+      })
+    } finally {
+      hideLoading()
+    }
+  }
+
+  const handleExport = (material) => {
+    // TODO: Implement export functionality
+    console.log('Exporting:', material.title)
+    showToast({
+      variant: "info",
+      title: "Export feature coming soon",
+      subtitle: "This feature will be available in a future update.",
     })
   }
 
-  const handleExport = (fileTitle) => {
-    // TODO: Implement export functionality
-    console.log('Exporting:', fileTitle)
-  }
-
-  const handleDelete = (fileTitle) => {
-    setFiles(prevFiles => prevFiles.filter(file => file.title !== fileTitle));
-    // Remove from pinned files if it was pinned
-    if (pinnedFiles.includes(fileTitle)) {
-      setPinnedFiles(prev => prev.filter(title => title !== fileTitle));
+  const handleDelete = async (material) => {
+    if (!confirm(`Are you sure you want to delete "${material.title}"? This action cannot be undone.`)) {
+      return
     }
-    // Remove from visibility state
-    setIsPublic(prev => {
-      const newState = { ...prev };
-      delete newState[fileTitle];
-      return newState;
-    });
+
+    try {
+      showLoading()
+      await deleteMaterial(material.id)
+      
+      setMaterials(prev => prev.filter(m => m.id !== material.id))
+      
+      showToast({
+        variant: "success",
+        title: "Material deleted",
+        subtitle: `"${material.title}" has been deleted successfully.`,
+      })
+    } catch (err) {
+      showToast({
+        variant: "error",
+        title: "Error deleting material",
+        subtitle: "Failed to delete material. Please try again.",
+      })
+    } finally {
+      hideLoading()
+    }
   }
 
   const handleCreateMaterial = (newMaterial) => {
-    const material = {
-      ...newMaterial,
-      id: Date.now().toString(),
-      content: [],
-      updated: 'Just now'
-    }
-    setFiles(prevFiles => [material, ...prevFiles])
+    // Add the new material to the top of the list
+    setMaterials(prev => [newMaterial, ...prev])
   }
 
   const handleCreateFlashcards = (material) => {
@@ -214,30 +311,68 @@ const MaterialsScreen = () => {
     setIsFromExplore(isFromExplore)
   }
 
-  const handleTitleChange = (oldTitle, newTitle, newDescription) => {
-    setFiles(prevFiles => 
-      prevFiles.map(file => 
-        file.title === oldTitle 
-          ? { ...file, title: newTitle, description: newDescription }
-          : file
+  const handleTitleChange = async (materialId, newTitle, newDescription) => {
+    try {
+      showLoading()
+      await updateMaterial(materialId, {
+        title: newTitle,
+        description: newDescription
+      })
+      
+      setMaterials(prev => 
+        prev.map(m => 
+          m.id === materialId 
+            ? { ...m, title: newTitle, description: newDescription }
+            : m
+        )
       )
-    );
-    // Update pinned files if the material was pinned
-    if (pinnedFiles.includes(oldTitle)) {
-      setPinnedFiles(prev => 
-        prev.map(title => title === oldTitle ? newTitle : title)
-      );
+
+      showToast({
+        variant: "success",
+        title: "Material updated",
+        subtitle: "Title and description have been updated successfully.",
+      })
+    } catch (err) {
+      showToast({
+        variant: "error",
+        title: "Error updating material",
+        subtitle: "Failed to update material. Please try again.",
+      })
+    } finally {
+      hideLoading()
     }
-    // Update visibility state
-    setIsPublic(prev => {
-      const newState = { ...prev };
-      if (prev[oldTitle] !== undefined) {
-        newState[newTitle] = prev[oldTitle];
-        delete newState[oldTitle];
-      }
-      return newState;
-    });
-  };
+  }
+
+  const clearSearch = () => {
+    setSearchQuery('')
+  }
+
+  // Show initial loading state
+  if (initialLoading) {
+    return <LoadingState />
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
+        <FileQuestion size={64} className="text-red-500 mb-6" />
+        <h3 className="label-text text-2xl font-semibold text-red-600 mb-3">
+          Error Loading Materials
+        </h3>
+        <p className="text-gray-600 text-center max-w-md leading-relaxed mb-6">
+          {error}
+        </p>
+        <button 
+          data-hover="Try Again"
+          className="exam-button-mini"
+          onClick={() => loadMaterials(true)} // Retry as initial load
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -259,20 +394,59 @@ const MaterialsScreen = () => {
       ) : showMaterialContent ? (
         <MaterialContent
           material={selectedMaterial}
-          isPublic={isPublic[selectedMaterial.title]}
-          onVisibilityToggle={toggleVisibility}
-          onExport={handleExport}
+          isPublic={selectedMaterial?.public}
+          onVisibilityToggle={() => toggleVisibility(selectedMaterial)}
+          onExport={() => handleExport(selectedMaterial)}
           onCreateFlashcards={handleCreateFlashcards}
           onCreateNotes={handleCreateNotes}
           onCreateQuiz={handleCreateQuiz}
           onBack={() => setShowMaterialContent(false)}
-          onTitleChange={(newTitle, newDescription) => handleTitleChange(selectedMaterial.title, newTitle, newDescription)}
+          onTitleChange={(newTitle, newDescription) => handleTitleChange(selectedMaterial.id, newTitle, newDescription)}
           readOnly={isFromExplore}
         />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-4 text-xs sm:text-sm">
-            <h1 className="exam-heading exam-heading-mini text-base">Your Materials</h1>
+          <div className="flex justify-between items-center mb-4 text-xs sm:text-sm p-4">
+            <div className="relative w-full max-w-md">
+              <div className={`
+                relative flex items-center
+                transition-all duration-200
+                ${isSearchFocused ? 'ring-2 ring-blue-400' : ''}
+                rounded-full border border-gray-200
+                bg-white
+              `}>
+                <Search 
+                  className={`
+                    absolute left-4
+                    transition-colors duration-200
+                    ${isSearchFocused ? 'text-blue-500' : 'text-gray-400'}
+                  `} 
+                  size={20} 
+                />
+                <input
+                  type="text"
+                  placeholder="Search your materials..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  className="label-text w-full pl-12 pr-12 py-3 rounded-full focus:outline-none text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={16} className="text-gray-400" />
+                  </button>
+                )}
+              </div>
+              {searchQuery && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Found {filteredMaterials.length} results
+                </p>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               <button 
                 data-hover="Create Material"
@@ -280,6 +454,14 @@ const MaterialsScreen = () => {
                 onClick={() => setShowCreateModal(true)}
               >
                 Create Material
+              </button>
+              <button 
+                data-hover="Refresh"
+                className="exam-button-mini py-1 px-2 flex items-center gap-1"
+                onClick={() => loadMaterials(false)}
+              >
+                <RefreshCw size={14} />
+                Refresh
               </button>
               <div className="relative" ref={typeDropdownRef}>
                 <button 
@@ -388,30 +570,34 @@ const MaterialsScreen = () => {
             </div>
           </div>
 
-          {pinnedMaterials.length === 0 && otherMaterials.length === 0 ? (
-            <EmptyState />
+          {filteredMaterials.length === 0 ? (
+            <EmptyState onCreateMaterial={() => setShowCreateModal(true)} />
           ) : (
             <>
               {/* Pinned Materials Section */}
               {pinnedMaterials.length > 0 && (
-                <div className="mb-6">
-                  <h2 className="text-sm font-medium text-gray-700 mb-3">Pinned</h2>
+                <div className="mb-6 px-4">
+                  <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
+                    <Pin size={18} className="text-[#FF6B6B]" />
+                    Pinned
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pinnedMaterials.map((file) => (
+                    {pinnedMaterials.map((material) => (
                       <MaterialCard
-                        key={file.id || file.title}
-                        file={file}
+                        key={material.id}
+                        file={material}
                         isPinned={true}
-                        onPinToggle={() => togglePin(file.title)}
-                        onVisibilityToggle={() => toggleVisibility(file.title)}
-                        onDelete={() => handleDelete(file.title)}
-                        isPublic={isPublic[file.title]}
+                        onPinToggle={() => togglePin(material)}
+                        onVisibilityToggle={() => toggleVisibility(material)}
+                        onDelete={() => handleDelete(material)}
+                        isPublic={material.public}
                         getTagColor={getTagColor}
-                        getUpdatedLabel={getUpdatedLabel}
+                        getUpdatedLabel={(dateString) => getUpdatedLabel(dateString)}
                         onCreateFlashcards={handleCreateFlashcards}
                         onCreateNotes={handleCreateNotes}
                         onCreateQuiz={handleCreateQuiz}
-                        onViewMaterial={() => handleViewMaterial(file)}
+                        onViewMaterial={() => handleViewMaterial(material)}
+                        timeAgo={formatTimeAgo(material.updated_at)}
                       />
                     ))}
                   </div>
@@ -420,24 +606,28 @@ const MaterialsScreen = () => {
 
               {/* Other Materials Section */}
               {otherMaterials.length > 0 && (
-                <div>
-                  <h2 className="exam-subheading sm:text-sm">All Materials</h2>
+                <div className='px-4'>
+                  <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
+                    <Folder size={18} className="text-[#4ECDC4]" />
+                    All Materials
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {otherMaterials.map((file) => (
+                    {otherMaterials.map((material) => (
                       <MaterialCard
-                        key={file.id || file.title}
-                        file={file}
+                        key={material.id}
+                        file={material}
                         isPinned={false}
-                        onPinToggle={() => togglePin(file.title)}
-                        onVisibilityToggle={() => toggleVisibility(file.title)}
-                        onDelete={() => handleDelete(file.title)}
-                        isPublic={isPublic[file.title]}
+                        onPinToggle={() => togglePin(material)}
+                        onVisibilityToggle={() => toggleVisibility(material)}
+                        onDelete={() => handleDelete(material)}
+                        isPublic={material.public}
                         getTagColor={getTagColor}
-                        getUpdatedLabel={getUpdatedLabel}
+                        getUpdatedLabel={(dateString) => getUpdatedLabel(dateString)}
                         onCreateFlashcards={handleCreateFlashcards}
                         onCreateNotes={handleCreateNotes}
                         onCreateQuiz={handleCreateQuiz}
-                        onViewMaterial={() => handleViewMaterial(file)}
+                        onViewMaterial={() => handleViewMaterial(material)}
+                        timeAgo={formatTimeAgo(material.updated_at)}
                       />
                     ))}
                   </div>
@@ -449,7 +639,7 @@ const MaterialsScreen = () => {
           <CreateMaterialModal
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
-            onSubmit={handleCreateMaterial}
+            onCreated={handleCreateMaterial}
           />
         </>
       )}
@@ -457,4 +647,4 @@ const MaterialsScreen = () => {
   )
 }
 
-export default MaterialsScreen 
+export default MaterialsScreen
