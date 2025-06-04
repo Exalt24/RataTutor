@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, FileQuestion } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
@@ -6,6 +6,18 @@ import CreateNotes from './CreateNotes'
 import CreateQuiz from './CreateQuiz'
 import MaterialCard, { defaultFiles } from './MaterialCard'
 import MaterialContent from './MaterialContent'
+
+const EmptyState = () => (
+  <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
+    <FileQuestion size={64} className="text-[#1b81d4] mb-6" />
+    <h3 className="label-text text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
+      No Materials Yet
+    </h3>
+    <p className="text-gray-600 text-center max-w-md leading-relaxed">
+      Create your first material to start organizing your study content. You can add flashcards, notes, and quizzes to help you learn effectively.
+    </p>
+  </div>
+);
 
 const MaterialsScreen = () => {
   const [files, setFiles] = useState(defaultFiles)
@@ -30,6 +42,7 @@ const MaterialsScreen = () => {
   const [showQuiz, setShowQuiz] = useState(false)
   const [showMaterialContent, setShowMaterialContent] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
+  const [isFromExplore, setIsFromExplore] = useState(false)
 
   const typeDropdownRef = useRef(null)
   const updatedDropdownRef = useRef(null)
@@ -100,16 +113,17 @@ const MaterialsScreen = () => {
   }
 
   const filterByType = (file) => {
-    const tag = file.tag.toLowerCase()
+    if (!file.content) return true;
+    
     switch (selectedTypeFilter) {
       case 'flashcards':
-        return tag.includes('flashcards')
+        return file.content.some(item => item.tags?.includes('Flashcard'));
       case 'notes':
-        return tag.includes('note')
+        return file.content.some(item => item.tags?.includes('Notes'));
       case 'quizzes':
-        return tag.includes('quiz')
+        return file.content.some(item => item.tags?.includes('Quiz'));
       default:
-        return true
+        return true;
     }
   }
 
@@ -155,11 +169,26 @@ const MaterialsScreen = () => {
     console.log('Exporting:', fileTitle)
   }
 
+  const handleDelete = (fileTitle) => {
+    setFiles(prevFiles => prevFiles.filter(file => file.title !== fileTitle));
+    // Remove from pinned files if it was pinned
+    if (pinnedFiles.includes(fileTitle)) {
+      setPinnedFiles(prev => prev.filter(title => title !== fileTitle));
+    }
+    // Remove from visibility state
+    setIsPublic(prev => {
+      const newState = { ...prev };
+      delete newState[fileTitle];
+      return newState;
+    });
+  }
+
   const handleCreateMaterial = (newMaterial) => {
     const material = {
       ...newMaterial,
-      id: Date.now().toString(), // Temporary ID for new materials
-      isPublic: false
+      id: Date.now().toString(),
+      content: [],
+      updated: 'Just now'
     }
     setFiles(prevFiles => [material, ...prevFiles])
   }
@@ -179,10 +208,36 @@ const MaterialsScreen = () => {
     setShowQuiz(true)
   }
 
-  const handleViewMaterial = (material) => {
+  const handleViewMaterial = (material, isFromExplore = false) => {
     setSelectedMaterial(material)
     setShowMaterialContent(true)
+    setIsFromExplore(isFromExplore)
   }
+
+  const handleTitleChange = (oldTitle, newTitle, newDescription) => {
+    setFiles(prevFiles => 
+      prevFiles.map(file => 
+        file.title === oldTitle 
+          ? { ...file, title: newTitle, description: newDescription }
+          : file
+      )
+    );
+    // Update pinned files if the material was pinned
+    if (pinnedFiles.includes(oldTitle)) {
+      setPinnedFiles(prev => 
+        prev.map(title => title === oldTitle ? newTitle : title)
+      );
+    }
+    // Update visibility state
+    setIsPublic(prev => {
+      const newState = { ...prev };
+      if (prev[oldTitle] !== undefined) {
+        newState[newTitle] = prev[oldTitle];
+        delete newState[oldTitle];
+      }
+      return newState;
+    });
+  };
 
   return (
     <div>
@@ -211,6 +266,8 @@ const MaterialsScreen = () => {
           onCreateNotes={handleCreateNotes}
           onCreateQuiz={handleCreateQuiz}
           onBack={() => setShowMaterialContent(false)}
+          onTitleChange={(newTitle, newDescription) => handleTitleChange(selectedMaterial.title, newTitle, newDescription)}
+          readOnly={isFromExplore}
         />
       ) : (
         <>
@@ -331,55 +388,63 @@ const MaterialsScreen = () => {
             </div>
           </div>
 
-          {/* Pinned Materials Section */}
-          {pinnedMaterials.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-sm font-medium text-gray-700 mb-3">Pinned</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pinnedMaterials.map((file) => (
-                  <MaterialCard
-                    key={file.id || file.title}
-                    file={file}
-                    isPinned={true}
-                    onPinToggle={() => togglePin(file.title)}
-                    onVisibilityToggle={() => toggleVisibility(file.title)}
-                    onExport={() => handleExport(file.title)}
-                    isPublic={isPublic[file.title]}
-                    getTagColor={getTagColor}
-                    getUpdatedLabel={getUpdatedLabel}
-                    onCreateFlashcards={handleCreateFlashcards}
-                    onCreateNotes={handleCreateNotes}
-                    onCreateQuiz={handleCreateQuiz}
-                    onViewMaterial={() => handleViewMaterial(file)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          {pinnedMaterials.length === 0 && otherMaterials.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              {/* Pinned Materials Section */}
+              {pinnedMaterials.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-sm font-medium text-gray-700 mb-3">Pinned</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {pinnedMaterials.map((file) => (
+                      <MaterialCard
+                        key={file.id || file.title}
+                        file={file}
+                        isPinned={true}
+                        onPinToggle={() => togglePin(file.title)}
+                        onVisibilityToggle={() => toggleVisibility(file.title)}
+                        onDelete={() => handleDelete(file.title)}
+                        isPublic={isPublic[file.title]}
+                        getTagColor={getTagColor}
+                        getUpdatedLabel={getUpdatedLabel}
+                        onCreateFlashcards={handleCreateFlashcards}
+                        onCreateNotes={handleCreateNotes}
+                        onCreateQuiz={handleCreateQuiz}
+                        onViewMaterial={() => handleViewMaterial(file)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Other Materials Section */}
-          <div>
-            <h2 className="text-sm font-medium text-gray-700 mb-3">All Materials</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {otherMaterials.map((file) => (
-                <MaterialCard
-                  key={file.id || file.title}
-                  file={file}
-                  isPinned={false}
-                  onPinToggle={() => togglePin(file.title)}
-                  onVisibilityToggle={() => toggleVisibility(file.title)}
-                  onExport={() => handleExport(file.title)}
-                  isPublic={isPublic[file.title]}
-                  getTagColor={getTagColor}
-                  getUpdatedLabel={getUpdatedLabel}
-                  onCreateFlashcards={handleCreateFlashcards}
-                  onCreateNotes={handleCreateNotes}
-                  onCreateQuiz={handleCreateQuiz}
-                  onViewMaterial={() => handleViewMaterial(file)}
-                />
-              ))}
-            </div>
-          </div>
+              {/* Other Materials Section */}
+              {otherMaterials.length > 0 && (
+                <div>
+                  <h2 className="exam-subheading sm:text-sm">All Materials</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {otherMaterials.map((file) => (
+                      <MaterialCard
+                        key={file.id || file.title}
+                        file={file}
+                        isPinned={false}
+                        onPinToggle={() => togglePin(file.title)}
+                        onVisibilityToggle={() => toggleVisibility(file.title)}
+                        onDelete={() => handleDelete(file.title)}
+                        isPublic={isPublic[file.title]}
+                        getTagColor={getTagColor}
+                        getUpdatedLabel={getUpdatedLabel}
+                        onCreateFlashcards={handleCreateFlashcards}
+                        onCreateNotes={handleCreateNotes}
+                        onCreateQuiz={handleCreateQuiz}
+                        onViewMaterial={() => handleViewMaterial(file)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           <CreateMaterialModal
             isOpen={showCreateModal}

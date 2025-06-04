@@ -1,6 +1,6 @@
-import { BookMarked, Compass, FileText, Search, StickyNote, X } from 'lucide-react'
+import { Compass, Search, X } from 'lucide-react'
 import React, { useState } from 'react'
-import ExploreCard from './ExploreCard'
+import MaterialCard, { defaultFiles } from './MaterialCard'
 
 const ExploreScreen = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -14,47 +14,14 @@ const ExploreScreen = () => {
     { id: 'quizzes', name: 'Quizzes' }
   ]
 
-  const featuredContent = [
-    {
-      id: 1,
-      title: 'Introduction to Calculus',
-      type: 'notes',
-      author: 'John Doe',
-      description: 'A comprehensive guide covering limits, derivatives, and integrals with practical examples.',
-      timeAgo: '2 days ago',
-      typeIcon: <StickyNote size={20} className="text-blue-500" />
-    },
-    {
-      id: 2,
-      title: 'World History Timeline',
-      type: 'flashcards',
-      author: 'Jane Smith',
-      description: 'Key events from ancient civilizations to modern times, perfect for quick review.',
-      timeAgo: '1 week ago',
-      typeIcon: <BookMarked size={20} className="text-green-500" />
-    },
-    {
-      id: 3,
-      title: 'Chemistry Fundamentals',
-      type: 'quizzes',
-      author: 'Mike Johnson',
-      description: 'Test your knowledge of atomic structure, chemical bonding, and reactions.',
-      timeAgo: '3 days ago',
-      typeIcon: <FileText size={20} className="text-purple-500" />
-    }
-  ]
-
-  const filteredContent = featuredContent.filter(item => {
+  // Filter materials based on search query and selected filter
+  const filteredContent = defaultFiles.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = selectedFilter === 'all' || item.type === selectedFilter
+                         item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesFilter = selectedFilter === 'all' || 
+      (item.content?.some(content => content.tags?.includes(selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1))))
     return matchesSearch && matchesFilter
   })
-
-  const handleCopy = (itemId) => {
-    // Handle the copy action
-    console.log(`Copying item ${itemId}`)
-  }
 
   const clearSearch = () => {
     setSearchQuery('')
@@ -125,10 +92,11 @@ const ExploreScreen = () => {
       {/* Featured Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredContent.map(item => (
-          <ExploreCard
+          <MaterialCard
             key={item.id}
             file={item}
-            onCopy={handleCopy}
+            variant="explore"
+            isPublic={true}
           />
         ))}
       </div>

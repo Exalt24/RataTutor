@@ -1,51 +1,102 @@
-import { ArrowLeft, BookOpen, Download, FileQuestion, FileText, HelpCircle, Sparkles } from 'lucide-react'
-import React, { useState } from 'react'
-import MaterialFile from './MaterialFile'
-import ViewFlashcards from './ViewFlashcards'
-import ViewNotes from './ViewNotes'
-import ViewQuiz from './ViewQuiz'
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronDown,
+  Download,
+  FileQuestion,
+  FileText,
+  Globe,
+  HelpCircle,
+  Lock,
+  Pencil
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import MaterialFile from "./MaterialFile";
+import ViewFlashcards from "./ViewFlashcards";
+import ViewNotes from "./ViewNotes";
+import ViewQuiz from "./ViewQuiz";
 
 const EmptyState = () => (
-  <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl mb-6 shadow-lg">
-      <FileQuestion size={64} className="text-[#1b81d4]" />
-    </div>
-    <h3 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
+  <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12 rounded-xl">
+    <FileQuestion size={64} className="text-[#1b81d4] mb-6" />
+    <h3 className="label-text text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
       No Content Available
     </h3>
     <p className="text-gray-600 text-center max-w-md leading-relaxed">
-      This material doesn't have any content yet. Use the buttons above to create flashcards, notes, or a quiz.
+      This material doesn't have any content yet. Use the buttons above to
+      create flashcards, notes, or a quiz.
     </p>
   </div>
-)
+);
 
-const SectionHeader = ({ icon: Icon, title, count }) => (
+const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle }) => (
   <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center gap-2">
-      <div className="p-2 bg-blue-50 rounded-lg">
-        <Icon size={20} className="text-[#1b81d4]" />
+    <div className="flex items-center gap-3">
+      <div className={`p-2.5 rounded-xl ${
+        title === "Flashcards" ? "bg-blue-50" :
+        title === "Notes" ? "bg-purple-50" :
+        "bg-green-50"
+      }`}>
+        <Icon size={22} className={
+          title === "Flashcards" ? "text-blue-500" :
+          title === "Notes" ? "text-purple-500" :
+          "text-green-500"
+        } />
       </div>
-      <h2 className="text-xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-        {title}
-      </h2>
+      <div className="flex items-center gap-2.5">
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+          {title}
+        </h2>
+        <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium label-text">
+          {count}
+        </span>
+      </div>
     </div>
-    <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
-      {count} {count === 1 ? 'item' : 'items'}
-    </span>
+    <div className="relative">
+      <button
+        onClick={onToggle}
+        className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 text-sm font-medium rounded-xl border label-text ${
+          isExpanded 
+            ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' 
+            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+        }`}
+      >
+        <span>{isExpanded ? "Hide" : "Show"}</span>
+        <ChevronDown
+          size={16}
+          className={`transition-transform duration-200 ${
+            isExpanded ? "transform rotate-180" : ""
+          }`}
+        />
+      </button>
+    </div>
   </div>
-)
+);
 
-const SectionEmptyState = ({ title }) => (
-  <div className="flex flex-col items-center justify-center py-8 bg-white/50 rounded-xl border border-dashed border-gray-200">
-    <div className="bg-blue-50 p-4 rounded-full mb-3">
-      <FileQuestion size={24} className="text-[#1b81d4]" />
+const SectionEmptyState = ({ title }) => {
+  const getIcon = () => {
+    switch (title) {
+      case "Flashcards":
+        return <BookOpen size={24} className="text-blue-500 mb-3" />;
+      case "Notes":
+        return <FileText size={24} className="text-purple-500 mb-3" />;
+      case "Quizzes":
+        return <HelpCircle size={24} className="text-green-500 mb-3" />;
+      default:
+        return <FileQuestion size={24} className="text-[#1b81d4] mb-3" />;
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center py-8 bg-white/50 rounded-xl border border-dashed border-gray-200">
+      {getIcon()}
+      <h3 className="text-base font-medium text-gray-900 mb-1 label-text">No {title} Yet</h3>
+      <p className="text-sm text-gray-500 text-center label-text">
+        Use the buttons above to create your first {title.toLowerCase()}
+      </p>
     </div>
-    <h3 className="text-base font-medium text-gray-900 mb-1">No {title} Yet</h3>
-    <p className="text-sm text-gray-500 text-center">
-      Use the buttons above to create your first {title.toLowerCase()}
-    </p>
-  </div>
-)
+  );
+};
 
 const MaterialContent = ({
   material,
@@ -55,96 +106,58 @@ const MaterialContent = ({
   onCreateFlashcards,
   onCreateNotes,
   onCreateQuiz,
-  onBack
+  onBack,
+  onTitleChange,
 }) => {
-  const hasContent = material?.content?.length > 0
-  const [showViewFlashcards, setShowViewFlashcards] = useState(false)
-  const [showViewQuiz, setShowViewQuiz] = useState(false)
-  const [showViewNotes, setShowViewNotes] = useState(false)
-  const [selectedContent, setSelectedContent] = useState(null)
+  const hasContent = material?.content?.length > 0;
+  const [showViewFlashcards, setShowViewFlashcards] = useState(false);
+  const [showViewQuiz, setShowViewQuiz] = useState(false);
+  const [showViewNotes, setShowViewNotes] = useState(false);
+  const [selectedContent, setSelectedContent] = useState(null);
+  const [isMaterialPublic, setIsMaterialPublic] = useState(isPublic);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(material?.title || "");
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedDescription, setEditedDescription] = useState(material?.description || "");
+  const [expandedSections, setExpandedSections] = useState({
+    Flashcards: true,
+    Notes: true,
+    Quizzes: true
+  });
 
   // Sample content with flashcards
   const [items, setItems] = useState([
     // Flashcards
     {
-      id: '1',
+      id: "1",
       title: "Introduction to Calculus",
       author: "John Doe",
-      description: "A comprehensive guide covering limits, derivatives, and integrals with practical examples and exercises.",
+      description:
+        "A comprehensive guide covering limits, derivatives, and integrals with practical examples and exercises.",
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       tags: ["Flashcard"],
       flashcards: [
-        { front: "What is a derivative?", back: "The rate of change of a function with respect to its variable" },
-        { front: "What is an integral?", back: "The area under a curve or the accumulation of a quantity" },
-        { front: "What is a limit?", back: "The value that a function approaches as the input approaches some value" }
-      ]
-    },
-    {
-      id: '2',
-      title: "Advanced Calculus",
-      author: "John Doe",
-      description: "Advanced topics in calculus including multivariable calculus and vector calculus.",
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Flashcard"],
-      flashcards: [
-        { front: "What is a partial derivative?", back: "The derivative of a function with respect to one variable while holding others constant" },
-        { front: "What is a gradient?", back: "A vector of partial derivatives representing the direction of steepest ascent" }
-      ]
-    },
-    {
-      id: '3',
-      title: "Calculus Applications",
-      author: "John Doe",
-      description: "Real-world applications of calculus in physics, engineering, and economics.",
-      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Flashcard"],
-      flashcards: [
-        { front: "How is calculus used in physics?", back: "To describe motion, forces, and rates of change in physical systems" },
-        { front: "What is optimization in calculus?", back: "Finding maximum or minimum values of functions" }
-      ]
-    },
-    {
-      id: '4',
-      title: "Calculus Practice Problems",
-      author: "John Doe",
-      description: "Collection of practice problems and solutions for calculus students.",
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Flashcard"],
-      flashcards: [
-        { front: "Solve: ∫x²dx", back: "x³/3 + C" },
-        { front: "Find the derivative of sin(x)", back: "cos(x)" }
-      ]
-    },
-    {
-      id: '13',
-      title: "Calculus Series",
-      author: "John Doe",
-      description: "Understanding infinite series and their convergence.",
-      createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Flashcard"],
-      flashcards: [
-        { front: "What is a power series?", back: "An infinite sum of terms with increasing powers of a variable" },
-        { front: "What is the radius of convergence?", back: "The distance from the center where a power series converges" }
-      ]
-    },
-    {
-      id: '14',
-      title: "Calculus Integration Techniques",
-      author: "John Doe",
-      description: "Various methods for solving integrals.",
-      createdAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Flashcard"],
-      flashcards: [
-        { front: "What is integration by parts?", back: "A technique based on the product rule for derivatives" },
-        { front: "What is partial fraction decomposition?", back: "Breaking down complex fractions into simpler ones" }
-      ]
+        {
+          front: "What is a derivative?",
+          back: "The rate of change of a function with respect to its variable",
+        },
+        {
+          front: "What is an integral?",
+          back: "The area under a curve or the accumulation of a quantity",
+        },
+        {
+          front: "What is a limit?",
+          back: "The value that a function approaches as the input approaches some value",
+        },
+      ],
     },
     // Notes
     {
-      id: '5',
+      id: "5",
       title: "Linear Algebra Fundamentals",
       author: "Jane Smith",
-      description: "An introduction to vectors, matrices, and linear transformations.",
+      description:
+        "An introduction to vectors, matrices, and linear transformations.",
       createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       tags: ["Notes", "Math"],
       content: `# Linear Algebra Fundamentals
@@ -162,351 +175,151 @@ const MaterialContent = ({
 ## Applications
 - Computer graphics
 - Machine learning
-- Quantum mechanics`
+- Quantum mechanics`,
     },
+    // Quiz
     {
-      id: '6',
-      title: "Advanced Linear Algebra",
-      author: "Jane Smith",
-      description: "Advanced topics in linear algebra including eigenvalues and eigenvectors.",
-      createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Notes", "Math"],
-      content: `# Advanced Linear Algebra
-
-## Eigenvalues and Eigenvectors
-- Definition and properties
-- Characteristic polynomial
-- Diagonalization
-
-## Applications
-- Principal Component Analysis
-- Quantum Mechanics
-- Stability Analysis`
-    },
-    {
-      id: '7',
-      title: "Linear Algebra Applications",
-      author: "Jane Smith",
-      description: "Real-world applications of linear algebra in various fields.",
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Notes", "Math"],
-      content: `# Linear Algebra Applications
-
-## Computer Graphics
-- 3D transformations
-- Projection matrices
-- Animation
-
-## Data Science
-- Dimensionality reduction
-- Image processing
-- Machine learning algorithms`
-    },
-    {
-      id: '8',
-      title: "Linear Algebra Practice",
-      author: "Jane Smith",
-      description: "Practice problems and solutions for linear algebra concepts.",
-      createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Notes", "Math"],
-      content: `# Linear Algebra Practice
-
-## Problem Sets
-- Matrix operations
-- Vector spaces
-- Linear transformations
-- Eigenvalue problems`
-    },
-    {
-      id: '15',
-      title: "Linear Algebra in Machine Learning",
-      author: "Jane Smith",
-      description: "Applications of linear algebra in machine learning algorithms.",
-      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Notes", "Math"],
-      content: `# Linear Algebra in Machine Learning
-
-## Neural Networks
-- Weight matrices
-- Activation functions
-- Backpropagation
-
-## Data Processing
-- Feature extraction
-- Dimensionality reduction
-- Data normalization`
-    },
-    {
-      id: '16',
-      title: "Linear Algebra in Computer Graphics",
-      author: "Jane Smith",
-      description: "How linear algebra powers modern computer graphics.",
-      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Notes", "Math"],
-      content: `# Linear Algebra in Computer Graphics
-
-## 3D Graphics
-- Transformation matrices
-- Projection techniques
-- Lighting calculations
-
-## Animation
-- Keyframe interpolation
-- Skeletal animation
-- Physics simulation`
-    },
-    // Quizzes
-    {
-      id: '9',
-      title: "World History: Ancient Civilizations",
-      author: "Peter Jones",
-      description: "Exploring the origins and development of early human societies.",
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz", "History"],
+      id: "9",
+      title: "Calculus Quiz",
+      author: "John Doe",
+      description: "Test your knowledge of calculus fundamentals.",
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      tags: ["Quiz"],
       questions: [
         {
-          question: "Which civilization is known as the 'Cradle of Civilization'?",
-          choices: [
-            "Mesopotamia",
-            "Ancient Egypt",
-            "Ancient Greece",
-            "Roman Empire"
-          ],
-          correctAnswer: 0
+          question: "What is the derivative of f(x) = x²?",
+          options: ["2x", "x²", "2", "x"],
+          correctAnswer: 0,
         },
         {
-          question: "What was the main contribution of Ancient Egypt to world history?",
-          choices: [
-            "Democracy",
-            "Pyramids and hieroglyphics",
-            "Philosophy",
-            "Road networks"
-          ],
-          correctAnswer: 1
+          question: "What is the integral of 2x?",
+          options: ["x²", "x² + C", "2x²", "2x² + C"],
+          correctAnswer: 1,
         },
-        {
-          question: "Which ancient civilization developed the first known writing system?",
-          choices: [
-            "Ancient Greece",
-            "Mesopotamia",
-            "Ancient China",
-            "Indus Valley"
-          ],
-          correctAnswer: 1
-        }
-      ]
+      ],
     },
-    {
-      id: '10',
-      title: "World History: Middle Ages",
-      author: "Peter Jones",
-      description: "The period between ancient and modern history, focusing on European development.",
-      createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz", "History"],
-      questions: [
-        {
-          question: "What was the main economic system during the Middle Ages?",
-          choices: [
-            "Capitalism",
-            "Feudalism",
-            "Socialism",
-            "Mercantilism"
-          ],
-          correctAnswer: 1
-        },
-        {
-          question: "Which event marked the end of the Middle Ages?",
-          choices: [
-            "The Renaissance",
-            "The Industrial Revolution",
-            "The French Revolution",
-            "The Fall of Constantinople"
-          ],
-          correctAnswer: 0
-        }
-      ]
-    },
-    {
-      id: '11',
-      title: "World History: Modern Era",
-      author: "Peter Jones",
-      description: "Major events and developments from the Renaissance to the present day.",
-      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz", "History"],
-      questions: [
-        {
-          question: "What was the Industrial Revolution?",
-          choices: [
-            "A political movement",
-            "A period of technological advancement",
-            "A religious reformation",
-            "An artistic movement"
-          ],
-          correctAnswer: 1
-        },
-        {
-          question: "Which event started World War I?",
-          choices: [
-            "The sinking of the Lusitania",
-            "The assassination of Archduke Franz Ferdinand",
-            "The invasion of Poland",
-            "The bombing of Pearl Harbor"
-          ],
-          correctAnswer: 1
-        }
-      ]
-    },
-    {
-      id: '12',
-      title: "World History: Contemporary Period",
-      author: "Peter Jones",
-      description: "Recent historical events and their impact on the modern world.",
-      createdAt: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz", "History"],
-      questions: [
-        {
-          question: "What was the Cold War?",
-          choices: [
-            "A military conflict",
-            "A period of political tension",
-            "An economic crisis",
-            "A cultural movement"
-          ],
-          correctAnswer: 1
-        },
-        {
-          question: "Which event marked the end of the Cold War?",
-          choices: [
-            "The fall of the Berlin Wall",
-            "The Cuban Missile Crisis",
-            "The Vietnam War",
-            "The Korean War"
-          ],
-          correctAnswer: 0
-        }
-      ]
-    },
-    {
-      id: '17',
-      title: "World History: Ancient Asia",
-      author: "Peter Jones",
-      description: "The development of civilizations in ancient Asia.",
-      createdAt: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz", "History"],
-      questions: [
-        {
-          question: "Which dynasty built the Great Wall of China?",
-          choices: [
-            "Han Dynasty",
-            "Ming Dynasty",
-            "Qin Dynasty",
-            "Tang Dynasty"
-          ],
-          correctAnswer: 2
-        },
-        {
-          question: "What was the Silk Road?",
-          choices: [
-            "A military route",
-            "A trade network",
-            "A religious pilgrimage path",
-            "A migration route"
-          ],
-          correctAnswer: 1
-        }
-      ]
-    },
-    {
-      id: '18',
-      title: "World History: Ancient Americas",
-      author: "Peter Jones",
-      description: "The civilizations of the ancient Americas.",
-      createdAt: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz", "History"],
-      questions: [
-        {
-          question: "Which civilization built Machu Picchu?",
-          choices: [
-            "Aztecs",
-            "Incas",
-            "Mayans",
-            "Olmecs"
-          ],
-          correctAnswer: 1
-        },
-        {
-          question: "What was the main achievement of the Mayan civilization?",
-          choices: [
-            "Pyramids",
-            "Calendar system",
-            "Road networks",
-            "Written language"
-          ],
-          correctAnswer: 1
-        }
-      ]
-    }
   ]);
 
   const onDelete = (e, id) => {
     e.stopPropagation(); // Prevent click from bubbling up to the parent
-    setItems(prevItems => prevItems.filter(item => item.id !== id));
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
   const handleViewContent = (item) => {
-    setSelectedContent(item)
-    if (item.tags.includes('Flashcard')) {
-      setShowViewFlashcards(true)
-    } else if (item.tags.includes('Quiz')) {
-      setShowViewQuiz(true)
-    } else if (item.tags.includes('Notes')) {
-      setShowViewNotes(true)
+    setSelectedContent(item);
+    if (item.tags.includes("Flashcard")) {
+      setShowViewFlashcards(true);
+    } else if (item.tags.includes("Quiz")) {
+      setShowViewQuiz(true);
+    } else if (item.tags.includes("Notes")) {
+      setShowViewNotes(true);
     }
-  }
+  };
 
   const handleCloseView = () => {
-    setShowViewFlashcards(false)
-    setShowViewQuiz(false)
-    setShowViewNotes(false)
-    setSelectedContent(null)
-  }
+    setShowViewFlashcards(false);
+    setShowViewQuiz(false);
+    setShowViewNotes(false);
+    setSelectedContent(null);
+  };
+
+  const handleVisibilityToggle = () => {
+    setIsMaterialPublic(!isMaterialPublic);
+    onVisibilityToggle(material.title);
+  };
+
+  const handleTitleEdit = () => {
+    setIsEditingTitle(true);
+  };
+
+  const handleTitleSave = () => {
+    if (editedTitle.trim() && editedTitle !== material?.title) {
+      onTitleChange(editedTitle);
+    } else {
+      setEditedTitle(material?.title || "");
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleTitleSave();
+    } else if (e.key === 'Escape') {
+      setIsEditingTitle(false);
+      setEditedTitle(material?.title || "");
+    }
+  };
+
+  const handleDescriptionEdit = () => {
+    setIsEditingDescription(true);
+  };
+
+  const handleDescriptionSave = () => {
+    if (editedDescription.trim() && editedDescription !== material?.description) {
+      onTitleChange(editedTitle, editedDescription);
+    } else {
+      setEditedDescription(material?.description || "");
+    }
+    setIsEditingDescription(false);
+  };
+
+  const handleDescriptionKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleDescriptionSave();
+    } else if (e.key === 'Escape') {
+      setIsEditingDescription(false);
+      setEditedDescription(material?.description || "");
+    }
+  };
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleEditContent = (content) => {
+    if (content.tags.includes("Flashcard")) {
+      setSelectedContent(content);
+      setShowViewFlashcards(true);
+    } else if (content.tags.includes("Quiz")) {
+      setSelectedContent(content);
+      setShowViewQuiz(true);
+    } else if (content.tags.includes("Notes")) {
+      setSelectedContent(content);
+      setShowViewNotes(true);
+    }
+  };
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setIsMaterialPublic(isPublic);
+  }, [isPublic]);
 
   if (showViewFlashcards) {
     return (
-      <ViewFlashcards
-        material={selectedContent}
-        onClose={handleCloseView}
-      />
-    )
+      <ViewFlashcards material={selectedContent} onClose={handleCloseView} />
+    );
   }
 
   if (showViewQuiz) {
-    return (
-      <ViewQuiz
-        material={selectedContent}
-        onClose={handleCloseView}
-      />
-    )
+    return <ViewQuiz material={selectedContent} onClose={handleCloseView} />;
   }
 
   if (showViewNotes) {
-    return (
-      <ViewNotes
-        material={selectedContent}
-        onClose={handleCloseView}
-      />
-    )
+    return <ViewNotes material={selectedContent} onClose={handleCloseView} />;
   }
 
-  const flashcards = items.filter(item => item.tags.includes('Flashcard'))
-  const notes = items.filter(item => item.tags.includes('Notes'))
-  const quizzes = items.filter(item => item.tags.includes('Quiz'))
+  const flashcards = items.filter((item) => item.tags.includes("Flashcard"));
+  const notes = items.filter((item) => item.tags.includes("Notes"));
+  const quizzes = items.filter((item) => item.tags.includes("Quiz"));
 
-  const totalItems = flashcards.length + notes.length + quizzes.length
+  const totalItems = flashcards.length + notes.length + quizzes.length;
 
   if (totalItems === 0) {
     return (
-      <div className=" flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl overflow-hidden">
         {/* Header */}
         <div className="flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm">
           <div className="max-w-[90rem] mx-auto px-6 py-4">
@@ -519,10 +332,76 @@ const MaterialContent = ({
                   <ArrowLeft size={20} className="text-gray-600" />
                 </button>
                 <div>
-                  <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    {material?.title || 'Material'}
-                  </h1>
-                  <p className="text-sm text-gray-500">View and manage your content</p>
+                  <div className="flex items-center gap-3">
+                    {isEditingTitle ? (
+                      <input
+                        type="text"
+                        value={editedTitle}
+                        onChange={(e) => setEditedTitle(e.target.value)}
+                        onBlur={handleTitleSave}
+                        onKeyDown={handleTitleKeyDown}
+                        className="text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
+                        autoFocus
+                      />
+                    ) : (
+                      <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                        {material?.title || "Material"}
+                      </h1>
+                    )}
+                    <button
+                      onClick={handleTitleEdit}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                      title="Edit Title"
+                    >
+                      <Pencil size={16} className="text-gray-600" />
+                    </button>
+                    <button
+                      onClick={handleVisibilityToggle}
+                      className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                        isMaterialPublic 
+                          ? 'bg-white border-gray-300 hover:bg-gray-50' 
+                          : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                      }`}
+                      title={isMaterialPublic ? "Make Private" : "Make Public"}
+                    >
+                      {isMaterialPublic ? (
+                        <>
+                          <Globe size={16} className="text-[#1b81d4]" />
+                          <span className="text-[#1b81d4] text-sm font-medium">Public</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock size={16} className="text-gray-600" />
+                          <span className="text-gray-600 text-sm font-medium">Private</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {isEditingDescription ? (
+                      <input
+                        type="text"
+                        value={editedDescription}
+                        onChange={(e) => setEditedDescription(e.target.value)}
+                        onBlur={handleDescriptionSave}
+                        onKeyDown={handleDescriptionKeyDown}
+                        className="text-sm text-gray-500 bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 w-full label-text"
+                        placeholder="Add a description..."
+                        autoFocus
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-500 label-text">
+                        {material?.description || "View and manage your content"}
+                      </p>
+                    )}
+                    <button
+                      onClick={handleDescriptionEdit}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                      title="Edit Description"
+                    >
+                      <Pencil size={14} className="text-gray-600" />
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -569,14 +448,13 @@ const MaterialContent = ({
           <EmptyState />
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
-      {/* Header */}
-      <div className="flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-[90rem] mx-auto px-6 py-4">
+    <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl">
+      <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
+        <div className="max-w-[90rem] mx-auto px-6 py-4 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -585,11 +463,77 @@ const MaterialContent = ({
               >
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
-                <div>
-                <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  {material?.title || 'Material'}
-                </h1>
-                <p className="text-sm text-gray-500">View and manage your content</p>
+              <div>
+                <div className="flex items-center gap-3">
+                  {isEditingTitle ? (
+                    <input
+                      type="text"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      onBlur={handleTitleSave}
+                      onKeyDown={handleTitleKeyDown}
+                      className="text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
+                      autoFocus
+                    />
+                  ) : (
+                    <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                      {material?.title || "Material"}
+                    </h1>
+                  )}
+                  <button
+                    onClick={handleTitleEdit}
+                    className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="Edit Title"
+                  >
+                    <Pencil size={16} className="text-gray-600" />
+                  </button>
+                  <button
+                    onClick={handleVisibilityToggle}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                      isMaterialPublic 
+                        ? 'bg-white border-gray-300 hover:bg-gray-50' 
+                        : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                    }`}
+                    title={isMaterialPublic ? "Make Private" : "Make Public"}
+                  >
+                    {isMaterialPublic ? (
+                      <>
+                        <Globe size={16} className="text-[#1b81d4]" />
+                        <span className="text-[#1b81d4] text-sm font-medium">Public</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={16} className="text-gray-600" />
+                        <span className="text-gray-600 text-sm font-medium">Private</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  {isEditingDescription ? (
+                    <input
+                      type="text"
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                      onBlur={handleDescriptionSave}
+                      onKeyDown={handleDescriptionKeyDown}
+                      className="text-sm text-gray-500 bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 w-full label-text"
+                      placeholder="Add a description..."
+                      autoFocus
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-500 label-text">
+                      {material?.description || "View and manage your content"}
+                    </p>
+                  )}
+                  <button
+                    onClick={handleDescriptionEdit}
+                    className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                    title="Edit Description"
+                  >
+                    <Pencil size={14} className="text-gray-600" />
+                  </button>
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -631,101 +575,127 @@ const MaterialContent = ({
         </div>
       </div>
 
-      {/* Content */}
-      <div className=" bg-gradient-to-br from-gray-50 to-gray-400 rounded-b-xl">
-        <div className="max-w-[90rem] mx-auto pl-6 py-8">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Sparkles size={20} className="text-[#1b81d4]" />
-            </div>
-            <h2 className="text-xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Your Learning Materials
-            </h2>
-          </div>
-
-          <div className="h-screen overflow-y-auto pr-2 space-y-12">
+      <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
+        <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
+          <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
             {/* Flashcards Section */}
             <div>
-              <SectionHeader icon={BookOpen} title="Flashcards" count={flashcards.length} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {flashcards.length > 0 ? (
-                  flashcards.map((item) => (
-                    <div
-                      key={item.id}
-                      className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                    >
-                      <div 
-                        onClick={() => handleViewContent(item)}
-                        className="cursor-pointer"
+              <SectionHeader
+                icon={BookOpen}
+                title="Flashcards"
+                count={flashcards.length}
+                isExpanded={expandedSections.Flashcards}
+                onToggle={() => toggleSection("Flashcards")}
+              />
+              {expandedSections.Flashcards && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {flashcards.length > 0 ? (
+                    flashcards.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
                       >
-                        <MaterialFile content={item} onDelete={(e) => onDelete(e, item.id)} />
+                        <div
+                          onClick={() => handleViewContent(item)}
+                          className="cursor-pointer"
+                        >
+                          <MaterialFile
+                            content={item}
+                            onDelete={(e) => onDelete(e, item.id)}
+                            onEdit={handleEditContent}
+                          />
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full">
+                      <SectionEmptyState title="Flashcards" />
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-full">
-                    <SectionEmptyState title="Flashcards" />
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Notes Section */}
             <div>
-              <SectionHeader icon={FileText} title="Notes" count={notes.length} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {notes.length > 0 ? (
-                  notes.map((item) => (
-                    <div
-                      key={item.id}
-                      className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                    >
-                      <div 
-                        onClick={() => handleViewContent(item)}
-                        className="cursor-pointer"
+              <SectionHeader
+                icon={FileText}
+                title="Notes"
+                count={notes.length}
+                isExpanded={expandedSections.Notes}
+                onToggle={() => toggleSection("Notes")}
+              />
+              {expandedSections.Notes && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {notes.length > 0 ? (
+                    notes.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
                       >
-                        <MaterialFile content={item} onDelete={(e) => onDelete(e, item.id)} />
+                        <div
+                          onClick={() => handleViewContent(item)}
+                          className="cursor-pointer"
+                        >
+                          <MaterialFile
+                            content={item}
+                            onDelete={(e) => onDelete(e, item.id)}
+                            onEdit={handleEditContent}
+                          />
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full">
+                      <SectionEmptyState title="Notes" />
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-full">
-                    <SectionEmptyState title="Notes" />
-                          </div>
-                        )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Quiz Section */}
             <div>
-              <SectionHeader icon={HelpCircle} title="Quizzes" count={quizzes.length} />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {quizzes.length > 0 ? (
-                  quizzes.map((item) => (
-                    <div
-                      key={item.id}
-                      className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                    >
-                      <div 
-                        onClick={() => handleViewContent(item)}
-                        className="cursor-pointer"
+              <SectionHeader
+                icon={HelpCircle}
+                title="Quizzes"
+                count={quizzes.length}
+                isExpanded={expandedSections.Quizzes}
+                onToggle={() => toggleSection("Quizzes")}
+              />
+              {expandedSections.Quizzes && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {quizzes.length > 0 ? (
+                    quizzes.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
                       >
-                        <MaterialFile content={item} onDelete={(e) => onDelete(e, item.id)} />
+                        <div
+                          onClick={() => handleViewContent(item)}
+                          className="cursor-pointer"
+                        >
+                          <MaterialFile
+                            content={item}
+                            onDelete={(e) => onDelete(e, item.id)}
+                            onEdit={handleEditContent}
+                          />
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full">
+                      <SectionEmptyState title="Quizzes" />
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-full">
-                    <SectionEmptyState title="Quizzes" />
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MaterialContent 
+export default MaterialContent;
