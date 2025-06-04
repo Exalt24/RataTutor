@@ -12,14 +12,12 @@ const loginFields = [
     name: "username",
     label: "Username",
     icon: User,
-    placeholder: "Enter your username",
   },
   {
     name: "password",
     type: "password",
     label: "Password",
     icon: Lock,
-    placeholder: "Enter your password",
   },
 ];
 

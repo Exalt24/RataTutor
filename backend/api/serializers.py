@@ -356,12 +356,18 @@ class MaterialSerializer(serializers.ModelSerializer):
         help_text="Must be one of: 'active' or 'trash'.",
     )
     pinned = serializers.BooleanField(
+        default=False,
         help_text="Whether this Material is pinned (e.g. shown at top)."
     )
     public = serializers.BooleanField(
+        default=False,
         help_text="Whether this Material is shared publicly."
     )
-
+    
+    # Add owner as read-only field
+    owner = serializers.StringRelatedField(read_only=True)
+    
+    # Related objects (read-only)
     attachments = AttachmentSerializer(many=True, read_only=True)
     notes = NoteSerializer(many=True, read_only=True)
     flashcard_sets = FlashcardSetSerializer(many=True, read_only=True)
@@ -371,6 +377,7 @@ class MaterialSerializer(serializers.ModelSerializer):
         model = Material
         fields = [
             "id",
+            "owner",  # Add owner field
             "title",
             "description",
             "status",
@@ -383,7 +390,7 @@ class MaterialSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "owner", "created_at", "updated_at"]
 
     def validate_title(self, value):
         clean = value.strip()
@@ -391,7 +398,7 @@ class MaterialSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Title cannot be blank or just whitespace.")
 
         request = self.context.get("request")
-        if request and hasattr(request, "user"):
+        if request and hasattr(request, "user") and request.user.is_authenticated:
             user = request.user
             qs = Material.objects.filter(owner=user, title__iexact=clean)
             # Exclude the current instance to allow updates without false conflict
@@ -402,16 +409,17 @@ class MaterialSerializer(serializers.ModelSerializer):
         return clean
 
     def validate_description(self, value):
-        return value.strip()
+        if value:
+            return value.strip()
+        return value
 
     def validate(self, data):
         request = self.context.get("request")
 
+        # Check if marking as trash requires description
         if data.get("status") == "trash" and not data.get("description", "").strip():
-            raise serializers.ValidationError("You must provide a description when marking a material as 'trash'.")
+            raise serializers.ValidationError({
+                "description": "You must provide a description when marking a material as 'trash'."
+            })
 
-        instance = getattr(self, "instance", None)
-        if instance and request and hasattr(request, "user"):
-            if hasattr(instance, "owner") and instance.owner != request.user:
-                raise serializers.ValidationError("You do not have permission to modify that Material.")
         return data
