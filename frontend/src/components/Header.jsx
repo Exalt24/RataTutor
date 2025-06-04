@@ -20,9 +20,9 @@ const Header = ({
   });
 
   const streakData = {
-    current: streak,
-    longest: 14, // This should come from props or API
-    total: 42, // This should come from props or API
+    current: profileData.streak.count,
+    longest: profileData.streak.longest_streak, // This should come from props or API
+    total: profileData.streak.total_days, // This should come from props or API
   };
 
   const handleStreakClick = () => {
@@ -46,7 +46,7 @@ const Header = ({
             className="flex items-center space-x-1 hover:opacity-75 transition-opacity"
           >
             <span className="text-lg">🔥</span>
-            <span className="font-medium">{streak}</span>
+            <span className="font-medium">{streakData.current}</span>
           </button>
 
           {/* Level */}
