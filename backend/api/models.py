@@ -32,7 +32,7 @@ class Material(models.Model):
     )
     public = models.BooleanField(
         default=False,
-        help_text="If true, this material can be shared publicly; otherwise it’s private."
+        help_text="If true, this material can be shared publicly; otherwise it's private."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -83,11 +83,16 @@ class Note(models.Model):
     content = models.TextField()
     public = models.BooleanField(
         default=False,
-        help_text="If true, this note is shared publicly; otherwise it’s private."
+        help_text="If true, this note is shared publicly; otherwise it's private."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['material', 'title'], name='unique_material_note_title')
+        ]
 
     def __str__(self):
         if self.description:
@@ -140,11 +145,16 @@ class Quiz(models.Model):
     )
     public = models.BooleanField(
         default=False,
-        help_text="If true, this quiz is shared publicly; otherwise it’s private."
+        help_text="If true, this quiz is shared publicly; otherwise it's private."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['material', 'title'], name='unique_material_quiz_title')
+        ]
 
     def __str__(self):
         if self.description:
@@ -187,11 +197,16 @@ class FlashcardSet(models.Model):
     )
     public = models.BooleanField(
         default=False,
-        help_text="If true, this flashcard set is shared publicly; otherwise it’s private."
+        help_text="If true, this flashcard set is shared publicly; otherwise it's private."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['material', 'title'], name='unique_material_flashcardset_title')
+        ]
 
     def __str__(self):
         if self.description:
