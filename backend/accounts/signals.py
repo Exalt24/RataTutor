@@ -26,4 +26,8 @@ def create_user_profile(sender, instance, created, **kwargs):
             full_name=generate_random_full_name(),
         )
 
-        Streak.objects.create(profile=user_profile)
+        # Create Streak instance for the newly created UserProfile
+        streak = Streak.objects.create(profile=user_profile)
+
+        # Immediately update the streak based on the last activity (last_login)
+        streak.update_streak()  # This will set the streak to 1 since it's the first activity
