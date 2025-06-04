@@ -1,58 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import { updateProfile } from "../services/authService";
 import ValidatedInput from '../components/ValidatedInput';
-
-// Import your local avatar images
-import avatar1 from '../assets/avatar1.png'
-import avatar2 from '../assets/avatar2.png'
-import avatar3 from '../assets/avatar3.png'
-
-// Background colors
-const backgroundColors = [
-  { name: 'Blue', hex: '#7BA7CC' },
-  { name: 'Coral', hex: '#FFB5A7' },
-  { name: 'Lavender', hex: '#D8B7FF' },
-];
-
-// Generate 9 avatar combinations (3 avatars × 3 backgrounds)
-const generateAvatarCombinations = () => {
-  const baseAvatars = [
-    { id: 1, url: avatar1, name: 'Avatar 1' },
-    { id: 2, url: avatar2, name: 'Avatar 2' },
-    { id: 3, url: avatar3, name: 'Avatar 3' },
-  ];
-
-  const avatarCombinations = [];
-  let combinationId = 1;
-
-  baseAvatars.forEach(avatar => {
-    backgroundColors.forEach(bg => {
-      avatarCombinations.push({
-        id: combinationId++,
-        avatarId: avatar.id,
-        avatarUrl: avatar.url,
-        avatarName: avatar.name,
-        backgroundColor: bg.hex,
-        backgroundName: bg.name,
-        displayName: `${avatar.name} - ${bg.name}`,
-        isFree: true
-      });
-    });
-  });
-
-  return avatarCombinations;
-};
-
-const avatarCombinations = generateAvatarCombinations();
+import { avatarCombinations, getCurrentAvatar } from '../utils/avatarUtils';
 
 const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
+  // Initialize with currentAvatar
   const [selectedAvatar, setSelectedAvatar] = useState(currentAvatar);
 
   const handleSave = () => {
     onSave(selectedAvatar);
+    onClose();
+  };
+
+  const handleClose = () => {
     onClose();
   };
 
@@ -62,21 +25,19 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
     <div 
       className="fixed inset-0 flex items-center justify-center z-50 p-4"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+      onClick={handleClose} // Close when clicking backdrop
     >
-      <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div 
+        className="bg-white rounded-3xl max-w-xl w-full max-h-[125vh] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50 shadow-2xl"
+        onClick={(e) => e.stopPropagation()} // Prevent close when clicking modal content
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center space-x-3">
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft size={20} className="text-gray-600" />
-            </button>
-            <h3 className="text-xl font-bold text-gray-800">Choose Avatar</h3>
+            <h3 className="label-text text-xl font-bold text-gray-800">Choose Avatar</h3>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
             <X size={20} className="text-gray-500" />
@@ -113,8 +74,8 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
 
           {/* Avatar Grid */}
           <div>
-            <h4 className="text-lg font-semibold text-gray-800 mb-4">Select Your Avatar</h4>
-            <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+            <h4 className="label-text text-lg font-semibold text-gray-800 mb-4">Select Your Avatar</h4>
+            <div className="grid grid-cols-5 gap-3 max-h-96 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
               {avatarCombinations.map(avatarCombo => (
                 <div
                   key={avatarCombo.id}
@@ -161,7 +122,7 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
                   {/* Price/Free label */}
                   <div className="text-center mt-2">
                     {avatarCombo.isFree ? (
-                      <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      <span className="label-text text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
                         Free
                       </span>
                     ) : (
@@ -180,8 +141,8 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
         {/* Footer */}
         <div className="flex justify-between items-center p-6 border-t border-gray-100 bg-gray-50 rounded-b-3xl">
           <button
-            onClick={onClose}
-            className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-medium"
+            onClick={handleClose}
+            className="label-text px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-medium"
           >
             Cancel
           </button>
@@ -199,92 +160,114 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
 };
 
 const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
-  // Initialize avatar from existing profile data or default to first combination
-  const getCurrentAvatar = () => {
-    if (profileData.avatar) {
-      // If avatar exists in profile data, try to find matching combination
-      const existingAvatar = avatarCombinations.find(combo => 
-        combo.id === parseInt(profileData.avatar) || 
-        combo.displayName === profileData.avatar
-      );
-      return existingAvatar || avatarCombinations[0];
-    }
-    return avatarCombinations[0];
-  };
+  // Early return if profileData is not available (during logout)
+  if (!profileData) {
+    return <div>Loading...</div>;
+  }
 
-  const [selectedAvatar, setSelectedAvatar] = useState(getCurrentAvatar());
+  // Fix 1: Stabilize currentAvatar calculation with proper dependencies
+  const currentAvatar = useMemo(() => {
+    return getCurrentAvatar(profileData);
+  }, [profileData.avatar, profileData.id]); // Only depend on specific stable fields
+
+  // Fix 2: Use lazy initialization to avoid dependency issues
+  const [selectedAvatar, setSelectedAvatar] = useState(() => currentAvatar);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  
+  // Initialize form data with lazy initialization
+  const [formData, setFormData] = useState(() => ({
     full_name: profileData.full_name || '',
     username: profileData.username || '',
     email: profileData.email || '',
     bio: profileData.bio || '',
-    avatar: profileData.avatar || selectedAvatar.id.toString(),
-  });
-  const [validities, setValidities] = useState({
+    avatar: profileData.avatar || currentAvatar.id.toString(),
+  }));
+  
+  // Initialize validities with lazy initialization  
+  const [validities, setValidities] = useState(() => ({
     full_name: !!(profileData.full_name),
     username: !!(profileData.username),
     email: !!(profileData.email),
     bio: true, // Bio is optional
-  });
+  }));
+  
   const [serverErrors, setServerErrors] = useState({});
 
   const { showLoading, hideLoading } = useLoading();
   const { showToast } = useToast();
 
-  // Handle form input changes
-  const handleChange = (e) => {
+  // Handle form input changes - MEMOIZED to prevent re-renders
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     // Clear server error for this field when user starts typing
-    if (serverErrors[name]) {
-      setServerErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
+    setServerErrors(prev => {
+      if (prev[name]) {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      }
+      return prev;
+    });
+  }, []);
 
-  // Handle validation state changes
-  const handleValidityChange = (field, isValid) => {
-    setValidities(prev => ({ ...prev, [field]: isValid }));
-  };
+  // Handle validation state changes - MEMOIZED to prevent infinite re-renders
+  const handleValidityChange = useCallback((field, isValid) => {
+    setValidities(prev => {
+      // Only update if the validity actually changed
+      if (prev[field] !== isValid) {
+        return { ...prev, [field]: isValid };
+      }
+      return prev;
+    });
+  }, []);
 
-  // Handle avatar selection
-  const handleAvatarSave = (avatar) => {
+  // Handle avatar selection - MEMOIZED
+  const handleAvatarSave = useCallback((avatar) => {
     setSelectedAvatar(avatar);
     setFormData(prev => ({ ...prev, avatar: avatar.id.toString() }));
-  };
+  }, []);
 
-  // Check if form data has changed from original
-  const hasChanges = () => {
-    const originalData = {
+  // Fix 5: Calculate hasChanges without depending on unstable references
+  const hasChanges = useMemo(() => {
+    const original = {
       full_name: profileData.full_name || '',
       username: profileData.username || '',
       email: profileData.email || '',
       bio: profileData.bio || '',
-      avatar: profileData.avatar || getCurrentAvatar().id.toString(),
+      avatar: profileData.avatar || currentAvatar.id.toString(),
     };
-
+    
     return Object.keys(formData).some(key => 
-      formData[key] !== originalData[key]
+      formData[key] !== original[key]
     );
-  };
+  }, [
+    formData, 
+    profileData.full_name, 
+    profileData.username, 
+    profileData.email, 
+    profileData.bio, 
+    profileData.avatar, 
+    currentAvatar.id
+  ]);
 
-  // Check if all required fields are valid
-  const allRequiredFieldsValid = () => {
+  const allRequiredFieldsValid = useMemo(() => {
     return Object.entries(validities).every(([field, isValid]) => {
       if (field === 'bio') return true; // Bio is optional
       return isValid;
     });
-  };
+  }, [validities]);
 
-  // Determine if save button should be disabled
-  const isDisabled = !hasChanges() || !allRequiredFieldsValid();
+  const isSaveDisabled = useMemo(() => {
+    return !hasChanges || !allRequiredFieldsValid;
+  }, [hasChanges, allRequiredFieldsValid]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Early return if button should be disabled (safety check)
-    if (isDisabled) return;
+    if (isSaveDisabled) return;
 
     setServerErrors({}); // Clear previous server errors
     showLoading();
@@ -351,13 +334,14 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
             </div>
             <button 
               onClick={handleSubmit}
-              disabled={isDisabled}
-              data-hover={isDisabled ? 
-                (!hasChanges() ? "No changes to save" : "Fix errors to save") : 
-                "Are you sure?"
+              disabled={isSaveDisabled}
+              data-hover={
+                isSaveDisabled 
+                  ? (hasChanges ? "Fix errors to save" : "No changes to save")
+                  : "Save Changes"
               }
               className={`exam-button-mini py-1.5 px-4 text-xs sm:text-sm transition-all ${
-                isDisabled ? 
+                isSaveDisabled ? 
                 'opacity-50 cursor-not-allowed' : 
                 'hover:scale-105'
               }`}
@@ -462,9 +446,10 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
 
       {/* Avatar Selection Modal */}
       <AvatarSelectionModal
+        key={isAvatarModalOpen ? 'open' : 'closed'} // Force remount to reset state
         isOpen={isAvatarModalOpen}
         onClose={() => setIsAvatarModalOpen(false)}
-        currentAvatar={selectedAvatar}
+        currentAvatar={currentAvatar}
         onSave={handleAvatarSave}
       />
     </>
