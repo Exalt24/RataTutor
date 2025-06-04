@@ -12,28 +12,49 @@ import Sidebar from '../components/Sidebar';
 import StreakScreen from '../components/StreakScreen';
 import TrashScreenEmptyState from '../components/TrashScreenEmptyState';
 import { logout } from '../services/authService';
-import { getProfile } from '../services/authService'; // Import getProfile function
+import { getProfile } from '../services/authService';
+import { useLoading } from '../components/Loading/LoadingContext';  // Import LoadingContext
 import '../styles/pages/dashboard.css';
 
 const Dashboard = () => {
   const [screen, setScreen] = useState('home');
-  const [profileData, setProfileData] = useState({});
+  const [profileData, setProfileData] = useState(null);  // Start with null to show loading
   const [selectedFile, setSelectedFile] = useState(null);
   const nav = useNavigate();
+
+  const { showLoading, hideLoading } = useLoading();  // Trigger loading state
 
   // Fetch profile data once when the Dashboard component mounts
   const fetchProfileData = async () => {
     try {
       const profile = await getProfile();
-      setProfileData(profile); // Set profile data here
+      setProfileData(profile);  // Set profile data here
     } catch (error) {
       console.error('Error fetching profile data:', error);
+    } finally {
+      hideLoading();  // Hide loading spinner after the data is fetched
     }
   };
 
   useEffect(() => {
-    fetchProfileData(); // Fetch profile data on component mount
-  }, []); // Empty dependency array means this runs only once on component mount
+    // Show the loading spinner when the component mounts
+    showLoading();
+
+    const savedScreen = localStorage.getItem('currentScreen');
+    if (savedScreen) {
+      setScreen(savedScreen); // Set the screen to the stored screen name
+    }
+    // Fetch profile data on component mount
+    fetchProfileData();
+
+    // Retrieve stored screen name from localStorage if available
+    
+  }, []);  // Empty dependency array means this runs only once on component mount
+
+  useEffect(() => {
+    // Store the current screen in localStorage whenever it changes
+    localStorage.setItem('currentScreen', screen);
+  }, [screen]);  // Only trigger when `screen` changes
 
   // Handle Logout
   const doLogout = () => {
@@ -41,9 +62,13 @@ const Dashboard = () => {
     nav('/login', { replace: true });
   };
 
-  // Change screen
-  const showProfile = () => setScreen('profile');
-  const showStreak = () => setScreen('streak');
+  // Change screen and show loading spinner
+  const showProfile = () => {
+    setScreen('profile');
+  };
+  const showStreak = () => {
+    setScreen('streak');
+  };
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -79,33 +104,36 @@ const Dashboard = () => {
     }
   };
 
-  // Pass profileData to child screens
   return (
-    <div className="flex h-screen text-xs sm:text-sm">
-      <Sidebar screen={screen} setScreen={setScreen} />
-      <div className="flex-1 flex flex-col">
-        <Header
-          streak={0}  // Placeholder until streak data is fetched
-          level={0}  // Placeholder until level data is fetched
-          points={0}  // Placeholder until points data is fetched
-          onLogout={doLogout}
-          onProfile={showProfile}
-          onStreak={showStreak}
-          profileData={profileData}
-        />
-        <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
-          {screen === 'home' && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={profileData} />}
-          {screen === 'materials' && <MaterialsScreen />}
-          {screen === 'trash' && <TrashScreenEmptyState />}
-          {screen === 'exams' && <ExamsScreen />}
-          {screen === 'explore' && <ExploreScreen />}
-          {screen === 'rata' && <RataAIScreen />}
-          {screen === 'profile' && <ProfileScreen onEditProfile={() => setScreen('edit-profile')} profileData={profileData} />}
-          {screen === 'edit-profile' && <EditProfileScreen onBack={() => setScreen('profile')} profileData={profileData} fetchProfileData={fetchProfileData} />}
-          {screen === 'streak' && <StreakScreen profileData={profileData} />}
-        </main>
+    // Show loading until profileData is available
+    profileData === null ? (
+      <div className="flex justify-center items-center h-screen"></div>
+    ) : (
+      // Once profileData is available, render the entire dashboard layout
+      <div className="flex h-screen text-xs sm:text-sm">
+        <Sidebar screen={screen} setScreen={setScreen} />
+        <div className="flex-1 flex flex-col">
+          <Header
+            onLogout={doLogout}
+            onProfile={showProfile}
+            onStreak={showStreak}
+            profileData={profileData}
+          />
+          <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
+            {/* Render each screen based on the selected screen */}
+            {screen === 'home' && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={profileData} />}
+            {screen === 'materials' && <MaterialsScreen />}
+            {screen === 'trash' && <TrashScreenEmptyState />}
+            {screen === 'exams' && <ExamsScreen />}
+            {screen === 'explore' && <ExploreScreen />}
+            {screen === 'rata' && <RataAIScreen />}
+            {screen === 'profile' && <ProfileScreen onEditProfile={() => setScreen('edit-profile')} profileData={profileData} />}
+            {screen === 'edit-profile' && <EditProfileScreen onBack={() => setScreen('profile')} profileData={profileData} fetchProfileData={fetchProfileData} />}
+            {screen === 'streak' && <StreakScreen profileData={profileData} />}
+          </main>
+        </div>
       </div>
-    </div>
+    )
   );
 };
 

@@ -20,8 +20,26 @@ export function clearTokens() {
 /**
  * Returns true if an access token exists in localStorage.
  */
+// authService.js
+
 export function isLoggedIn() {
-  return Boolean(localStorage.getItem("access_token"));
+  const token = localStorage.getItem("access_token");
+
+  if (!token) return false; // No token means the user is not logged in
+
+  const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT token to access the payload
+
+  // Check if the token has expired
+  const currentTime = Date.now() / 1000; // Get the current time in seconds (JWT expiration is in seconds)
+
+  if (decoded.exp < currentTime) {
+    // Token has expired, clear both tokens from localStorage
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    return false;
+  }
+
+  return true; // Token is still valid
 }
 
 /**

@@ -209,7 +209,7 @@ class StreakSerializer(serializers.ModelSerializer):
         model = Streak
         fields = ['count', 'longest_streak', 'total_days', 'last_updated']
         read_only_fields = fields
-        
+
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
@@ -218,9 +218,3 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['username', 'email', 'full_name', 'bio', 'avatar', 'streak']
-
-class StreakSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Streak
-        fields = ['count', 'longest_streak', 'total_days', 'last_updated']
-        read_only_fields = fields

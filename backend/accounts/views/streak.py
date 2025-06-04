@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.utils.timezone import now
 from ..models import Streak, UserProfile
 
 class UpdateStreakView(APIView):
@@ -25,7 +24,7 @@ class UpdateStreakView(APIView):
             "last_updated": streak.last_updated
         })
 
-    
+
 class ResetStreakView(APIView):
     """
     POST /streak/reset/
@@ -46,5 +45,3 @@ class ResetStreakView(APIView):
             })
         except (UserProfile.DoesNotExist, Streak.DoesNotExist):
             return Response({"detail": "Streak not found."}, status=404)
-
-

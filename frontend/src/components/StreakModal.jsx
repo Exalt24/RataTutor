@@ -1,7 +1,7 @@
 import { CalendarDaysIcon, FireIcon, TrophyIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React from 'react';
 
-const StreakModal = ({ onClose, streakData = { current: 5, longest: 14, total: 42 } }) => {
+const StreakModal = ({ onClose, profileData }) => {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 relative bg-color-2">
@@ -25,7 +25,7 @@ const StreakModal = ({ onClose, streakData = { current: 5, longest: 14, total: 4
               <FireIcon className="w-8 h-8 text-red-500" />
             </div>
             <p className="text-sm text-gray-600">Current Streak</p>
-            <p className="text-2xl font-bold text-gray-800">{streakData.current}</p>
+            <p className="text-2xl font-bold text-gray-800">{profileData.streak.count}</p>
             <p className="text-xs text-gray-500">days</p>
           </div>
 
@@ -34,7 +34,7 @@ const StreakModal = ({ onClose, streakData = { current: 5, longest: 14, total: 4
               <TrophyIcon className="w-8 h-8 text-yellow-500" />
             </div>
             <p className="text-sm text-gray-600">Longest Streak</p>
-            <p className="text-2xl font-bold text-gray-800">{streakData.longest}</p>
+            <p className="text-2xl font-bold text-gray-800">{profileData.streak.longest_streak}</p>
             <p className="text-xs text-gray-500">days</p>
           </div>
 
@@ -42,16 +42,16 @@ const StreakModal = ({ onClose, streakData = { current: 5, longest: 14, total: 4
             <div className="flex justify-center mb-2">
               <CalendarDaysIcon className="w-8 h-8 text-blue-500" />
             </div>
-            <p className="text-sm text-gray-600">Total Days</p>
-            <p className="text-2xl font-bold text-gray-800">{streakData.total}</p>
-            <p className="text-xs text-gray-500">learned</p>
+            <p className="text-sm text-gray-600">Total Learning</p>
+            <p className="text-2xl font-bold text-gray-800">{profileData.streak.total_days}</p>
+            <p className="text-xs text-gray-500">days</p>
           </div>
         </div>
 
         {/* Motivational Message */}
         <div className="text-center">
           <p className="exam-msg text-lg mb-4">
-            {streakData.current > 0 
+            {profileData.streak.count > 0
               ? "You're on fire! Keep the momentum going!"
               : "Start your streak today!"}
           </p>
