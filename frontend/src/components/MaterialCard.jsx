@@ -212,7 +212,10 @@ const MaterialCard = ({
 
   // Explore/Public materials variant (keeping existing logic)
   return (
-    <div className="exam-card p-4 hover:shadow-lg transition-shadow">
+    <div 
+      className="exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           {file.typeIcon}
