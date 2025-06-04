@@ -15,6 +15,7 @@ export default function ValidatedInput({
   required = false,
   onValidityChange,
   errorMessage: serverError = "",
+  variant = "default", // "default" or "profile"
   // Textarea specific props
   rows = 3,
   cols,
@@ -38,7 +39,7 @@ export default function ValidatedInput({
   const isValid = !!value && !error;
 
   useEffect(() => {
-    onValidityChange(name, isValid);
+    onValidityChange?.(name, isValid);
   }, [name, isValid, onValidityChange]);
 
   const isActive = focused || !!value;
@@ -56,7 +57,57 @@ export default function ValidatedInput({
     ...otherProps
   };
 
-  // Render textarea
+  // Profile variant styling
+  if (variant === "profile") {
+    if (type === "textarea") {
+      return (
+        <div>
+          <label className="label-text block text-sm font-medium text-gray-700 mb-2">
+            {label}
+          </label>
+          <textarea
+            {...commonProps}
+            rows={rows}
+            cols={cols}
+            className={`label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none ${
+              error ? 'border-red-500 ring-red-500' : ''
+            }`}
+          />
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <label className="label-text block text-sm font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+        <div className="relative">
+          <input
+            {...commonProps}
+            type={type === "password" ? (show ? "text" : "password") : type}
+            className={`label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+              error ? 'border-red-500 ring-red-500' : ''
+            } ${type === "password" ? 'pr-12' : ''}`}
+          />
+          {type === "password" && (
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShow((v) => !v)}
+              disabled={disabled}
+            >
+              {show ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          )}
+        </div>
+        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      </div>
+    );
+  }
+
+  // Default variant (existing styling)
   if (type === "textarea") {
     return (
       <div
@@ -80,7 +131,6 @@ export default function ValidatedInput({
     );
   }
 
-  // Render regular input
   return (
     <div
       className={`form-field ${isActive ? "active" : ""} ${
