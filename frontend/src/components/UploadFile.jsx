@@ -45,7 +45,7 @@ const UploadFile = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="letter p-6 space-y-6 shadow-lg border border-gray-200 relative w-full max-w-sm md:max-w-md lg:max-w-xl"
+        className="letter1 p-6 space-y-6 shadow-lg border border-gray-200 relative w-full max-w-sm md:max-w-md lg:max-w-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}

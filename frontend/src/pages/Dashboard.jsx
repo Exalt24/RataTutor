@@ -5,15 +5,14 @@ import ExamsScreen from '../components/ExamsScreen';
 import ExploreScreen from '../components/ExploreScreen';
 import Header from '../components/Header';
 import HomeScreen from '../components/HomeScreen';
+import { useLoading } from '../components/Loading/LoadingContext'; // Import LoadingContext
 import MaterialsScreen from '../components/MaterialsScreen';
 import ProfileScreen from '../components/ProfileScreen';
 import RataAIScreen from '../components/RataAIScreen';
 import Sidebar from '../components/Sidebar';
 import StreakScreen from '../components/StreakScreen';
-import TrashScreenEmptyState from '../components/TrashScreenEmptyState';
-import { logout } from '../services/authService';
-import { getProfile } from '../services/authService';
-import { useLoading } from '../components/Loading/LoadingContext';  // Import LoadingContext
+import TrashScreen from '../components/TrashScreen';
+import { getProfile, logout } from '../services/authService';
 import '../styles/pages/dashboard.css';
 
 const Dashboard = () => {
@@ -123,7 +122,7 @@ const Dashboard = () => {
             {/* Render each screen based on the selected screen */}
             {screen === 'home' && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={profileData} />}
             {screen === 'materials' && <MaterialsScreen />}
-            {screen === 'trash' && <TrashScreenEmptyState />}
+            {screen === 'trash' && <TrashScreen />}
             {screen === 'exams' && <ExamsScreen />}
             {screen === 'explore' && <ExploreScreen />}
             {screen === 'rata' && <RataAIScreen />}
