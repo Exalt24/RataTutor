@@ -1,9 +1,9 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.validators import RegexValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode
 from .models import Streak, UserProfile
@@ -91,30 +91,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('confirm_password')
         return User.objects.create_user(**validated_data)
-
-
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        trim_whitespace=True,
-        allow_blank=False,
-        error_messages={
-            'blank': 'Username cannot be blank.',
-            'required': 'Username is required.'
-        }
-    )
-    password = serializers.CharField(
-        write_only=True,
-        error_messages={'required': 'Password is required.'}
-    )
-
-    def validate(self, data):
-        from django.contrib.auth import authenticate
-        user = authenticate(**data)
-        if not user:
-            raise serializers.ValidationError('Invalid username or password.')
-        tokens = RefreshToken.for_user(user)
-        return {'refresh': str(tokens), 'access': str(tokens.access_token)}
-
 
 class TokenSerializer(serializers.Serializer):
     refresh = serializers.CharField()

@@ -10,7 +10,7 @@ import { getMaterials, updateMaterial, deleteMaterial, toggleMaterialPin, toggle
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
 
-const EmptyState = ({ onCreateMaterial }) => (
+const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
     <FileQuestion size={64} className="text-[#1b81d4] mb-6" />
     <h3 className="label-text text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">
@@ -19,13 +19,6 @@ const EmptyState = ({ onCreateMaterial }) => (
     <p className="text-gray-600 text-center max-w-md leading-relaxed mb-6">
       Create your first material to start organizing your study content. You can add flashcards, notes, and quizzes to help you learn effectively.
     </p>
-    <button 
-      data-hover="Create Your First Material"
-      className="exam-button-mini"
-      onClick={onCreateMaterial}
-    >
-      Create Material
-    </button>
   </div>
 );
 
@@ -38,7 +31,7 @@ const LoadingState = () => (
 
 const MaterialsScreen = () => {
   const [materials, setMaterials] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true) // Renamed for clarity
   const [error, setError] = useState(null)
   const [showUpdatedDropdown, setShowUpdatedDropdown] = useState(false)
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
@@ -59,7 +52,7 @@ const MaterialsScreen = () => {
 
   // Load materials on component mount
   useEffect(() => {
-    loadMaterials()
+    loadMaterials(true) // Pass true for initial load
   }, [])
 
   useEffect(() => {
@@ -78,10 +71,17 @@ const MaterialsScreen = () => {
     }
   }, [])
 
-  const loadMaterials = async () => {
+  const loadMaterials = async (isInitialLoad = false) => {
     try {
-      setLoading(true)
       setError(null)
+      
+      // Use different loading indicators based on context
+      if (isInitialLoad) {
+        setInitialLoading(true) // Full page loading state
+      } else {
+        showLoading() // Global loading overlay for refresh
+      }
+      
       const response = await getMaterials()
       setMaterials(response.data)
     } catch (err) {
@@ -92,7 +92,11 @@ const MaterialsScreen = () => {
         subtitle: "Please refresh the page or try again later.",
       })
     } finally {
-      setLoading(false)
+      if (isInitialLoad) {
+        setInitialLoading(false)
+      } else {
+        hideLoading()
+      }
     }
   }
 
@@ -115,7 +119,7 @@ const MaterialsScreen = () => {
       setMaterials(prev => 
         prev.map(m => 
           m.id === material.id 
-            ? response.data  // Use the response data which includes the updated material
+            ? response.data
             : m
         )
       )
@@ -172,14 +176,14 @@ const MaterialsScreen = () => {
     // TODO: Implement filtering based on related content (notes, flashcards, quizzes)
     switch (selectedTypeFilter) {
       case 'flashcards':
-        // TODO: Check if material has flashcard sets
-        return true
+        // Check if material has flashcard sets
+        return material.flashcard_sets && material.flashcard_sets.length > 0
       case 'notes':
-        // TODO: Check if material has notes
-        return true
+        // Check if material has notes
+        return material.notes && material.notes.length > 0
       case 'quizzes':
-        // TODO: Check if material has quizzes
-        return true
+        // Check if material has quizzes
+        return material.quizzes && material.quizzes.length > 0
       default:
         return true
     }
@@ -219,7 +223,7 @@ const MaterialsScreen = () => {
       setMaterials(prev => 
         prev.map(m => 
           m.id === material.id 
-            ? response.data  // Use the response data which includes the updated material
+            ? response.data
             : m
         )
       )
@@ -335,8 +339,8 @@ const MaterialsScreen = () => {
     }
   }
 
-  // Show loading state
-  if (loading) {
+  // Show initial loading state
+  if (initialLoading) {
     return <LoadingState />
   }
 
@@ -354,7 +358,7 @@ const MaterialsScreen = () => {
         <button 
           data-hover="Try Again"
           className="exam-button-mini"
-          onClick={loadMaterials}
+          onClick={() => loadMaterials(true)} // Retry as initial load
         >
           Retry
         </button>
@@ -407,7 +411,7 @@ const MaterialsScreen = () => {
               <button 
                 data-hover="Refresh"
                 className="exam-button-mini py-1 px-2 flex items-center gap-1"
-                onClick={loadMaterials}
+                onClick={() => loadMaterials(false)} // Refresh with global loading
               >
                 <RefreshCw size={14} />
                 Refresh
@@ -531,7 +535,7 @@ const MaterialsScreen = () => {
                     {pinnedMaterials.map((material) => (
                       <MaterialCard
                         key={material.id}
-                        file={material} // Keep 'file' prop name for MaterialCard compatibility
+                        file={material}
                         isPinned={true}
                         onPinToggle={() => togglePin(material)}
                         onVisibilityToggle={() => toggleVisibility(material)}
@@ -558,7 +562,7 @@ const MaterialsScreen = () => {
                     {otherMaterials.map((material) => (
                       <MaterialCard
                         key={material.id}
-                        file={material} // Keep 'file' prop name for MaterialCard compatibility
+                        file={material}
                         isPinned={false}
                         onPinToggle={() => togglePin(material)}
                         onVisibilityToggle={() => toggleVisibility(material)}

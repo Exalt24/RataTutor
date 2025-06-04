@@ -17,6 +17,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
+CORS_ALLOW_CREDENTIALS = True
 if DEBUG:
     FRONTEND_URL = 'http://localhost:3000'
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
@@ -116,6 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Custom JWT Authentication Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Add this for JWT
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
@@ -130,6 +132,16 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS':     True,
     'BLACKLIST_AFTER_ROTATION':  True,
 }
+
+# CSRF settings (for session auth fallback)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+] if DEBUG else [
+    "https://ratatutor.onrender.com",
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
