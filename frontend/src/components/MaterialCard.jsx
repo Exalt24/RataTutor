@@ -3,22 +3,83 @@ import React, { useEffect, useRef, useState } from 'react'
 
 export const defaultFiles = [
   { 
+    id: '1',
     title: 'Scripts sa IOT', 
     updated: '270d ago', 
-    tag: 'Flashcards (33)',
     description: 'Collection of scripts and notes for Internet of Things course',
+    content: [
+      {
+        id: '1-1',
+        title: 'Introduction to Calculus',
+        author: 'John Doe',
+        description: 'A comprehensive guide covering limits, derivatives, and integrals with practical examples and exercises.',
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        tags: ['Flashcard'],
+        flashcards: [
+          { front: 'What is a derivative?', back: 'The rate of change of a function with respect to its variable' },
+          { front: 'What is an integral?', back: 'The area under a curve or the accumulation of a quantity' },
+          { front: 'What is a limit?', back: 'The value that a function approaches as the input approaches some value' }
+        ]
+      },
+      {
+        id: '1-2',
+        title: 'Linear Algebra Fundamentals',
+        author: 'Jane Smith',
+        description: 'An introduction to vectors, matrices, and linear transformations.',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        tags: ['Notes'],
+        content: `# Linear Algebra Fundamentals
+
+## Vectors and Matrices
+- Vectors: Ordered lists of numbers representing magnitude and direction
+- Matrices: Rectangular arrays of numbers
+- Operations: Addition, multiplication, and transformations
+
+## Linear Transformations
+- Matrix multiplication as transformation
+- Determinants and their geometric meaning
+- Eigenvalues and eigenvectors
+
+## Applications
+- Computer graphics
+- Machine learning
+- Quantum mechanics`
+      },
+      {
+        id: '1-3',
+        title: 'Calculus Quiz',
+        author: 'John Doe',
+        description: 'Test your knowledge of calculus fundamentals.',
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        tags: ['Quiz'],
+        questions: [
+          {
+            question: 'What is the derivative of f(x) = x²?',
+            options: ['2x', 'x²', '2', 'x'],
+            correctAnswer: 0
+          },
+          {
+            question: 'What is the integral of 2x?',
+            options: ['x²', 'x² + C', '2x²', '2x² + C'],
+            correctAnswer: 1
+          }
+        ]
+      }
+    ]
   },
   { 
+    id: '2',
     title: 'Untitled', 
     updated: '270d ago', 
-    tag: 'Note',
     description: 'Quick notes and ideas',
+    content: []
   },
   { 
+    id: '3',
     title: '(Draft) 5 Testing', 
     updated: '367d ago', 
-    tag: 'Flashcards (14)',
     description: 'Testing concepts and methodologies',
+    content: []
   }
 ]
 
@@ -27,7 +88,7 @@ const MaterialCard = ({
   isPinned, 
   onPinToggle, 
   onVisibilityToggle, 
-  onExport,
+  onDelete,
   onCopy,
   variant = 'materials',
   isPublic = false,
@@ -59,14 +120,35 @@ const MaterialCard = ({
 
   const getTagColor = (tag) => {
     if (tag.toLowerCase().includes('flashcards')) {
-      return 'bg-[#FFB3BA] text-[#7D1F1F]' // Soft red
-    } else if (tag.toLowerCase().includes('note')) {
-      return 'bg-[#BAFFC9] text-[#1F7D2F]' // Soft green
-    } else if (tag.toLowerCase().includes('quiz')) {
       return 'bg-[#BAE1FF] text-[#1F4B7D]' // Soft blue
+    } else if (tag.toLowerCase().includes('note')) {
+      return 'bg-[#E1BAFF] text-[#4B1F7D]' // Soft purple
+    } else if (tag.toLowerCase().includes('quiz')) {
+      return 'bg-[#BAFFC9] text-[#1F7D2F]' // Soft green
     }
     return 'bg-[#F0F0F0] text-[#4A4A4A]' // Soft gray
   }
+
+  // Calculate tags based on content
+  const getContentTags = () => {
+    const tags = [];
+    if (file.content) {
+      const flashcards = file.content.filter(item => item.tags?.includes('Flashcard'));
+      const notes = file.content.filter(item => item.tags?.includes('Notes'));
+      const quizzes = file.content.filter(item => item.tags?.includes('Quiz'));
+
+      if (flashcards.length > 0) {
+        tags.push(`Flashcards (${flashcards.length})`);
+      }
+      if (notes.length > 0) {
+        tags.push(`Notes (${notes.length})`);
+      }
+      if (quizzes.length > 0) {
+        tags.push(`Quizzes (${quizzes.length})`);
+      }
+    }
+    return tags;
+  };
 
   if (variant === 'materials') {
     return (
@@ -104,17 +186,6 @@ const MaterialCard = ({
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onExport(file.title)
-                      setShowMenu(false)
-                    }}
-                  >
-                    <Trash size={14} />
-                    Delete
-                  </button>
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
                       onVisibilityToggle(file.title)
                       setShowMenu(false)
                     }}
@@ -131,21 +202,37 @@ const MaterialCard = ({
                       </>
                     )}
                   </button>
+                  <div className="h-px bg-gray-200 my-1"></div>
+                  <button
+                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(file.title)
+                      setShowMenu(false)
+                    }}
+                  >
+                    <Trash size={14} />
+                    Delete
+                  </button>
                 </div>
               )}
             </div>
           </div>
           
           {file.description && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-2">{file.description}</p>
+            <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
           )}
           
           <p className="text-sm text-gray-600 mb-3">{file.updated}</p>
           
           <div className="flex items-center justify-between">
-            <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor(file.tag)}`}>
-              {file.tag}
-            </span>
+            <div className="flex flex-wrap gap-2">
+              {getContentTags().map((tag, index) => (
+                <span key={index} className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor(tag)}`}>
+                  {tag}
+                </span>
+              ))}
+            </div>
             <div className="flex space-x-2">
               <button 
                 className="p-1 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC]"

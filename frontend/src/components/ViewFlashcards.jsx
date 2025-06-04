@@ -1,14 +1,42 @@
-import { ArrowLeft, ArrowRight, BookOpen, Globe, Lock, Sparkles } from 'lucide-react';
-import React, { useState } from 'react';
+import { ArrowLeft, ArrowRight, BookOpen, Edit, Globe, Lock, Shuffle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import Confetti from 'react-confetti';
 import '../styles/components/flashcards.css';
+import CreateFlashcards from './CreateFlashcards';
 
 const ViewFlashcards = ({ material, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [studyMode, setStudyMode] = useState('all'); // 'all', 'unmastered', 'mastered'
-  const [masteredCards, setMasteredCards] = useState(new Set());
   const [isFlipping, setIsFlipping] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
+  const [isShuffled, setIsShuffled] = useState(false);
+  const [showCreateFlashcards, setShowCreateFlashcards] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isFinished) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isFinished]);
 
   // Use material's flashcards if available, otherwise use sample data
   const flashcards = material?.flashcards || [
@@ -19,33 +47,28 @@ const ViewFlashcards = ({ material, onClose }) => {
     { front: "Which planet is known as the Red Planet?", back: "Mars" }
   ];
 
-  const filteredFlashcards = flashcards.filter((_, index) => {
-    if (studyMode === 'all') return true;
-    if (studyMode === 'mastered') return masteredCards.has(index);
-    if (studyMode === 'unmastered') return !masteredCards.has(index);
-    return true;
-  });
-
   const handleNext = () => {
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev + 1) % filteredFlashcards.length);
+    if (currentIndex === flashcards.length - 1) {
+      setIsFinished(true);
+    } else {
+      setCurrentIndex((prev) => (prev + 1) % flashcards.length);
+    }
   };
 
   const handlePrevious = () => {
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev - 1 + filteredFlashcards.length) % filteredFlashcards.length);
+    setCurrentIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+    setIsFinished(false);
   };
 
-  const toggleMastered = () => {
-    setMasteredCards(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(currentIndex)) {
-        newSet.delete(currentIndex);
-      } else {
-        newSet.add(currentIndex);
-      }
-      return newSet;
-    });
+  const handleShuffle = () => {
+    const shuffled = [...flashcards].sort(() => Math.random() - 0.5);
+    flashcards.splice(0, flashcards.length, ...shuffled);
+    setCurrentIndex(0);
+    setShowAnswer(false);
+    setIsShuffled(true);
+    setIsFinished(false);
   };
 
   const handleFlip = () => {
@@ -56,10 +79,27 @@ const ViewFlashcards = ({ material, onClose }) => {
     }, 150); // Half of the animation duration
   };
 
+  const handleEdit = () => {
+    setShowCreateFlashcards(true);
+  };
+
+  if (showCreateFlashcards) {
+    return <CreateFlashcards material={material} onClose={() => setShowCreateFlashcards(false)} />;
+  }
+
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="flex flex-col bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 rounded-xl h-[calc(100vh-6rem)]">
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.3}
+        />
+      )}
       {/* Header */}
-      <div className="flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm">
+      <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
         <div className="max-w-[90rem] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -70,10 +110,10 @@ const ViewFlashcards = ({ material, onClose }) => {
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
                   {material?.title || 'Flashcards'}
                 </h1>
-                <p className="text-sm text-gray-500">Study and master your flashcards</p>
+                <p className="text-sm text-gray-500 label-text">Study and review your flashcards</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -89,139 +129,159 @@ const ViewFlashcards = ({ material, onClose }) => {
                 {isPrivate ? (
                   <>
                     <Lock size={20} className="text-gray-600" />
-                    <span className="text-gray-600 font-medium">Private</span>
+                    <span className="text-gray-600 font-medium label-text">Private</span>
                   </>
                 ) : (
                   <>
                     <Globe size={20} className="text-[#1b81d4]" />
-                    <span className="text-[#1b81d4] font-medium">Public</span>
+                    <span className="text-[#1b81d4] font-medium label-text">Public</span>
                   </>
                 )}
               </button>
-              <select
-                value={studyMode}
-                onChange={(e) => setStudyMode(e.target.value)}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7BA7CC]/30 focus:border-[#1b81d4] transition-all duration-200 hover:border-gray-300"
+              <div className="h-6 w-px bg-gray-200"></div>
+              <button
+                onClick={handleEdit}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
               >
-                <option value="all">All Cards</option>
-                <option value="unmastered">Unmastered</option>
-                <option value="mastered">Mastered</option>
-              </select>
+                <Edit size={16} />
+                <span className="label-text">Edit</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          {filteredFlashcards.length > 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="flex-1 overflow-hidden">
+        <div className="max-w-4xl mx-auto px-6 py-4 h-full">
+          {flashcards.length > 0 ? (
+            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
               {/* Progress */}
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
                   <div className="p-2 bg-blue-50 rounded-lg">
                     <BookOpen size={20} className="text-[#1b81d4]" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    {currentIndex + 1} of {filteredFlashcards.length}
+                  <span className="text-sm font-medium text-gray-700 label-text">
+                    {isFinished ? "Finished" : `${currentIndex + 1} of ${flashcards.length}`}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <Sparkles size={20} className="text-[#1F7D2F]" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Mastered: {masteredCards.size} / {flashcards.length}
-                  </span>
-                </div>
+                <button
+                  onClick={handleShuffle}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+                    isShuffled
+                      ? 'bg-blue-50 text-[#1b81d4]'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Shuffle size={20} />
+                  <span className="label-text">Shuffle</span>
+                </button>
               </div>
 
               {/* Flashcard with 3D flip animation */}
-              <div 
-                className="relative h-[500px] w-[600px] mx-auto mb-8"
-                style={{ perspective: '1000px' }}
-                onClick={handleFlip}
-              >
-                <div 
-                  className="w-full h-full cursor-pointer"
-                  style={{
-                    transformStyle: 'preserve-3d',
-                    transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: showAnswer ? 'rotateY(180deg)' : 'none',
-                    pointerEvents: isFlipping ? 'none' : 'auto'
-                  }}
-                >
-                  {/* Front of card */}
-                  <div 
-                    className="absolute w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-xl flex items-center justify-center"
-                    style={{
-                      backfaceVisibility: 'hidden',
-                      opacity: showAnswer ? 0 : 1
-                    }}
-                  >
+              {isFinished ? (
+                <div className="relative h-[270px] w-[500px] mx-auto mb-8">
+                  <div className="w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-xl flex items-center justify-center">
                     <div className="text-center px-12">
-                      <h2 className="text-4xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                        {filteredFlashcards[currentIndex].front}
+                      <h2 className="text-3xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent label-text mb-4">
+                        Congratulations!
                       </h2>
-                      <p className="text-sm text-gray-500 mt-6">Click to show answer</p>
-                    </div>
-                  </div>
-                  
-                  {/* Back of card */}
-                  <div 
-                    className="absolute w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-xl flex items-center justify-center"
-                    style={{
-                      backfaceVisibility: 'hidden',
-                      transform: 'rotateY(180deg)',
-                      opacity: showAnswer ? 1 : 0
-                    }}
-                  >
-                    <div className="text-center px-12">
-                      <h2 className="text-4xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                        {filteredFlashcards[currentIndex].back}
-                      </h2>
-                      <p className="text-sm text-gray-500 mt-6">Click to show question</p>
+                      <p className="text-lg text-gray-600 label-text mb-6">
+                        You've completed reviewing all {flashcards.length} flashcards
+                      </p>
+                      <button
+                        onClick={() => {
+                          setCurrentIndex(0);
+                          setIsFinished(false);
+                          setShowAnswer(false);
+                        }}
+                        className="exam-button-mini"
+                        data-hover="Review Again"
+                      >
+                        Review Again
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div 
+                  className="relative h-[270px] w-[500px] mx-auto mb-8"
+                  style={{ perspective: '1000px' }}
+                  onClick={handleFlip}
+                >
+                  <div 
+                    className="w-full h-full cursor-pointer"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: showAnswer ? 'rotateY(180deg)' : 'none',
+                      pointerEvents: isFlipping ? 'none' : 'auto'
+                    }}
+                  >
+                    {/* Front of card */}
+                    <div 
+                      className="absolute w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-xl flex items-center justify-center"
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        opacity: showAnswer ? 0 : 1
+                      }}
+                    >
+                      <div className="text-center px-12">
+                        <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                          {flashcards[currentIndex].front}
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-6 label-text">Click to show answer</p>
+                      </div>
+                    </div>
+                    
+                    {/* Back of card */}
+                    <div 
+                      className="absolute w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-xl flex items-center justify-center"
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                        opacity: showAnswer ? 1 : 0
+                      }}
+                    >
+                      <div className="text-center px-12">
+                        <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                          {flashcards[currentIndex].back}
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-6 label-text">Click to show question</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Controls */}
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handlePrevious}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
-                >
-                  <ArrowLeft size={20} />
-                  Previous
-                </button>
-                <button
-                  onClick={toggleMastered}
-                  className={`px-6 py-2 rounded-lg transition-all duration-200 hover:scale-105 ${
-                    masteredCards.has(currentIndex)
-                      ? 'bg-gradient-to-r from-[#BAFFC9] to-[#A8FFB9] text-[#1F7D2F] hover:from-[#A8FFB9] hover:to-[#BAFFC9]'
-                      : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-gray-200 hover:to-gray-100'
-                  }`}
-                >
-                  {masteredCards.has(currentIndex) ? 'Mastered' : 'Mark as Mastered'}
-                </button>
-                <button
-                  onClick={handleNext}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
-                >
-                  Next
-                  <ArrowRight size={20} />
-                </button>
-              </div>
+              {!isFinished && (
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={handlePrevious}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                  >
+                    <ArrowLeft size={20} />
+                    <span className="label-text">Previous</span>
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                  >
+                    <span className="label-text">Next</span>
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
               <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                 <BookOpen size={48} className="text-gray-400" />
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No flashcards available</h3>
-              <p className="text-gray-600">Try changing your study mode or check back later for new content.</p>
+              <h3 className="text-xl font-medium text-gray-900 mb-2 label-text">No flashcards available</h3>
+              <p className="text-gray-600 label-text">Create some flashcards to get started.</p>
             </div>
           )}
         </div>
