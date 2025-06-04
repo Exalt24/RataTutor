@@ -19,6 +19,7 @@ def validate_file_extension(value):
     if not ext.lower() in valid_extensions:
         raise serializers.ValidationError('Unsupported file extension.')
 
+
 class AttachmentSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
@@ -61,6 +62,22 @@ class NoteSerializer(serializers.ModelSerializer):
         fields = ["id", "material", "title", "description", "content", "public", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+    def _generate_unique_title(self, base_title, material, exclude_instance=None):
+        """Generate a unique title by adding a suffix if needed."""
+        title = base_title
+        counter = 1
+        
+        while True:
+            qs = Note.objects.filter(material=material, title=title)
+            if exclude_instance:
+                qs = qs.exclude(pk=exclude_instance.pk)
+            
+            if not qs.exists():
+                return title
+            
+            counter += 1
+            title = f"{base_title} ({counter})"
+
     def validate_title(self, value):
         clean = value.strip()
         if not clean:
@@ -83,6 +100,28 @@ class NoteSerializer(serializers.ModelSerializer):
             if hasattr(mat, "owner") and mat.owner != request.user:
                 raise serializers.ValidationError("You do not have permission to add notes to this Material.")
         return data
+
+    def create(self, validated_data):
+        material = validated_data['material']
+        base_title = validated_data['title']
+        
+        # Generate unique title
+        unique_title = self._generate_unique_title(base_title, material)
+        validated_data['title'] = unique_title
+        
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'title' in validated_data:
+            material = validated_data.get('material', instance.material)
+            base_title = validated_data['title']
+            
+            # Generate unique title (excluding current instance)
+            unique_title = self._generate_unique_title(base_title, material, exclude_instance=instance)
+            validated_data['title'] = unique_title
+        
+        return super().update(instance, validated_data)
+
 
 class FlashcardSerializer(serializers.ModelSerializer):
     flashcard_set = serializers.PrimaryKeyRelatedField(
@@ -130,6 +169,7 @@ class FlashcardSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("You do not have permission to add flashcards to this Flashcard Set.")
         return data
 
+
 class FlashcardSetSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
@@ -162,6 +202,22 @@ class FlashcardSetSerializer(serializers.ModelSerializer):
         fields = ["id", "material", "title", "description", "public", "flashcards", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+    def _generate_unique_title(self, base_title, material, exclude_instance=None):
+        """Generate a unique title by adding a suffix if needed."""
+        title = base_title
+        counter = 1
+        
+        while True:
+            qs = FlashcardSet.objects.filter(material=material, title=title)
+            if exclude_instance:
+                qs = qs.exclude(pk=exclude_instance.pk)
+            
+            if not qs.exists():
+                return title
+            
+            counter += 1
+            title = f"{base_title} ({counter})"
+
     def validate_title(self, value):
         clean = value.strip()
         if not clean:
@@ -186,6 +242,13 @@ class FlashcardSetSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         flashcards_data = validated_data.pop('cards')
+        material = validated_data['material']
+        base_title = validated_data['title']
+        
+        # Generate unique title
+        unique_title = self._generate_unique_title(base_title, material)
+        validated_data['title'] = unique_title
+        
         flashcard_set = FlashcardSet.objects.create(**validated_data)
         
         for flashcard_data in flashcards_data:
@@ -198,6 +261,14 @@ class FlashcardSetSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # Handle flashcards if they're provided in the update
         flashcards_data = validated_data.pop('cards', None)
+        
+        if 'title' in validated_data:
+            material = validated_data.get('material', instance.material)
+            base_title = validated_data['title']
+            
+            # Generate unique title (excluding current instance)
+            unique_title = self._generate_unique_title(base_title, material, exclude_instance=instance)
+            validated_data['title'] = unique_title
         
         # Update the flashcard set fields
         for attr, value in validated_data.items():
@@ -215,6 +286,7 @@ class FlashcardSetSerializer(serializers.ModelSerializer):
                 Flashcard.objects.create(flashcard_set=instance, **flashcard_data)
         
         return instance
+
 
 class AIConversationSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
@@ -260,7 +332,7 @@ class AIConversationSerializer(serializers.ModelSerializer):
         mat = data.get("material")
         if request and hasattr(request, "user"):
             if hasattr(mat, "owner") and mat.owner != request.user:
-                raise serializers.ValidationError("You do not have permission to modify this Material’s conversation.")
+                raise serializers.ValidationError("You do not have permission to modify this Material's conversation.")
         if not data.get("last_user_message"):
             raise serializers.ValidationError("You must supply 'last_user_message'.")
         return data
@@ -364,6 +436,22 @@ class QuizSerializer(serializers.ModelSerializer):
         fields = ["id", "material", "title", "description", "public", "questions", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+    def _generate_unique_title(self, base_title, material, exclude_instance=None):
+        """Generate a unique title by adding a suffix if needed."""
+        title = base_title
+        counter = 1
+        
+        while True:
+            qs = Quiz.objects.filter(material=material, title=title)
+            if exclude_instance:
+                qs = qs.exclude(pk=exclude_instance.pk)
+            
+            if not qs.exists():
+                return title
+            
+            counter += 1
+            title = f"{base_title} ({counter})"
+
     def validate_title(self, value):
         clean = value.strip()
         if not clean:
@@ -388,6 +476,13 @@ class QuizSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions')
+        material = validated_data['material']
+        base_title = validated_data['title']
+        
+        # Generate unique title
+        unique_title = self._generate_unique_title(base_title, material)
+        validated_data['title'] = unique_title
+        
         quiz = Quiz.objects.create(**validated_data)
         
         for question_data in questions_data:
@@ -400,6 +495,14 @@ class QuizSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # Handle questions if they're provided in the update
         questions_data = validated_data.pop('questions', None)
+        
+        if 'title' in validated_data:
+            material = validated_data.get('material', instance.material)
+            base_title = validated_data['title']
+            
+            # Generate unique title (excluding current instance)
+            unique_title = self._generate_unique_title(base_title, material, exclude_instance=instance)
+            validated_data['title'] = unique_title
         
         # Update the quiz fields
         for attr, value in validated_data.items():
@@ -417,6 +520,7 @@ class QuizSerializer(serializers.ModelSerializer):
                 QuizQuestion.objects.create(quiz=instance, **question_data)
         
         return instance
+
 
 class MaterialSerializer(serializers.ModelSerializer):
     title = serializers.CharField(
