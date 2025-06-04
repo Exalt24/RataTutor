@@ -18,11 +18,11 @@ const Header = ({
     full_name: "",
     username: "",
   });
-
+  
   const streakData = {
-    current: profileData.streak.count,
-    longest: profileData.streak.longest_streak, // This should come from props or API
-    total: profileData.streak.total_days, // This should come from props or API
+    current: 10, // This should come from props or API
+    longest: 10, // This should come from props or API
+    total: 10, // This should come from props or API
   };
 
   const handleStreakClick = () => {
