@@ -32,7 +32,13 @@ class Streak(models.Model):
         today = now().date()
 
         # Use User.last_login for streak calculation (last activity)
-        last_login_date = self.profile.user.last_login.date()  # This will give the last login date of the user
+        user = self.profile.user
+
+        # Ensure that last_login is not None
+        if user.last_login is None:
+            return  # No streak update if the user hasn't logged in yet
+
+        last_login_date = user.last_login.date()  # This will give the last login date of the user
         delta = (today - last_login_date).days  # Calculate the number of days since last login
 
         if delta == 0:
