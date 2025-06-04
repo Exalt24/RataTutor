@@ -15,7 +15,7 @@ export default function ValidatedInput({
   required = false,
   onValidityChange,
   errorMessage: serverError = "",
-  variant = "default", // "default" or "profile"
+  variant = "default", // "default", "profile", or "card"
   // Textarea specific props
   rows = 3,
   cols,
@@ -56,6 +56,68 @@ export default function ValidatedInput({
     disabled: disabled,
     ...otherProps
   };
+
+  // Card variant styling (for flashcards)
+  if (variant === "card") {
+    if (type === "textarea") {
+      return (
+        <div>
+          <label className="label-text block text-sm font-medium text-gray-700 mb-2">
+            {label} {required && "*"}
+          </label>
+          <textarea
+            {...commonProps}
+            rows={rows}
+            cols={cols}
+            className={`label-text w-full p-4 border rounded-lg bg-white focus:bg-white focus:ring-2 focus:ring-[#7BA7CC]/30 focus:border-[#1b81d4] transition-colors outline-none resize-none ${
+              error 
+                ? 'border-red-300 focus:ring-red-200 focus:border-red-500' 
+                : 'border-gray-200'
+            }`}
+          />
+          {error && (
+            <p className="mt-1 text-xs text-red-600">
+              {error}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <label className="label-text block text-sm font-medium text-gray-700 mb-2">
+          {label} {required && "*"}
+        </label>
+        <div className="relative">
+          <input
+            {...commonProps}
+            type={type === "password" ? (show ? "text" : "password") : type}
+            className={`label-text w-full p-4 border rounded-lg bg-white focus:bg-white focus:ring-2 focus:ring-[#7BA7CC]/30 focus:border-[#1b81d4] transition-colors outline-none ${
+              error 
+                ? 'border-red-300 focus:ring-red-200 focus:border-red-500' 
+                : 'border-gray-200'
+            } ${type === "password" ? 'pr-12' : ''}`}
+          />
+          {type === "password" && (
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShow((v) => !v)}
+              disabled={disabled}
+            >
+              {show ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          )}
+        </div>
+        {error && (
+          <p className="mt-1 text-xs text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   // Profile variant styling
   if (variant === "profile") {

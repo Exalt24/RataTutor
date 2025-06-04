@@ -5,7 +5,7 @@ import ExamsScreen from '../components/ExamsScreen';
 import ExploreScreen from '../components/ExploreScreen';
 import Header from '../components/Header';
 import HomeScreen from '../components/HomeScreen';
-import { useLoading } from '../components/Loading/LoadingContext'; // Import LoadingContext
+import { useLoading } from '../components/Loading/LoadingContext';
 import MaterialsScreen from '../components/MaterialsScreen';
 import ProfileScreen from '../components/ProfileScreen';
 import RataAIScreen from '../components/RataAIScreen';
@@ -13,47 +13,75 @@ import Sidebar from '../components/Sidebar';
 import StreakScreen from '../components/StreakScreen';
 import TrashScreen from '../components/TrashScreen';
 import { getProfile, logout } from '../services/authService';
+import { getMaterials, getTrashedMaterials } from '../services/apiService'; // Add these imports
 import '../styles/pages/dashboard.css';
 
 const Dashboard = () => {
   const [screen, setScreen] = useState('home');
-  const [profileData, setProfileData] = useState(null);  // Start with null to show loading
+  const [profileData, setProfileData] = useState(null);
+  const [materialsData, setMaterialsData] = useState(null); // Add materials state
+  const [trashedMaterialsData, setTrashedMaterialsData] = useState(null); // Add trashed materials
   const [selectedFile, setSelectedFile] = useState(null);
   const nav = useNavigate();
 
-  const { showLoading, hideLoading } = useLoading();  // Trigger loading state
+  const { showLoading, hideLoading } = useLoading();
 
-  // Fetch profile data once when the Dashboard component mounts
+  // Fetch profile data
   const fetchProfileData = async () => {
     try {
       const profile = await getProfile();
-      setProfileData(profile);  // Set profile data here
+      setProfileData(profile);
     } catch (error) {
       console.error('Error fetching profile data:', error);
+    }
+  };
+
+  // Fetch materials data
+  const fetchMaterialsData = async () => {
+    try {
+      const [materials, trashedMaterials] = await Promise.all([
+        getMaterials(),
+        getTrashedMaterials()
+      ]);
+      setMaterialsData(materials.data);
+      setTrashedMaterialsData(trashedMaterials.data);
+    } catch (error) {
+      console.error('Error fetching materials data:', error);
+      // Set empty arrays as fallback
+      setMaterialsData([]);
+      setTrashedMaterialsData([]);
+    }
+  };
+
+  // Combined initial data fetch
+  const fetchInitialData = async () => {
+    try {
+      await Promise.all([
+        fetchProfileData(),
+        fetchMaterialsData()
+      ]);
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
     } finally {
-      hideLoading();  // Hide loading spinner after the data is fetched
+      hideLoading();
     }
   };
 
   useEffect(() => {
-    // Show the loading spinner when the component mounts
     showLoading();
-
+    
     const savedScreen = localStorage.getItem('currentScreen');
     if (savedScreen) {
-      setScreen(savedScreen); // Set the screen to the stored screen name
+      setScreen(savedScreen);
     }
-    // Fetch profile data on component mount
-    fetchProfileData();
-
-    // Retrieve stored screen name from localStorage if available
     
-  }, []);  // Empty dependency array means this runs only once on component mount
+    // Fetch all initial data
+    fetchInitialData();
+  }, []);
 
   useEffect(() => {
-    // Store the current screen in localStorage whenever it changes
     localStorage.setItem('currentScreen', screen);
-  }, [screen]);  // Only trigger when `screen` changes
+  }, [screen]);
 
   // Handle Logout
   const doLogout = () => {
@@ -61,10 +89,11 @@ const Dashboard = () => {
     nav('/login', { replace: true });
   };
 
-  // Change screen and show loading spinner
+  // Screen navigation
   const showProfile = () => {
     setScreen('profile');
   };
+  
   const showStreak = () => {
     setScreen('streak');
   };
@@ -75,7 +104,42 @@ const Dashboard = () => {
 
   const uploadAndGenerate = async (type) => {
     if (!selectedFile) return alert('Please select a file first');
-    // Your generate logic (api.post) can stay commented if needed
+    // Your generate logic
+  };
+
+  // Helper function to update a specific material in the state
+  const updateMaterialInState = (updatedMaterial) => {
+    setMaterialsData(prevMaterials => 
+      prevMaterials.map(material => 
+        material.id === updatedMaterial.id ? updatedMaterial : material
+      )
+    );
+  };
+
+  // Helper function to add a new material to state
+  const addMaterialToState = (newMaterial) => {
+    setMaterialsData(prevMaterials => [newMaterial, ...prevMaterials]);
+  };
+
+  // Helper function to remove material from state (when deleted or trashed)
+  const removeMaterialFromState = (materialId) => {
+    setMaterialsData(prevMaterials => 
+      prevMaterials.filter(material => material.id !== materialId)
+    );
+  };
+
+  // Helper function to move material to trash
+  const moveMaterialToTrash = (material) => {
+    removeMaterialFromState(material.id);
+    setTrashedMaterialsData(prevTrashed => [material, ...prevTrashed]);
+  };
+
+  // Helper function to restore material from trash
+  const restoreMaterialFromTrash = (material) => {
+    setTrashedMaterialsData(prevTrashed => 
+      prevTrashed.filter(m => m.id !== material.id)
+    );
+    setMaterialsData(prevMaterials => [material, ...prevMaterials]);
   };
 
   const getBgColor = () => {
@@ -103,36 +167,67 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    // Show loading until profileData is available
-    profileData === null ? (
-      <div className="flex justify-center items-center h-screen"></div>
-    ) : (
-      // Once profileData is available, render the entire dashboard layout
-      <div className="flex h-screen text-xs sm:text-sm">
-        <Sidebar screen={screen} setScreen={setScreen} />
-        <div className="flex-1 flex flex-col">
-          <Header
-            onLogout={doLogout}
-            onProfile={showProfile}
-            onStreak={showStreak}
-            profileData={profileData}
-          />
-          <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
-            {/* Render each screen based on the selected screen */}
-            {screen === 'home' && <HomeScreen selectedFile={selectedFile} handleFileChange={handleFileChange} uploadAndGenerate={uploadAndGenerate} generated={profileData} />}
-            {screen === 'materials' && <MaterialsScreen />}
-            {screen === 'trash' && <TrashScreen />}
-            {screen === 'exams' && <ExamsScreen />}
-            {screen === 'explore' && <ExploreScreen />}
-            {screen === 'rata' && <RataAIScreen />}
-            {screen === 'profile' && <ProfileScreen onEditProfile={() => setScreen('edit-profile')} profileData={profileData} />}
-            {screen === 'edit-profile' && <EditProfileScreen onBack={() => setScreen('profile')} profileData={profileData} fetchProfileData={fetchProfileData} />}
-            {screen === 'streak' && <StreakScreen profileData={profileData} />}
-          </main>
-        </div>
+  // Show loading until all essential data is available
+  const isLoading = profileData === null || materialsData === null;
+
+  return isLoading ? (
+    <div className="flex justify-center items-center h-screen"></div>
+  ) : (
+    <div className="flex h-screen text-xs sm:text-sm">
+      <Sidebar screen={screen} setScreen={setScreen} />
+      <div className="flex-1 flex flex-col">
+        <Header
+          onLogout={doLogout}
+          onProfile={showProfile}
+          onStreak={showStreak}
+          profileData={profileData}
+        />
+        <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
+          {screen === 'home' && (
+            <HomeScreen 
+              selectedFile={selectedFile} 
+              handleFileChange={handleFileChange} 
+              uploadAndGenerate={uploadAndGenerate} 
+              generated={profileData} 
+            />
+          )}
+          {screen === 'materials' && (
+            <MaterialsScreen 
+              materialsData={materialsData}
+              onRefreshMaterials={fetchMaterialsData}
+              onUpdateMaterial={updateMaterialInState}
+              onAddMaterial={addMaterialToState}
+              onRemoveMaterial={removeMaterialFromState}
+              onMoveMaterialToTrash={moveMaterialToTrash}
+            />
+          )}
+          {screen === 'trash' && (
+            <TrashScreen 
+              trashedMaterialsData={trashedMaterialsData}
+              onRefreshTrashedMaterials={fetchMaterialsData}
+              onRestoreMaterial={restoreMaterialFromTrash}
+            />
+          )}
+          {screen === 'exams' && <ExamsScreen />}
+          {screen === 'explore' && <ExploreScreen />}
+          {screen === 'rata' && <RataAIScreen />}
+          {screen === 'profile' && (
+            <ProfileScreen 
+              onEditProfile={() => setScreen('edit-profile')} 
+              profileData={profileData} 
+            />
+          )}
+          {screen === 'edit-profile' && (
+            <EditProfileScreen 
+              onBack={() => setScreen('profile')} 
+              profileData={profileData} 
+              fetchProfileData={fetchProfileData} 
+            />
+          )}
+          {screen === 'streak' && <StreakScreen profileData={profileData} />}
+        </main>
       </div>
-    )
+    </div>
   );
 };
 

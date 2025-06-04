@@ -2,7 +2,7 @@ import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, X } from 'lu
 import React, { useEffect, useRef, useState } from 'react'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
-import { deleteMaterial, getMaterials, toggleMaterialPin, toggleMaterialVisibility, updateMaterial } from '../services/apiService'
+import { deleteMaterial, toggleMaterialPin, toggleMaterialVisibility, updateMaterial } from '../services/apiService'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
@@ -22,17 +22,15 @@ const EmptyState = () => (
   </div>
 );
 
-const LoadingState = () => (
-  <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
-    <RefreshCw size={48} className="text-[#1b81d4] mb-4 animate-spin" />
-    <p className="text-gray-600">Loading your materials...</p>
-  </div>
-);
-
-const MaterialsScreen = () => {
-  const [materials, setMaterials] = useState([])
-  const [initialLoading, setInitialLoading] = useState(true) // Renamed for clarity
-  const [error, setError] = useState(null)
+const MaterialsScreen = ({ 
+  materialsData,
+  onRefreshMaterials,
+  onUpdateMaterial,
+  onAddMaterial,
+  onRemoveMaterial,
+  onMoveMaterialToTrash 
+}) => {
+  // Remove materials state - now comes from props
   const [showUpdatedDropdown, setShowUpdatedDropdown] = useState(false)
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all')
@@ -52,10 +50,7 @@ const MaterialsScreen = () => {
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
 
-  // Load materials on component mount
-  useEffect(() => {
-    loadMaterials(true) // Pass true for initial load
-  }, [])
+  // Remove the loadMaterials useEffect - Dashboard handles initial loading
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,35 +68,6 @@ const MaterialsScreen = () => {
     }
   }, [])
 
-  const loadMaterials = async (isInitialLoad = false) => {
-    try {
-      setError(null)
-      
-      // Use different loading indicators based on context
-      if (isInitialLoad) {
-        setInitialLoading(true) // Full page loading state
-      } else {
-        showLoading() // Global loading overlay for refresh
-      }
-      
-      const response = await getMaterials()
-      setMaterials(response.data)
-    } catch (err) {
-      setError('Failed to load materials. Please try again.')
-      showToast({
-        variant: "error",
-        title: "Error loading materials",
-        subtitle: "Please refresh the page or try again later.",
-      })
-    } finally {
-      if (isInitialLoad) {
-        setInitialLoading(false)
-      } else {
-        hideLoading()
-      }
-    }
-  }
-
   const getTagColor = (tag) => {
     if (tag.toLowerCase().includes('flashcards')) {
       return 'bg-[#FFB3BA] text-[#7D1F1F]' // Soft red
@@ -118,13 +84,8 @@ const MaterialsScreen = () => {
       showLoading()
       const response = await toggleMaterialPin(material.id)
       
-      setMaterials(prev => 
-        prev.map(m => 
-          m.id === material.id 
-            ? response.data
-            : m
-        )
-      )
+      // Update through Dashboard's state management
+      onUpdateMaterial(response.data)
 
       showToast({
         variant: "success",
@@ -174,25 +135,20 @@ const MaterialsScreen = () => {
   }
 
   const filterByType = (material) => {
-    // For now, return true since we need to implement content counting
-    // TODO: Implement filtering based on related content (notes, flashcards, quizzes)
     switch (selectedTypeFilter) {
       case 'flashcards':
-        // Check if material has flashcard sets
         return material.flashcard_sets && material.flashcard_sets.length > 0
       case 'notes':
-        // Check if material has notes
         return material.notes && material.notes.length > 0
       case 'quizzes':
-        // Check if material has quizzes
         return material.quizzes && material.quizzes.length > 0
       default:
         return true
     }
   }
 
-  // Separate pinned and unpinned materials with filters
-  const filteredMaterials = materials.filter(m => 
+  // Use materialsData from props instead of local state
+  const filteredMaterials = materialsData.filter(m => 
     m.status === 'active' && 
     filterByTime(m) && 
     filterByType(m) &&
@@ -224,13 +180,8 @@ const MaterialsScreen = () => {
       showLoading()
       const response = await toggleMaterialVisibility(material.id)
       
-      setMaterials(prev => 
-        prev.map(m => 
-          m.id === material.id 
-            ? response.data
-            : m
-        )
-      )
+      // Update through Dashboard's state management
+      onUpdateMaterial(response.data)
 
       showToast({
         variant: "success",
@@ -267,7 +218,8 @@ const MaterialsScreen = () => {
       showLoading()
       await deleteMaterial(material.id)
       
-      setMaterials(prev => prev.filter(m => m.id !== material.id))
+      // Remove through Dashboard's state management
+      onRemoveMaterial(material.id)
       
       showToast({
         variant: "success",
@@ -286,8 +238,8 @@ const MaterialsScreen = () => {
   }
 
   const handleCreateMaterial = (newMaterial) => {
-    // Add the new material to the top of the list
-    setMaterials(prev => [newMaterial, ...prev])
+    // Add through Dashboard's state management
+    onAddMaterial(newMaterial)
   }
 
   const handleCreateFlashcards = (material) => {
@@ -311,21 +263,19 @@ const MaterialsScreen = () => {
     setIsFromExplore(isFromExplore)
   }
 
-  const handleTitleChange = async (materialId, newTitle, newDescription) => {
+  const handleTitleChange = async (newTitle, newDescription) => {
     try {
       showLoading()
-      await updateMaterial(materialId, {
+      const response = await updateMaterial(selectedMaterial.id, {
         title: newTitle,
         description: newDescription
       })
       
-      setMaterials(prev => 
-        prev.map(m => 
-          m.id === materialId 
-            ? { ...m, title: newTitle, description: newDescription }
-            : m
-        )
-      )
+      // Update through Dashboard's state management
+      onUpdateMaterial(response.data)
+      
+      // Update selectedMaterial to reflect changes immediately in MaterialContent
+      setSelectedMaterial(response.data)
 
       showToast({
         variant: "success",
@@ -338,6 +288,7 @@ const MaterialsScreen = () => {
         title: "Error updating material",
         subtitle: "Failed to update material. Please try again.",
       })
+      throw err // Re-throw so MaterialContent can handle it
     } finally {
       hideLoading()
     }
@@ -347,31 +298,9 @@ const MaterialsScreen = () => {
     setSearchQuery('')
   }
 
-  // Show initial loading state
-  if (initialLoading) {
-    return <LoadingState />
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
-        <FileQuestion size={64} className="text-red-500 mb-6" />
-        <h3 className="label-text text-2xl font-semibold text-red-600 mb-3">
-          Error Loading Materials
-        </h3>
-        <p className="text-gray-600 text-center max-w-md leading-relaxed mb-6">
-          {error}
-        </p>
-        <button 
-          data-hover="Try Again"
-          className="exam-button-mini"
-          onClick={() => loadMaterials(true)} // Retry as initial load
-        >
-          Retry
-        </button>
-      </div>
-    )
+  // Use onRefreshMaterials from props instead of local loadMaterials
+  const handleRefresh = () => {
+    onRefreshMaterials()
   }
 
   return (
@@ -380,16 +309,28 @@ const MaterialsScreen = () => {
         <CreateFlashcards 
           material={selectedMaterial} 
           onClose={() => setShowFlashcards(false)}
+          onSuccess={(flashcardSet) => {
+            // Optionally refresh materials to get updated counts
+            onRefreshMaterials()
+          }}
         />
       ) : showNotes ? (
         <CreateNotes 
           material={selectedMaterial} 
           onClose={() => setShowNotes(false)}
+          onSuccess={(note) => {
+            // Optionally refresh materials to get updated counts
+            onRefreshMaterials()
+          }}
         />
       ) : showQuiz ? (
         <CreateQuiz 
           material={selectedMaterial} 
           onClose={() => setShowQuiz(false)}
+          onSuccess={(quiz) => {
+            // Optionally refresh materials to get updated counts
+            onRefreshMaterials()
+          }}
         />
       ) : showMaterialContent ? (
         <MaterialContent
@@ -401,7 +342,8 @@ const MaterialsScreen = () => {
           onCreateNotes={handleCreateNotes}
           onCreateQuiz={handleCreateQuiz}
           onBack={() => setShowMaterialContent(false)}
-          onTitleChange={(newTitle, newDescription) => handleTitleChange(selectedMaterial.id, newTitle, newDescription)}
+          onTitleChange={handleTitleChange}
+          onMaterialUpdate={onUpdateMaterial}
           readOnly={isFromExplore}
         />
       ) : (
@@ -458,7 +400,7 @@ const MaterialsScreen = () => {
               <button 
                 data-hover="Refresh"
                 className="exam-button-mini py-1 px-2 flex items-center gap-1"
-                onClick={() => loadMaterials(false)}
+                onClick={handleRefresh}
               >
                 <RefreshCw size={14} />
                 Refresh

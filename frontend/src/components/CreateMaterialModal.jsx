@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, FileText, Info, Globe, Pin, AlertCircle } from 'lucide-react';
 import { createMaterial } from '../services/apiService';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import ValidatedInput from '../components/ValidatedInput';
-import { defaultValidators } from '../utils/validation';
 
 const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
   const { showLoading, hideLoading } = useLoading();
@@ -43,6 +42,35 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
     }
   }, [isOpen]);
 
+  // Memoized handlers to prevent infinite re-renders
+  const handleTitleChange = useCallback((e) => {
+    setFormData(prev => ({
+      ...prev,
+      title: e.target.value
+    }));
+  }, []);
+
+  const handleDescriptionChange = useCallback((e) => {
+    setFormData(prev => ({
+      ...prev,
+      description: e.target.value
+    }));
+  }, []);
+
+  const handleTitleValidityChange = useCallback((field, isValid) => {
+    setValidities(prev => ({
+      ...prev,
+      title: isValid
+    }));
+  }, []);
+
+  const handleDescriptionValidityChange = useCallback((field, isValid) => {
+    setValidities(prev => ({
+      ...prev,
+      description: isValid
+    }));
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === 'checkbox' ? checked : value;
@@ -50,13 +78,6 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
     setFormData(prev => ({
       ...prev,
       [name]: newValue
-    }));
-  };
-
-  const handleValidityChange = (field, isValid) => {
-    setValidities(prev => ({
-      ...prev,
-      [field]: isValid
     }));
   };
 
@@ -81,7 +102,7 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
       onClose();
       
     } catch (err) {
-      // ✅ Enhanced error handling pattern from auth components
+      // Enhanced error handling pattern from auth components
       const data = err.response?.data || {};
       const msgs = [];
 
@@ -91,7 +112,7 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
       } else {
         Object.entries(data).forEach(([key, val]) => {
           if (Array.isArray(val)) {
-            val.forEach((m) => msgs.push(m));
+            val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
           } else if (typeof val === "string") {
             msgs.push(val);
           }
@@ -117,13 +138,13 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
     }
   };
 
-  const isDisabled = !validities.materialTitle || submitting;
+  const isDisabled = !validities.title || submitting;
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleClose}>
+      <div className="bg-white rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold label-text">Create New Material</h2>
@@ -153,33 +174,35 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {/* Title Field */}
+            {/* Title Field - Uses materialTitle validator */}
             <ValidatedInput
               label="Title"
-              name="title"
+              name="materialTitle"
               type="text"
               value={formData.title}
-              onChange={handleChange}
-              validate={defaultValidators.materialTitle}
+              onChange={handleTitleChange}
               icon={FileText}
               required={true}
-              onValidityChange={handleValidityChange}
+              onValidityChange={handleTitleValidityChange}
               disabled={submitting}
+              variant="profile"
+              placeholder="Enter material title"
             />
 
-            {/* Description Field */}
+            {/* Description Field - Uses materialDescription validator */}
             <ValidatedInput
               label="Description (Optional)"
-              name="description"
+              name="materialDescription"
               type="textarea"
               value={formData.description}
-              onChange={handleChange}
-              validate={defaultValidators.materialDescription}
+              onChange={handleDescriptionChange}
               icon={Info}
               required={false}
-              onValidityChange={handleValidityChange}
+              onValidityChange={handleDescriptionValidityChange}
               rows={3}
               disabled={submitting}
+              variant="profile"
+              placeholder="Enter material description (optional)"
             />
 
             {/* Options */}
