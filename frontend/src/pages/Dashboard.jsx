@@ -102,7 +102,7 @@ const Dashboard = () => {
           {screen === 'rata' && <RataAIScreen />}
           {screen === 'profile' && <ProfileScreen onEditProfile={() => setScreen('edit-profile')} profileData={profileData} />}
           {screen === 'edit-profile' && <EditProfileScreen onBack={() => setScreen('profile')} profileData={profileData} fetchProfileData={fetchProfileData} />}
-          {screen === 'streak' && <StreakScreen />}
+          {screen === 'streak' && <StreakScreen profileData={profileData} />}
         </main>
       </div>
     </div>

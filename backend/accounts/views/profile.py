@@ -2,9 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from ..serializers import UpdateProfileSerializer
+from ..serializers import UpdateProfileSerializer, UserProfileSerializer
 from rest_framework.permissions import IsAuthenticated
-from ..models import UserProfile
+from ..models import UserProfile, Streak
 
 User = get_user_model()
 
@@ -16,20 +16,10 @@ class GetProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        profile = getattr(user, 'profile', None)
-
-        return Response({
-            "user_id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "full_name": profile.full_name if profile else "",
-            "bio": profile.bio if profile else "",
-            "avatar": profile.avatar if profile and profile.avatar else None,
-            "date_joined": user.date_joined,
-            "last_login": user.last_login,
-        })
-
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        streak, _ = Streak.objects.get_or_create(profile=profile)
+        serializer = UserProfileSerializer(profile)
+        return Response(serializer.data)
 
 class UpdateProfileView(APIView):
     """

@@ -6,6 +6,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_decode
+from .models import Streak, UserProfile
 
 User = get_user_model()
 
@@ -202,3 +203,24 @@ class UpdateProfileSerializer(serializers.Serializer):
         allow_null=True,
         help_text="Identifier or URL string for the selected premade avatar."
     )
+
+class StreakSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Streak
+        fields = ['count', 'longest_streak', 'total_days', 'last_updated']
+        read_only_fields = fields
+        
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    streak = StreakSerializer(read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ['username', 'email', 'full_name', 'bio', 'avatar', 'streak']
+
+class StreakSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Streak
+        fields = ['count', 'longest_streak', 'total_days', 'last_updated']
+        read_only_fields = fields

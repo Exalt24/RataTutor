@@ -6,7 +6,7 @@ import {
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const StreakScreen = ({ streakData = { current: 5, longest: 14, total: 42 } }) => {
+const StreakScreen =  ({ profileData }) =>{
   const navigate = useNavigate();
 
   return (
@@ -26,21 +26,21 @@ const StreakScreen = ({ streakData = { current: 5, longest: 14, total: 42 } }) =
         <div className="bg-white bg-opacity-50 rounded-xl p-6 text-center">
           <FireIcon className="w-10 h-10 mx-auto text-red-500 mb-3" />
           <p className="text-sm text-gray-600">Current Streak</p>
-          <p className="text-4xl font-bold text-gray-800">{streakData.current}</p>
+          <p className="text-4xl font-bold text-gray-800">{profileData.streak.count}</p>
           <p className="text-xs text-gray-500">days</p>
         </div>
 
         <div className="bg-white bg-opacity-50 rounded-xl p-6 text-center">
           <TrophyIcon className="w-10 h-10 mx-auto text-yellow-500 mb-3" />
           <p className="text-sm text-gray-600">Longest Streak</p>
-          <p className="text-4xl font-bold text-gray-800">{streakData.longest}</p>
+          <p className="text-4xl font-bold text-gray-800">{profileData.streak.longest_streak}</p>
           <p className="text-xs text-gray-500">days</p>
         </div>
 
         <div className="bg-white bg-opacity-50 rounded-xl p-6 text-center">
           <CalendarDaysIcon className="w-10 h-10 mx-auto text-blue-500 mb-3" />
           <p className="text-sm text-gray-600">Total Days</p>
-          <p className="text-4xl font-bold text-gray-800">{streakData.total}</p>
+          <p className="text-4xl font-bold text-gray-800">{profileData.streak.total_days}</p>
           <p className="text-xs text-gray-500">learned</p>
         </div>
       </div>
