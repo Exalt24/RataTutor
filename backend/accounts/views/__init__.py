@@ -1,7 +1,6 @@
 from .register import RegisterView
-from .login    import LoginView
 from .logout   import LogoutView
 from .password_reset import PasswordResetRequestView, PasswordResetConfirmView
 from .profile import UpdateProfileView, GetProfileView
 
-__all__ = ["RegisterView","LoginView","LogoutView", "PasswordResetRequestView", "PasswordResetConfirmView", "UpdateProfileView", "GetProfileView", "UpdateStreakView", "ResetStreakView"]
+__all__ = ["RegisterView","LogoutView", "PasswordResetRequestView", "PasswordResetConfirmView", "UpdateProfileView", "GetProfileView"]

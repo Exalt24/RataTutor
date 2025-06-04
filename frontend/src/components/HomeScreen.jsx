@@ -1,4 +1,4 @@
-import { Edit2, FilePlus, FileText, HelpCircle } from 'lucide-react';
+import { Edit2, FilePlus, FileText, HelpCircle, Sparkles } from 'lucide-react';
 import React, { useState } from 'react';
 import CreateFlashcards from './CreateFlashcards';
 import CreateNotes from './CreateNotes';
@@ -29,21 +29,52 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-6 p-4">
       <section>
-        <h2 className="exam-subheading sm:text-sm ">Create</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 ">
+        <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
+          <Sparkles size={18} className="text-[#22C55E]" />
+          Create
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { icon: <FilePlus size={20} />, title: 'Upload a PDF, PPT, Video, or Audio', desc: 'Get flashcards, summaries & quiz questions instantly.', action: openModal },
-            { icon: <HelpCircle size={20} />, title: 'Create quiz manually', desc: 'Create quiz questions without AI for free.', action: () => openCreate('quiz') },
-            { icon: <FileText size={20} />, title: 'Create flashcards manually', desc: 'Create flashcards without AI for free.', action: () => openCreate('flashcards') },
-            { icon: <Edit2 size={20} />, title: 'Create notes manually', desc: 'Create notes without AI for free.', action: () => openCreate('notes') }
+            { 
+              icon: <FilePlus size={24} className="text-pink-500" />, 
+              title: 'Upload a PDF, PPT, Video, or Audio', 
+              desc: 'Get flashcards, summaries & quiz questions instantly.', 
+              action: openModal,
+              bgColor: 'bg-pink-50 hover:bg-pink-100'
+            },
+            { 
+              icon: <HelpCircle size={24} className="text-[#22C55E]" />, 
+              title: 'Create quiz manually', 
+              desc: 'Create quiz questions without AI for free.', 
+              action: () => openCreate('quiz'),
+              bgColor: 'bg-[#22C55E]/10 hover:bg-[#22C55E]/20'
+            },
+            { 
+              icon: <FileText size={24} className="text-blue-500" />, 
+              title: 'Create flashcards manually', 
+              desc: 'Create flashcards without AI for free.', 
+              action: () => openCreate('flashcards'),
+              bgColor: 'bg-blue-50 hover:bg-blue-100'
+            },
+            { 
+              icon: <Edit2 size={24} className="text-purple-500" />, 
+              title: 'Create notes manually', 
+              desc: 'Create notes without AI for free.', 
+              action: () => openCreate('notes'),
+              bgColor: 'bg-purple-50 hover:bg-purple-100'
+            }
           ].map((card, i) => (
-            <div key={i} className="exam-card p-2 sm:p-4 text-xs sm:text-sm flex items-start cursor-pointer" onClick={card.action}>
-              <div className="mr-2">{card.icon}</div>
+            <div 
+              key={i} 
+              className={`exam-card p-4 rounded-lg shadow-sm transition-all duration-200 ${card.bgColor} flex items-start cursor-pointer`} 
+              onClick={card.action}
+            >
+              <div className="mr-3 p-2 rounded-full bg-white shadow-sm">{card.icon}</div>
               <div>
-                <h3>{card.title}</h3>
-                <p>{card.desc}</p>
+                <h3 className="font-medium text-gray-800">{card.title}</h3>
+                <p className="text-gray-600 mt-1">{card.desc}</p>
               </div>
             </div>
           ))}

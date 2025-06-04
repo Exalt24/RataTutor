@@ -8,7 +8,8 @@ import {
   Globe,
   HelpCircle,
   Lock,
-  Pencil
+  Pencil,
+  Paperclip
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import MaterialFile from "./MaterialFile";
@@ -35,12 +36,14 @@ const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle }) => (
       <div className={`p-2.5 rounded-xl ${
         title === "Flashcards" ? "bg-blue-50" :
         title === "Notes" ? "bg-purple-50" :
-        "bg-green-50"
+        title === "Quizzes" ? "bg-green-50" :
+        "bg-orange-50"
       }`}>
         <Icon size={22} className={
           title === "Flashcards" ? "text-blue-500" :
           title === "Notes" ? "text-purple-500" :
-          "text-green-500"
+          title === "Quizzes" ? "text-green-500" :
+          "text-orange-500"
         } />
       </div>
       <div className="flex items-center gap-2.5">
@@ -82,6 +85,8 @@ const SectionEmptyState = ({ title }) => {
         return <FileText size={24} className="text-purple-500 mb-3" />;
       case "Quizzes":
         return <HelpCircle size={24} className="text-green-500 mb-3" />;
+      case "Attachments":
+        return <Paperclip size={24} className="text-orange-500 mb-3" />;
       default:
         return <FileQuestion size={24} className="text-[#1b81d4] mb-3" />;
     }
@@ -108,8 +113,8 @@ const MaterialContent = ({
   onCreateQuiz,
   onBack,
   onTitleChange,
+  readOnly = false
 }) => {
-  const hasContent = material?.content?.length > 0;
   const [showViewFlashcards, setShowViewFlashcards] = useState(false);
   const [showViewQuiz, setShowViewQuiz] = useState(false);
   const [showViewNotes, setShowViewNotes] = useState(false);
@@ -122,96 +127,23 @@ const MaterialContent = ({
   const [expandedSections, setExpandedSections] = useState({
     Flashcards: true,
     Notes: true,
-    Quizzes: true
+    Quizzes: true,
+    Attachments: true
   });
 
-  // Sample content with flashcards
-  const [items, setItems] = useState([
-    // Flashcards
-    {
-      id: "1",
-      title: "Introduction to Calculus",
-      author: "John Doe",
-      description:
-        "A comprehensive guide covering limits, derivatives, and integrals with practical examples and exercises.",
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Flashcard"],
-      flashcards: [
-        {
-          front: "What is a derivative?",
-          back: "The rate of change of a function with respect to its variable",
-        },
-        {
-          front: "What is an integral?",
-          back: "The area under a curve or the accumulation of a quantity",
-        },
-        {
-          front: "What is a limit?",
-          back: "The value that a function approaches as the input approaches some value",
-        },
-      ],
-    },
-    // Notes
-    {
-      id: "5",
-      title: "Linear Algebra Fundamentals",
-      author: "Jane Smith",
-      description:
-        "An introduction to vectors, matrices, and linear transformations.",
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Notes", "Math"],
-      content: `# Linear Algebra Fundamentals
+  // Extract content from API data structure
+  const flashcardSets = material?.flashcard_sets || [];
+  const notes = material?.notes || [];
+  const quizzes = material?.quizzes || [];
+  const attachments = material?.attachments || [];
 
-## Vectors and Matrices
-- Vectors: Ordered lists of numbers representing magnitude and direction
-- Matrices: Rectangular arrays of numbers
-- Operations: Addition, multiplication, and transformations
-
-## Linear Transformations
-- Matrix multiplication as transformation
-- Determinants and their geometric meaning
-- Eigenvalues and eigenvectors
-
-## Applications
-- Computer graphics
-- Machine learning
-- Quantum mechanics`,
-    },
-    // Quiz
-    {
-      id: "9",
-      title: "Calculus Quiz",
-      author: "John Doe",
-      description: "Test your knowledge of calculus fundamentals.",
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ["Quiz"],
-      questions: [
-        {
-          question: "What is the derivative of f(x) = x²?",
-          options: ["2x", "x²", "2", "x"],
-          correctAnswer: 0,
-        },
-        {
-          question: "What is the integral of 2x?",
-          options: ["x²", "x² + C", "2x²", "2x² + C"],
-          correctAnswer: 1,
-        },
-      ],
-    },
-  ]);
-
-  const onDelete = (e, id) => {
-    e.stopPropagation(); // Prevent click from bubbling up to the parent
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
-
-  const handleViewContent = (item) => {
+  const handleViewContent = (item, type) => {
     setSelectedContent(item);
-    if (item.tags.includes("Flashcard")) {
+    if (type === "flashcard") {
       setShowViewFlashcards(true);
-    } else if (item.tags.includes("Quiz")) {
+    } else if (type === "quiz") {
       setShowViewQuiz(true);
-    } else if (item.tags.includes("Notes")) {
+    } else if (type === "note") {
       setShowViewNotes(true);
     }
   };
@@ -225,16 +157,18 @@ const MaterialContent = ({
 
   const handleVisibilityToggle = () => {
     setIsMaterialPublic(!isMaterialPublic);
-    onVisibilityToggle(material.title);
+    onVisibilityToggle();
   };
 
   const handleTitleEdit = () => {
-    setIsEditingTitle(true);
+    if (!readOnly) {
+      setIsEditingTitle(true);
+    }
   };
 
   const handleTitleSave = () => {
     if (editedTitle.trim() && editedTitle !== material?.title) {
-      onTitleChange(editedTitle);
+      onTitleChange(editedTitle, editedDescription);
     } else {
       setEditedTitle(material?.title || "");
     }
@@ -251,11 +185,13 @@ const MaterialContent = ({
   };
 
   const handleDescriptionEdit = () => {
-    setIsEditingDescription(true);
+    if (!readOnly) {
+      setIsEditingDescription(true);
+    }
   };
 
   const handleDescriptionSave = () => {
-    if (editedDescription.trim() && editedDescription !== material?.description) {
+    if (editedDescription !== material?.description) {
       onTitleChange(editedTitle, editedDescription);
     } else {
       setEditedDescription(material?.description || "");
@@ -279,43 +215,64 @@ const MaterialContent = ({
     }));
   };
 
-  const handleEditContent = (content) => {
-    if (content.tags.includes("Flashcard")) {
+  const handleEditContent = (content, type) => {
+    if (readOnly) return;
+    
+    if (type === "flashcard") {
       setSelectedContent(content);
       setShowViewFlashcards(true);
-    } else if (content.tags.includes("Quiz")) {
+    } else if (type === "quiz") {
       setSelectedContent(content);
       setShowViewQuiz(true);
-    } else if (content.tags.includes("Notes")) {
+    } else if (type === "note") {
       setSelectedContent(content);
       setShowViewNotes(true);
+    }
+  };
+
+  const handleDeleteContent = (contentId, type) => {
+    if (readOnly) return;
+    
+    // TODO: Implement API calls to delete content
+    console.log(`Delete ${type} with ID: ${contentId}`);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
+    } else if (diffInMinutes < 1440) {
+      return `${Math.floor(diffInMinutes / 60)}h ago`;
+    } else {
+      return `${Math.floor(diffInMinutes / 1440)}d ago`;
     }
   };
 
   // Update local state when prop changes
   useEffect(() => {
     setIsMaterialPublic(isPublic);
-  }, [isPublic]);
+    setEditedTitle(material?.title || "");
+    setEditedDescription(material?.description || "");
+  }, [isPublic, material]);
 
   if (showViewFlashcards) {
     return (
-      <ViewFlashcards material={selectedContent} onClose={handleCloseView} />
+      <ViewFlashcards material={selectedContent} onClose={handleCloseView} readOnly={readOnly} />
     );
   }
 
   if (showViewQuiz) {
-    return <ViewQuiz material={selectedContent} onClose={handleCloseView} />;
+    return <ViewQuiz material={selectedContent} onClose={handleCloseView} readOnly={readOnly} />;
   }
 
   if (showViewNotes) {
-    return <ViewNotes material={selectedContent} onClose={handleCloseView} />;
+    return <ViewNotes material={selectedContent} onClose={handleCloseView} readOnly={readOnly} />;
   }
 
-  const flashcards = items.filter((item) => item.tags.includes("Flashcard"));
-  const notes = items.filter((item) => item.tags.includes("Notes"));
-  const quizzes = items.filter((item) => item.tags.includes("Quiz"));
-
-  const totalItems = flashcards.length + notes.length + quizzes.length;
+  const totalItems = flashcardSets.length + notes.length + quizzes.length + attachments.length;
 
   if (totalItems === 0) {
     return (
@@ -333,7 +290,7 @@ const MaterialContent = ({
                 </button>
                 <div>
                   <div className="flex items-center gap-3">
-                    {isEditingTitle ? (
+                    {isEditingTitle && !readOnly ? (
                       <input
                         type="text"
                         value={editedTitle}
@@ -348,21 +305,24 @@ const MaterialContent = ({
                         {material?.title || "Material"}
                       </h1>
                     )}
-                    <button
-                      onClick={handleTitleEdit}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
-                      title="Edit Title"
-                    >
-                      <Pencil size={16} className="text-gray-600" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={handleTitleEdit}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                        title="Edit Title"
+                      >
+                        <Pencil size={16} className="text-gray-600" />
+                      </button>
+                    )}
                     <button
                       onClick={handleVisibilityToggle}
                       className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
                         isMaterialPublic 
                           ? 'bg-white border-gray-300 hover:bg-gray-50' 
                           : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                      }`}
-                      title={isMaterialPublic ? "Make Private" : "Make Public"}
+                      } ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      title={readOnly ? "Read-only mode" : (isMaterialPublic ? "Make Private" : "Make Public")}
+                      disabled={readOnly}
                     >
                       {isMaterialPublic ? (
                         <>
@@ -378,7 +338,7 @@ const MaterialContent = ({
                     </button>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    {isEditingDescription ? (
+                    {isEditingDescription && !readOnly ? (
                       <input
                         type="text"
                         value={editedDescription}
@@ -394,50 +354,56 @@ const MaterialContent = ({
                         {material?.description || "View and manage your content"}
                       </p>
                     )}
-                    <button
-                      onClick={handleDescriptionEdit}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
-                      title="Edit Description"
-                    >
-                      <Pencil size={14} className="text-gray-600" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={handleDescriptionEdit}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                        title="Edit Description"
+                      >
+                        <Pencil size={14} className="text-gray-600" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => onExport(material.title)}
+                  onClick={() => onExport(material)}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                   title="Export Material"
                   aria-label="Export Material"
                 >
                   <Download size={20} className="text-gray-600" />
                 </button>
-                <div className="h-6 w-px bg-gray-200"></div>
-                <button
-                  className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                  onClick={() => onCreateFlashcards(material)}
-                  data-hover="Create Flashcards"
-                >
-                  <BookOpen size={16} />
-                  Create Flashcards
-                </button>
-                <button
-                  className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                  onClick={() => onCreateNotes(material)}
-                  data-hover="Create Notes"
-                >
-                  <FileText size={16} />
-                  Create Notes
-                </button>
-                <button
-                  className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                  onClick={() => onCreateQuiz(material)}
-                  data-hover="Create Quiz"
-                >
-                  <HelpCircle size={16} />
-                  Create Quiz
-                </button>
+                {!readOnly && (
+                  <>
+                    <div className="h-6 w-px bg-gray-200"></div>
+                    <button
+                      className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                      onClick={() => onCreateFlashcards(material)}
+                      data-hover="Create Flashcards"
+                    >
+                      <BookOpen size={16} />
+                      Create Flashcards
+                    </button>
+                    <button
+                      className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                      onClick={() => onCreateNotes(material)}
+                      data-hover="Create Notes"
+                    >
+                      <FileText size={16} />
+                      Create Notes
+                    </button>
+                    <button
+                      className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                      onClick={() => onCreateQuiz(material)}
+                      data-hover="Create Quiz"
+                    >
+                      <HelpCircle size={16} />
+                      Create Quiz
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -465,7 +431,7 @@ const MaterialContent = ({
               </button>
               <div>
                 <div className="flex items-center gap-3">
-                  {isEditingTitle ? (
+                  {isEditingTitle && !readOnly ? (
                     <input
                       type="text"
                       value={editedTitle}
@@ -480,21 +446,24 @@ const MaterialContent = ({
                       {material?.title || "Material"}
                     </h1>
                   )}
-                  <button
-                    onClick={handleTitleEdit}
-                    className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
-                    title="Edit Title"
-                  >
-                    <Pencil size={16} className="text-gray-600" />
-                  </button>
+                  {!readOnly && (
+                    <button
+                      onClick={handleTitleEdit}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                      title="Edit Title"
+                    >
+                      <Pencil size={16} className="text-gray-600" />
+                    </button>
+                  )}
                   <button
                     onClick={handleVisibilityToggle}
                     className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
                       isMaterialPublic 
                         ? 'bg-white border-gray-300 hover:bg-gray-50' 
                         : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                    }`}
-                    title={isMaterialPublic ? "Make Private" : "Make Public"}
+                    } ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={readOnly ? "Read-only mode" : (isMaterialPublic ? "Make Private" : "Make Public")}
+                    disabled={readOnly}
                   >
                     {isMaterialPublic ? (
                       <>
@@ -510,7 +479,7 @@ const MaterialContent = ({
                   </button>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  {isEditingDescription ? (
+                  {isEditingDescription && !readOnly ? (
                     <input
                       type="text"
                       value={editedDescription}
@@ -526,50 +495,56 @@ const MaterialContent = ({
                       {material?.description || "View and manage your content"}
                     </p>
                   )}
-                  <button
-                    onClick={handleDescriptionEdit}
-                    className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
-                    title="Edit Description"
-                  >
-                    <Pencil size={14} className="text-gray-600" />
-                  </button>
+                  {!readOnly && (
+                    <button
+                      onClick={handleDescriptionEdit}
+                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                      title="Edit Description"
+                    >
+                      <Pencil size={14} className="text-gray-600" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => onExport(material.title)}
+                onClick={() => onExport(material)}
                 className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                 title="Export Material"
                 aria-label="Export Material"
               >
                 <Download size={20} className="text-gray-600" />
               </button>
-              <div className="h-6 w-px bg-gray-200"></div>
-              <button
-                className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                onClick={() => onCreateFlashcards(material)}
-                data-hover="Create Flashcards"
-              >
-                <BookOpen size={16} />
-                Create Flashcards
-              </button>
-              <button
-                className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                onClick={() => onCreateNotes(material)}
-                data-hover="Create Notes"
-              >
-                <FileText size={16} />
-                Create Notes
-              </button>
-              <button
-                className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                onClick={() => onCreateQuiz(material)}
-                data-hover="Create Quiz"
-              >
-                <HelpCircle size={16} />
-                Create Quiz
-              </button>
+              {!readOnly && (
+                <>
+                  <div className="h-6 w-px bg-gray-200"></div>
+                  <button
+                    className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    onClick={() => onCreateFlashcards(material)}
+                    data-hover="Create Flashcards"
+                  >
+                    <BookOpen size={16} />
+                    Create Flashcards
+                  </button>
+                  <button
+                    className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    onClick={() => onCreateNotes(material)}
+                    data-hover="Create Notes"
+                  >
+                    <FileText size={16} />
+                    Create Notes
+                  </button>
+                  <button
+                    className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    onClick={() => onCreateQuiz(material)}
+                    data-hover="Create Quiz"
+                  >
+                    <HelpCircle size={16} />
+                    Create Quiz
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -578,119 +553,291 @@ const MaterialContent = ({
       <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
         <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
           <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
+            
             {/* Flashcards Section */}
-            <div>
-              <SectionHeader
-                icon={BookOpen}
-                title="Flashcards"
-                count={flashcards.length}
-                isExpanded={expandedSections.Flashcards}
-                onToggle={() => toggleSection("Flashcards")}
-              />
-              {expandedSections.Flashcards && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {flashcards.length > 0 ? (
-                    flashcards.map((item) => (
+            {flashcardSets.length > 0 && (
+              <div>
+                <SectionHeader
+                  icon={BookOpen}
+                  title="Flashcards"
+                  count={flashcardSets.length}
+                  isExpanded={expandedSections.Flashcards}
+                  onToggle={() => toggleSection("Flashcards")}
+                />
+                {expandedSections.Flashcards && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {flashcardSets.map((flashcardSet) => (
                       <div
-                        key={item.id}
+                        key={flashcardSet.id}
                         className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
                       >
                         <div
-                          onClick={() => handleViewContent(item)}
+                          onClick={() => handleViewContent(flashcardSet, "flashcard")}
                           className="cursor-pointer"
                         >
-                          <MaterialFile
-                            content={item}
-                            onDelete={(e) => onDelete(e, item.id)}
-                            onEdit={handleEditContent}
-                          />
+                          <div className="exam-card p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <BookOpen size={18} className="text-blue-500" />
+                                <h3 className="font-semibold">{flashcardSet.title}</h3>
+                              </div>
+                              {!readOnly && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteContent(flashcardSet.id, "flashcard");
+                                  }}
+                                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
+                                  title="Delete"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                            
+                            {flashcardSet.description && (
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                {flashcardSet.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <span>{flashcardSet.cards?.length || 0} cards</span>
+                              <span>{formatDate(flashcardSet.created_at)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full">
-                      <SectionEmptyState title="Flashcards" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notes Section */}
-            <div>
-              <SectionHeader
-                icon={FileText}
-                title="Notes"
-                count={notes.length}
-                isExpanded={expandedSections.Notes}
-                onToggle={() => toggleSection("Notes")}
-              />
-              {expandedSections.Notes && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {notes.length > 0 ? (
-                    notes.map((item) => (
+            {notes.length > 0 && (
+              <div>
+                <SectionHeader
+                  icon={FileText}
+                  title="Notes"
+                  count={notes.length}
+                  isExpanded={expandedSections.Notes}
+                  onToggle={() => toggleSection("Notes")}
+                />
+                {expandedSections.Notes && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {notes.map((note) => (
                       <div
-                        key={item.id}
+                        key={note.id}
                         className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
                       >
                         <div
-                          onClick={() => handleViewContent(item)}
+                          onClick={() => handleViewContent(note, "note")}
                           className="cursor-pointer"
                         >
-                          <MaterialFile
-                            content={item}
-                            onDelete={(e) => onDelete(e, item.id)}
-                            onEdit={handleEditContent}
-                          />
+                          <div className="exam-card p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <FileText size={18} className="text-purple-500" />
+                                <h3 className="font-semibold">{note.title}</h3>
+                              </div>
+                              {!readOnly && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteContent(note.id, "note");
+                                  }}
+                                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
+                                  title="Delete"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                            
+                            {note.description && (
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                {note.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <span>{note.content?.length > 100 ? `${note.content.substring(0, 100)}...` : note.content}</span>
+                              <span>{formatDate(note.created_at)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full">
-                      <SectionEmptyState title="Notes" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Quiz Section */}
-            <div>
-              <SectionHeader
-                icon={HelpCircle}
-                title="Quizzes"
-                count={quizzes.length}
-                isExpanded={expandedSections.Quizzes}
-                onToggle={() => toggleSection("Quizzes")}
-              />
-              {expandedSections.Quizzes && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {quizzes.length > 0 ? (
-                    quizzes.map((item) => (
+            {quizzes.length > 0 && (
+              <div>
+                <SectionHeader
+                  icon={HelpCircle}
+                  title="Quizzes"
+                  count={quizzes.length}
+                  isExpanded={expandedSections.Quizzes}
+                  onToggle={() => toggleSection("Quizzes")}
+                />
+                {expandedSections.Quizzes && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {quizzes.map((quiz) => (
                       <div
-                        key={item.id}
+                        key={quiz.id}
                         className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
                       >
                         <div
-                          onClick={() => handleViewContent(item)}
+                          onClick={() => handleViewContent(quiz, "quiz")}
                           className="cursor-pointer"
                         >
-                          <MaterialFile
-                            content={item}
-                            onDelete={(e) => onDelete(e, item.id)}
-                            onEdit={handleEditContent}
-                          />
+                          <div className="exam-card p-4 hover:shadow-lg transition-shadow">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <HelpCircle size={18} className="text-green-500" />
+                                <h3 className="font-semibold">{quiz.title}</h3>
+                              </div>
+                              {!readOnly && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteContent(quiz.id, "quiz");
+                                  }}
+                                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
+                                  title="Delete"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                            
+                            {quiz.description && (
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                {quiz.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <span>{quiz.questions?.length || 0} questions</span>
+                              <span>{formatDate(quiz.created_at)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full">
-                      <SectionEmptyState title="Quizzes" />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Attachments Section */}
+            {attachments.length > 0 && (
+              <div>
+                <SectionHeader
+                  icon={Paperclip}
+                  title="Attachments"
+                  count={attachments.length}
+                  isExpanded={expandedSections.Attachments}
+                  onToggle={() => toggleSection("Attachments")}
+                />
+                {expandedSections.Attachments && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {attachments.map((attachment) => (
+                      <div
+                        key={attachment.id}
+                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
+                      >
+                        <div className="exam-card p-4 hover:shadow-lg transition-shadow">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Paperclip size={18} className="text-orange-500" />
+                              <h3 className="font-semibold text-sm truncate">
+                                {attachment.file?.split('/').pop() || 'File'}
+                              </h3>
+                            </div>
+                            {!readOnly && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteContent(attachment.id, "attachment");
+                                }}
+                                className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
+                                title="Delete"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <a 
+                              href={attachment.file} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Download
+                            </a>
+                            <span>{formatDate(attachment.uploaded_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Show empty states for sections with no content */}
+            {flashcardSets.length === 0 && (
+              <div>
+                <SectionHeader
+                  icon={BookOpen}
+                  title="Flashcards"
+                  count={0}
+                  isExpanded={expandedSections.Flashcards}
+                  onToggle={() => toggleSection("Flashcards")}
+                />
+                {expandedSections.Flashcards && (
+                  <SectionEmptyState title="Flashcards" />
+                )}
+              </div>
+            )}
+
+            {notes.length === 0 && (
+              <div>
+                <SectionHeader
+                  icon={FileText}
+                  title="Notes"
+                  count={0}
+                  isExpanded={expandedSections.Notes}
+                  onToggle={() => toggleSection("Notes")}
+                />
+                {expandedSections.Notes && (
+                  <SectionEmptyState title="Notes" />
+                )}
+              </div>
+            )}
+
+            {quizzes.length === 0 && (
+              <div>
+                <SectionHeader
+                  icon={HelpCircle}
+                  title="Quizzes"
+                  count={0}
+                  isExpanded={expandedSections.Quizzes}
+                  onToggle={() => toggleSection("Quizzes")}
+                />
+                {expandedSections.Quizzes && (
+                  <SectionEmptyState title="Quizzes" />
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

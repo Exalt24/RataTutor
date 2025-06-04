@@ -12,14 +12,12 @@ const resetFields = [
     type: "password",
     label: "New Password",
     icon: Lock,
-    placeholder: "Enter new password",
   },
   {
     name: "confirmPassword",
     type: "password",
     label: "Confirm Password",
     icon: Lock,
-    placeholder: "Re-enter new password",
   },
 ];
 
@@ -136,7 +134,7 @@ export default function PasswordReset() {
         ) : (
           <div className="letter-slideIn" onClick={(e) => e.stopPropagation()}>
             <Form
-              wrapperClass="letter"
+              wrapperClass="letter2"
               enableTilt={true}
               title="Password Reset"
               titleKey={0}
@@ -151,16 +149,6 @@ export default function PasswordReset() {
               submitText="Change Password"
               submitTextDataHover="Submit"
             />
-
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:underline focus:outline-none"
-                onClick={() => nav("/login")}
-              >
-                Back to Login
-              </button>
-            </div>
           </div>
         )}
 

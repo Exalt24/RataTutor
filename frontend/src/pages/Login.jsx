@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { ArrowRight, Lock, User } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/authService";
-import { useToast } from "../components/Toast/ToastContext";
-import { User, Lock, ArrowRight } from "lucide-react";
 import Form from "../components/Form";
-import { useLoading } from "../components/Loading/LoadingContext";  // Import useLoading
+import { useLoading } from "../components/Loading/LoadingContext"; // Import useLoading
+import { useToast } from "../components/Toast/ToastContext";
+import { login } from "../services/authService";
 import "../styles/pages/login.css";
 
 const loginFields = [
@@ -12,14 +12,12 @@ const loginFields = [
     name: "username",
     label: "Username",
     icon: User,
-    placeholder: "Enter your username",
   },
   {
     name: "password",
     type: "password",
     label: "Password",
     icon: Lock,
-    placeholder: "Enter your password",
   },
 ];
 
@@ -123,7 +121,7 @@ export default function Login({ isActive, onGoRegister }) {
         ) : (
           <div className="letter-slideIn" onClick={(e) => e.stopPropagation()}>
             <Form
-              wrapperClass="letter"
+              wrapperClass="letter0"
               enableTilt={true}
               title="Welcome Back!"
               titleKey={isActive}
@@ -138,16 +136,6 @@ export default function Login({ isActive, onGoRegister }) {
               submitText="Sign In"
               submitTextDataHover="Welcome back!"
             />
-
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                className="text-sm text-blue-600 hover:underline focus:outline-none"
-                onClick={() => nav("/forgot-password", { replace: true })}
-              >
-                Forgot password?
-              </button>
-            </div>
           </div>
         )}
 

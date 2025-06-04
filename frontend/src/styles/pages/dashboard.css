@@ -97,42 +97,44 @@
   overflow: hidden;
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
   opacity: 1;
-  animation: fadeIn 0.3s ease forwards;
-  animation-delay: 0.3s;
 }
 
 .exam-button-mini::after {
   content: '';
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background:
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
     repeating-linear-gradient(
       45deg,
       transparent,
       transparent 1px,
-      rgba(255,255,255,0.1) 1px,
-      rgba(255,255,255,0.1) 2px
+      rgba(255, 255, 255, 0.1) 1px,
+      rgba(255, 255, 255, 0.1) 2px
     ),
     repeating-linear-gradient(
       -45deg,
       transparent,
       transparent 1px,
-      rgba(0,0,0,0.05) 1px,
-      rgba(0,0,0,0.05) 2px
+      rgba(0, 0, 0, 0.05) 1px,
+      rgba(0, 0, 0, 0.05) 2px
     );
   pointer-events: none;
   mix-blend-mode: overlay;
+  transition: background 0.3s ease;
 }
 
 .exam-button-mini::before {
   content: attr(data-hover);
   position: absolute;
-  top: 100%; left: 0;
+  top: 100%;
+  left: 0;
   width: 100%;
-  padding: 0.4rem;                 
+  padding: 0.4rem;
   font-family: var(--font-handwriting-secondary);
-  font-size: 0.8rem;               
+  font-size: 0.8rem;
   transform: rotate(-3deg);
   transition: all 0.3s ease;
   opacity: 0;
@@ -154,15 +156,28 @@
 }
 
 .exam-button-mini:hover::after {
-  background:
+  background: 
     repeating-linear-gradient(
       45deg,
       transparent,
       transparent 2px,
-      rgba(255,255,255,0.15) 2px,
-      rgba(255,255,255,0.15) 4px
+      rgba(255, 255, 255, 0.15) 2px,
+      rgba(255, 255, 255, 0.15) 4px
     );
 }
+
+.exam-button-mini:disabled {
+  background: rgba(255, 107, 107, 0.9);
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.exam-button-mini:disabled::before,
+.exam-button-mini:disabled::after {
+  display: none;
+}
+
 
 .exam-card.exam-card--alt:hover {
   background: rgba(255, 255, 255, 0.9);

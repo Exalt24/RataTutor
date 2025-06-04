@@ -1,8 +1,8 @@
-import React from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
-import ValidatedInput from "./ValidatedInput";
-import "../styles/components/form.css";
 import { CircleAlert } from "lucide-react";
+import React from "react";
+import "../styles/components/form.css";
+import ValidatedInput from "./ValidatedInput";
 
 function AnimatedTitle({
   text,
@@ -62,7 +62,6 @@ export default function Form({
   fields,
   formData,
   onChange,
-  validities,
   onValidityChange,
   bannerErrors = [],
   onSubmit,
@@ -101,7 +100,6 @@ export default function Form({
   return (
     <Wrapper className={wrapperClass} {...wrapperProps}>
       <div className="form-wrapper">
-        {}
         <AnimatedTitle key={titleKey} text={title} />
 
         {bannerErrors.length > 0 && (
@@ -144,6 +142,26 @@ export default function Form({
           >
             {submitText}
           </button>
+
+          <div className="mt-4 text-center">
+            {title === "Welcome Back!" ? (
+              <button
+                type="button"
+                className="label-text text-sm text-gray-600 hover:underline focus:outline-none"
+                onClick={() => window.location.href = "/forgot-password"}
+              >
+                Forgot password?
+              </button>
+            ) : (title === "Forgot Password" || title === "Password Reset") ? (
+              <button
+                type="button"
+                className="label-text text-sm text-gray-600 hover:underline focus:outline-none"
+                onClick={() => window.location.href = "/login"}
+              >
+                Back to Login
+              </button>
+            ) : null}
+          </div>
         </form>
       </div>
     </Wrapper>
