@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../services/auth";
+import { login } from "../services/authService";
 import { useToast } from "../components/Toast/ToastContext";
 import { User, Lock, ArrowRight } from "lucide-react";
 import Form from "../components/Form";

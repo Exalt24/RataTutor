@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { confirmPasswordReset } from "../services/auth";
+import { confirmPasswordReset } from "../services/authService";
 import { Lock } from "lucide-react";
 import Form from "../components/Form";
 import { useToast } from "../components/Toast/ToastContext";
