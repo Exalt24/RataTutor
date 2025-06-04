@@ -56,13 +56,13 @@ export const getCurrentAvatar = (profileData) => {
 };
 
 // Utility function to get current avatar with null fallback (for optional display)
-export const getCurrentAvatarOrNull = (profileData) => {
+export const getCurrentAvatarOrDefault = (profileData) => {
   if (profileData?.avatar) {
     const existingAvatar = avatarCombinations.find(combo => 
       combo.id === parseInt(profileData.avatar) || 
       combo.displayName === profileData.avatar
     );
-    return existingAvatar;
+    return existingAvatar || avatarCombinations[0]; // Always fallback to first combination
   }
-  return null;
+  return avatarCombinations[0]; // Default to first combination
 };

@@ -2,7 +2,7 @@
 import { Flame, LogOut, Plus, User } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import StreakModal from "./StreakModal";
-import { getCurrentAvatarOrNull } from '../utils/avatarUtils';
+import { getCurrentAvatarOrDefault } from '../utils/avatarUtils';
 
 const Header = ({
   onLogout,
@@ -13,7 +13,7 @@ const Header = ({
   const [open, setOpen] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
 
-  const currentAvatar = getCurrentAvatarOrNull(profileData);
+  const currentAvatar = getCurrentAvatarOrDefault(profileData);
 
   return (
     <>

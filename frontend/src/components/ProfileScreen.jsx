@@ -1,9 +1,9 @@
 import React from 'react';
 import avatarPlaceholder from '../assets/r1.png';
-import { getCurrentAvatarOrNull } from '../utils/avatarUtils';
+import { getCurrentAvatarOrDefault } from '../utils/avatarUtils';
 
 const ProfileScreen = ({ onEditProfile, profileData }) => {
-  const currentAvatar = getCurrentAvatarOrNull(profileData);
+  const currentAvatar = getCurrentAvatarOrDefault(profileData);
 
   return (
     <div className="space-y-4 text-xs sm:text-sm">
