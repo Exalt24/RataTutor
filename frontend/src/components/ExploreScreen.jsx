@@ -1,6 +1,6 @@
 import { Compass, Search, X } from 'lucide-react'
 import React, { useState } from 'react'
-import MaterialCard, { defaultFiles } from './MaterialCard'
+import MaterialCard from './MaterialCard'
 
 const ExploreScreen = () => {
   const [searchQuery, setSearchQuery] = useState('')
