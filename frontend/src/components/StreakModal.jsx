@@ -3,8 +3,14 @@ import React from 'react';
 
 const StreakModal = ({ onClose, profileData }) => {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 relative bg-color-2">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose} // Close when clicking backdrop
+    >
+      <div 
+        className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 relative bg-color-2"
+        onClick={(e) => e.stopPropagation()} // Prevent close when clicking modal content
+      >
         {/* Close button */}
         <button 
           onClick={onClose}
@@ -68,4 +74,4 @@ const StreakModal = ({ onClose, profileData }) => {
   );
 };
 
-export default StreakModal; 
+export default StreakModal;
