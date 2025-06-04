@@ -62,7 +62,6 @@ export default function Form({
   fields,
   formData,
   onChange,
-  validities,
   onValidityChange,
   bannerErrors = [],
   onSubmit,

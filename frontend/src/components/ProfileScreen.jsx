@@ -1,64 +1,9 @@
 import React from 'react';
 import avatarPlaceholder from '../assets/r1.png';
-
-// Import your local avatar images
-import avatar1 from '../assets/avatar1.png'
-import avatar2 from '../assets/avatar2.png'
-import avatar3 from '../assets/avatar3.png'
-
-// Background colors
-const backgroundColors = [
-  { name: 'Blue', hex: '#7BA7CC' },
-  { name: 'Coral', hex: '#FFB5A7' },
-  { name: 'Lavender', hex: '#D8B7FF' },
-];
-
-// Generate 9 avatar combinations (3 avatars × 3 backgrounds)
-const generateAvatarCombinations = () => {
-  const baseAvatars = [
-    { id: 1, url: avatar1, name: 'Avatar 1' },
-    { id: 2, url: avatar2, name: 'Avatar 2' },
-    { id: 3, url: avatar3, name: 'Avatar 3' },
-  ];
-
-  const avatarCombinations = [];
-  let combinationId = 1;
-
-  baseAvatars.forEach(avatar => {
-    backgroundColors.forEach(bg => {
-      avatarCombinations.push({
-        id: combinationId++,
-        avatarId: avatar.id,
-        avatarUrl: avatar.url,
-        avatarName: avatar.name,
-        backgroundColor: bg.hex,
-        backgroundName: bg.name,
-        displayName: `${avatar.name} - ${bg.name}`,
-        isFree: true
-      });
-    });
-  });
-
-  return avatarCombinations;
-};
-
-const avatarCombinations = generateAvatarCombinations();
+import { getCurrentAvatarOrNull } from '../utils/avatarUtils';
 
 const ProfileScreen = ({ onEditProfile, profileData }) => {
-  // Get the current avatar combination based on stored avatar ID
-  const getCurrentAvatar = () => {
-    if (profileData.avatar) {
-      // Try to find matching combination by ID
-      const existingAvatar = avatarCombinations.find(combo => 
-        combo.id === parseInt(profileData.avatar) || 
-        combo.displayName === profileData.avatar
-      );
-      return existingAvatar;
-    }
-    return null;
-  };
-
-  const currentAvatar = getCurrentAvatar();
+  const currentAvatar = getCurrentAvatarOrNull(profileData);
 
   return (
     <div className="space-y-4 text-xs sm:text-sm">
@@ -120,7 +65,6 @@ const ProfileScreen = ({ onEditProfile, profileData }) => {
           {profileData.bio || "No bio available. Update your bio!"}
         </p>
       </div>
-
     </div>
   );
 };

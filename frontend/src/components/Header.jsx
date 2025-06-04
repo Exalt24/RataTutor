@@ -2,6 +2,7 @@
 import { Flame, LogOut, Plus, User } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import StreakModal from "./StreakModal";
+import { getCurrentAvatarOrNull } from '../utils/avatarUtils';
 
 const Header = ({
   onLogout,
@@ -12,17 +13,14 @@ const Header = ({
   const [open, setOpen] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
 
-  const handleStreakClick = () => {
-    setShowStreakModal(true);
-    setOpen(false);
-  };
+  const currentAvatar = getCurrentAvatarOrNull(profileData);
 
   return (
     <>
       <header className="relative flex items-center justify-between bg-white px-4 py-4 shadow text-xs sm:text-sm">
         {/* Welcome Message */}
         <div className="flex items-center">
-         <h1 className="label-text text-xl">Welcome, {profileData.username || "User"}!</h1>
+         <h1 className="label-text text-xl">Welcome, {profileData?.username || "User"}!</h1>
         </div>
 
         {/* Actions & Stats + Profile */}
@@ -36,14 +34,40 @@ const Header = ({
             <span className="font-medium label-text">{profileData.streak.count} Days</span>
           </button>
 
-
           {/* Profile Menu */}
           <div className="relative">
             <button
               onClick={() => setOpen((o) => !o)}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 transition"
+              className="relative group transition-transform hover:scale-105"
             >
-              <User size={16} className="text-gray-600" />
+              {currentAvatar ? (
+                // Display avatar combination with background
+                <div className="relative">
+                  {/* Gradient ring effect */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full opacity-30 blur-sm group-hover:opacity-50 transition-opacity"></div>
+                  <div 
+                    className="relative w-8 h-8 rounded-full overflow-hidden shadow-lg border-2 border-white"
+                    style={{ backgroundColor: currentAvatar.backgroundColor }}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <img
+                        src={currentAvatar.avatarUrl}
+                        alt="User Avatar"
+                        className="w-6 h-6 object-cover rounded-full z-10 relative"
+                        style={{ 
+                          filter: 'contrast(1.2) brightness(1.1)',
+                          transform: 'scale(1.1)'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Fallback to generic user icon
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 hover:bg-gray-100 transition">
+                  <User size={16} className="text-gray-600" />
+                </div>
+              )}
             </button>
             {open && (
               <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
