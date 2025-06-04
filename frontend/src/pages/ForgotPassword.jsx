@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { requestPasswordReset } from "../services/auth";
+import { requestPasswordReset } from "../services/authService";
 import { Mail } from "lucide-react";
 import Form from "../components/Form";
 import { useToast } from "../components/Toast/ToastContext";

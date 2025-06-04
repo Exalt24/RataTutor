@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import avatarPlaceholder from '../assets/r1.png';
-import { getProfile, updateProfile } from "../services/auth"; // adjust your import path
+import { getProfile, updateProfile } from "../services/authService";
 
 const EditProfileScreen = ({ onBack }) => {
   const [formData, setFormData] = useState({
