@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
 import { useToast } from "../components/Toast/ToastContext";
 import { User, Lock, ArrowRight } from "lucide-react";
 import Form from "../components/Form";
+import { useLoading } from "../components/Loading/LoadingContext";  // Import useLoading
 import "../styles/pages/login.css";
 
 const loginFields = [
@@ -33,6 +34,7 @@ export default function Login({ isActive, onGoRegister }) {
   const [isPulledOut, setIsPulledOut] = useState(false);
   const nav = useNavigate();
   const { showToast } = useToast();
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     if (isActive) {
@@ -58,16 +60,15 @@ export default function Login({ isActive, onGoRegister }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setBannerErrors([]);
+    showLoading();  // Show the loading spinner when submitting
 
     try {
       await login(formData);
-
       showToast({
         variant: "success",
         title: "Login successful!",
         subtitle: `Welcome back, ${formData.username}!`,
       });
-
       nav("/dashboard", { replace: true });
     } catch (err) {
       const data = err.response?.data || {};
@@ -79,6 +80,8 @@ export default function Login({ isActive, onGoRegister }) {
       });
 
       setBannerErrors(msgs);
+    } finally {
+      hideLoading();  // Hide the loading spinner after the request finishes
     }
   };
 
@@ -102,9 +105,7 @@ export default function Login({ isActive, onGoRegister }) {
   return (
     <div className="login-container" onClick={handleOutsideClick}>
       <div
-        className={`envelope ${isOpen ? "open" : ""} ${
-          isPulledOut ? "form-pulled" : ""
-        }`}
+        className={`envelope ${isOpen ? "open" : ""} ${isPulledOut ? "form-pulled" : ""}`}
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => !isPulledOut && setIsOpen(false)}
       >

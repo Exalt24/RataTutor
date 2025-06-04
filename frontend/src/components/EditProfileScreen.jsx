@@ -1,34 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { useLoading } from '../components/Loading/LoadingContext';
+import { useToast } from '../components/Toast/ToastContext';
+import { updateProfile } from "../services/authService";
 import avatarPlaceholder from '../assets/r1.png';
-import { getProfile, updateProfile } from "../services/authService";
 
-const EditProfileScreen = ({ onBack }) => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    full_name: '',
-    bio: '',
-    avatar: '',
-  });
-
+const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
   const [avatarPreview, setAvatarPreview] = useState(avatarPlaceholder);
+  const [formData, setFormData] = useState({
+    full_name: profileData.full_name || '',
+    username: profileData.username || '',
+    email: profileData.email || '',
+    bio: profileData.bio || '',
+    avatar: profileData.avatar || '', // Store avatar selection as a string
+  });
+  const [isAvatarModalOpen, setAvatarModalOpen] = useState(false); // Track modal visibility
 
-  // Load profile data on mount
-  useEffect(() => {
-    getProfile().then(data => {
-      setFormData({
-        username: data.username || '',
-        email: data.email || '',
-        full_name: data.full_name || '',
-        bio: data.bio || '',
-        avatar: data.avatar || '',
-      });
-      if (data.avatar) {
-        setAvatarPreview(data.avatar);
-      }
-    }).catch(err => console.error('Error fetching profile:', err));
-  }, []);
+  const { showLoading, hideLoading } = useLoading();  // Use loading context
+  const { showToast } = useToast();  // Use toast context
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -36,29 +25,40 @@ const EditProfileScreen = ({ onBack }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle avatar upload
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatar: reader.result }));
-        setAvatarPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  // Handle avatar selection (trigger modal)
+  const handleAvatarChange = () => {
+    setAvatarModalOpen(true); // Open the avatar selection modal (currently commented out)
   };
 
   // Handle form submission
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    showLoading();  // Show loading spinner
+
     try {
+      // Update the profile data
       await updateProfile(formData);
-      alert('Profile updated successfully!');
+
+      // Refetch profile data after successful update
+      await fetchProfileData();
+
+      showToast({
+        variant: 'success',
+        title: 'Profile updated successfully!',
+        subtitle: 'Your profile has been updated.',
+      });
     } catch (error) {
       console.error('Error updating profile:', error.response?.data || error);
-      alert('Failed to update profile. Please try again.');
+      showToast({
+        variant: 'error',
+        title: 'Failed to update profile!',
+        subtitle: 'Please try again later.',
+      });
+    } finally {
+      hideLoading();
     }
   };
+
 
   return (
     <div className="space-y-6 text-xs sm:text-sm max-w-6xl mx-auto px-4">
@@ -92,13 +92,12 @@ const EditProfileScreen = ({ onBack }) => {
             />
             <label className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
               <span className="text-white text-xs font-medium">Change Photo</span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleAvatarChange} 
-              />
             </label>
+            <button 
+              type="button"
+              className="absolute inset-0 w-full h-full cursor-pointer" 
+              onClick={handleAvatarChange} 
+            />
           </div>
           <p className="text-gray-500 text-xs">Click to change profile picture</p>
         </div>
@@ -111,7 +110,7 @@ const EditProfileScreen = ({ onBack }) => {
               <input
                 type="text"
                 name="full_name"
-                value={formData.full_name}
+                value={formData.full_name || ''}
                 onChange={handleChange}
                 className="label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
@@ -121,7 +120,7 @@ const EditProfileScreen = ({ onBack }) => {
               <input
                 type="text"
                 name="username"
-                value={formData.username}
+                value={formData.username || ''}
                 onChange={handleChange}
                 className="label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
@@ -134,7 +133,7 @@ const EditProfileScreen = ({ onBack }) => {
               <input
                 type="email"
                 name="email"
-                value={formData.email}
+                value={formData.email || ''}
                 onChange={handleChange}
                 className="label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />
@@ -143,7 +142,8 @@ const EditProfileScreen = ({ onBack }) => {
               <label className="label-text block text-sm font-medium text-gray-700 mb-2">Bio</label>
               <textarea
                 name="bio"
-                value={formData.bio}
+                value={formData.bio || ''}
+                placeholder='Tell us about yourself...'
                 onChange={handleChange}
                 rows="3"
                 className="label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
@@ -151,33 +151,16 @@ const EditProfileScreen = ({ onBack }) => {
             </div>
           </div>
         </div>
-
-        {/* Additional Settings */}
-        <div className="pt-6 border-t border-gray-200">
-          <h3 className="text-sm font-medium text-gray-700 mb-6">Additional Settings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-xs text-gray-500">Receive updates about your account</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium">Dark Mode</p>
-                <p className="text-xs text-gray-500">Switch to dark theme</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
+  
+        {/* Avatar Selection Modal (Commented out for now) 
+        {isAvatarModalOpen && (
+          // AvatarSelectionModal will be uncommented once the modal is implemented
+          // <AvatarSelectionModal
+          //   onSelect={handleAvatarSelect}
+          //   onClose={() => setAvatarModalOpen(false)}
+          // />
+        )}*/}
+        
       </div>
     </div>
   );

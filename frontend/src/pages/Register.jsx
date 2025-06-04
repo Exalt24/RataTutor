@@ -100,12 +100,17 @@ export default function Register({ isActive, onGoLogin }) {
     e.preventDefault();
     setBannerErrors([]);
 
+    // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
       setBannerErrors(["Passwords do not match."]);
       return;
     }
 
+    // Disable the button by setting sending to true
+    setSending(true);
+
     try {
+      // Attempt registration
       await register({
         username: formData.username,
         email: formData.email,
@@ -113,38 +118,41 @@ export default function Register({ isActive, onGoLogin }) {
         confirm_password: formData.confirmPassword,
       });
     } catch (err) {
+      // Error handling for failed registration
       const data = err.response?.data || {};
       const msgs = [];
+
       Object.entries(data).forEach(([key, val]) => {
         if (Array.isArray(val)) val.forEach((m) => msgs.push(m));
         else if (typeof val === "string") msgs.push(val);
       });
       setBannerErrors(msgs);
+      setSending(false);  // Re-enable the button if the registration fails
       return;
     }
 
-    setAnimationStage(2);
+  // After successful registration
+  setAnimationStage(2);
+  setTimeout(() => {
+    setAnimationStage(3);
     setTimeout(() => {
-      setAnimationStage(3);
-      setSending(true);
-      setTimeout(() => {
-        setHideForm(true);
+      setHideForm(true);
 
-        showToast({
-          variant: "success",
-          title: "Registration successful!",
-          subtitle: "Welcome aboard!",
-        });
+      showToast({
+        variant: "success",
+        title: "Registration successful!",
+        subtitle: "Welcome aboard!",
+      });
 
-
-        setTimeout(onGoLogin, 1000);
-      }, 1500);
+      setTimeout(onGoLogin, 1000);
     }, 1500);
-  };
+  }, 1500);
+};
 
-  const isDisabled =
-    Object.values(validities).some((v) => !v) ||
-    formData.password !== formData.confirmPassword;
+const isDisabled =
+  Object.values(validities).some((v) => !v) ||
+  formData.password !== formData.confirmPassword ||
+  sending;  // Button will be disabled when sending is true
 
   return (
     <>
@@ -165,7 +173,7 @@ export default function Register({ isActive, onGoLogin }) {
               onValidityChange={handleValidityChange}
               bannerErrors={bannerErrors}
               onSubmit={handleSubmit}
-              submitDisabled={isDisabled}
+              submitDisabled={sending || isDisabled}
               submitText="Register"
               submitTextDataHover="Join us!"
             />

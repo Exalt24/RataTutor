@@ -20,11 +20,14 @@ class GetProfileView(APIView):
         profile = getattr(user, 'profile', None)
 
         return Response({
+            "user_id": user.id,
             "username": user.username,
             "email": user.email,
             "full_name": profile.full_name if profile else "",
             "bio": profile.bio if profile else "",
-            "avatar": profile.avatar if profile and profile.avatar else None
+            "avatar": profile.avatar if profile and profile.avatar else None,
+            "date_joined": user.date_joined,
+            "last_login": user.last_login,
         })
 
 
