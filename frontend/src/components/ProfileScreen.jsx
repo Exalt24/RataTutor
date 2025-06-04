@@ -1,7 +1,7 @@
 // src/screens/ProfileScreen.jsx
 import React from 'react'
 import avatar from '../assets/r1.png'
-import { getProfile, updateProfile } from "../services/auth";
+import { getProfile, updateProfile } from "../services/authService";
 import { useEffect, useState } from 'react';
 
 const ProfileScreen = ({ points, badges, onEditProfile }) => {

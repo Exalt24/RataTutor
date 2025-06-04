@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { API_URL, AUTH_URL } from '../config'
-import { refreshToken, clearTokens } from './auth'
+import { refreshToken, clearTokens } from './authService'
 
 const api = axios.create({
   baseURL: API_URL,
