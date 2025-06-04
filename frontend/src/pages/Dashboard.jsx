@@ -12,7 +12,7 @@ import Sidebar from '../components/Sidebar'
 import StreakScreen from '../components/StreakScreen'
 import TrashScreenEmptyState from '../components/TrashScreenEmptyState'
 // import api from '../services/api'   ← comment this out until ready
-import { logout } from '../services/auth'
+import { logout } from '../services/authService'
 import '../styles/pages/dashboard.css'
 
 const Dashboard = () => {

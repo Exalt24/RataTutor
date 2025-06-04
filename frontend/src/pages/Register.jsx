@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { register } from "../services/auth";
+import { register } from "../services/authService";
 import { useToast } from "../components/Toast/ToastContext";
 import Form from "../components/Form";
 import { User, Mail, Lock } from "lucide-react";

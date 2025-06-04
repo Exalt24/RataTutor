@@ -2,7 +2,7 @@
 import { Flame, LogOut, Plus, User } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import StreakModal from "./StreakModal";
-import { getProfile, updateProfile } from "../services/auth";
+import { getProfile, updateProfile } from "../services/authService";
 const Header = ({
   streak = 5,
   level,
