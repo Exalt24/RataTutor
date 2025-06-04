@@ -1,4 +1,4 @@
-import { Clock, Copy, Delete, Download, Globe, Lock, MoreVertical, Pin, Trash } from 'lucide-react'
+import { Clock, Copy, Globe, Lock, MoreVertical, Pin, Trash } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 export const defaultFiles = [
@@ -7,43 +7,18 @@ export const defaultFiles = [
     updated: '270d ago', 
     tag: 'Flashcards (33)',
     description: 'Collection of scripts and notes for Internet of Things course',
-    content: {
-      flashcards: [
-        { title: 'IoT Basics', count: 15 },
-        { title: 'Network Protocols', count: 8 },
-        { title: 'Security Concepts', count: 10 }
-      ],
-      notes: [
-        { title: 'Course Overview', updated: '2d ago' },
-        { title: 'Lab Notes', updated: '5d ago' }
-      ],
-      quizzes: [
-        { title: 'Midterm Review', questions: 20 },
-        { title: 'Final Practice', questions: 30 }
-      ]
-    }
   },
   { 
     title: 'Untitled', 
     updated: '270d ago', 
     tag: 'Note',
     description: 'Quick notes and ideas',
-    content: {
-      notes: [
-        { title: 'Quick Notes', updated: '1d ago' }
-      ]
-    }
   },
   { 
     title: '(Draft) 5 Testing', 
     updated: '367d ago', 
     tag: 'Flashcards (14)',
     description: 'Testing concepts and methodologies',
-    content: {
-      flashcards: [
-        { title: 'Testing Methods', count: 14 }
-      ]
-    }
   }
 ]
 
