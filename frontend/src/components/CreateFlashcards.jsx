@@ -620,10 +620,9 @@ const CreateFlashcards = ({
                     ? "Complete all cards to save"
                     : !cardValidationStatus.hasValidCards
                       ? "Add at least one valid card"
-                      : (isEditMode ? `Update ${cardValidationStatus.validCardCount} Flashcard(s)` : `Create ${cardValidationStatus.validCardCount} Flashcard(s)`)
+                      : (isEditMode ? `Update ${cardValidationStatus.validCardCount} Flashcard(s)` : `Create`)
               }
               disabled={isDisabled}
-              data-hover="Create"
             >
               {submitting 
                 ? (isEditMode ? "Updating..." : "Creating...") 
