@@ -17,25 +17,6 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
-CORS_ALLOW_CREDENTIALS = True
-if DEBUG:
-    FRONTEND_URL = 'http://localhost:3000'
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ]
-    CORS_ALLOW_ALL_ORIGINS = True
-    STATIC_URL = '/dev-static/'
-else:
-    FRONTEND_URL = 'https://ratatutor.onrender.com'
-    ALLOWED_HOSTS = ["ratatutor.onrender.com"]
-    CORS_ALLOWED_ORIGINS = [
-        "https://ratatutor.onrender.com",
-    ]
-    CORS_ALLOW_ALL_ORIGINS = False
-    STATIC_URL = '/static/'
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -81,6 +62,27 @@ TEMPLATES = [
         },
     },
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+if DEBUG:
+    FRONTEND_URL = 'http://localhost:3000'
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = True
+    STATIC_URL = '/dev-static/'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+else:
+    FRONTEND_URL = 'https://ratatutor.onrender.com'
+    ALLOWED_HOSTS = ["ratatutor.onrender.com"]
+    CORS_ALLOWED_ORIGINS = [
+        "https://ratatutor.onrender.com",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+    STATIC_URL = '/static/'
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 WSGI_APPLICATION = 'RataTutor.wsgi.application'
 
@@ -179,8 +181,6 @@ OPENROUTER_API_KEY = env('OPENROUTER_API_KEY')
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 60 * 60
 
-CORS_ALLOW_CREDENTIALS = True
-
 # Media files settings
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -192,4 +192,3 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': env('CLOUDINARY_API_SECRET'),
 }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
