@@ -59,7 +59,7 @@ const ViewNotes = ({ mainMaterial, material, onClose, readOnly = false, onSucces
   }
 
   return (
-    <div className="flex flex-col bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 rounded-xl h-[calc(100vh-6rem)]">
+    <div className="flex flex-col bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 rounded-xl h-[calc(100vh-7rem)]">
       {/* ✅ Enhanced: Header following ViewFlashcards structure */}
       <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
         <div className="max-w-[90rem] mx-auto px-6 py-4">
