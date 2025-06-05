@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import CreateFlashcards from './CreateFlashcards';
 import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
+import Folder from './Folder';
 import UploadFile from './UploadFile';
 
 const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generated }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createType, setCreateType] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -20,6 +22,25 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
     setCreateType(null);
   };
 
+  const handleFileUpload = (files) => {
+    const newFiles = files.map(file => ({
+      name: file.name,
+      type: file.type.split('/')[1] || 'file',
+      size: formatFileSize(file.size),
+      date: new Date().toISOString().split('T')[0],
+      file: file // Store the actual file object
+    }));
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
   if (createType === 'flashcards') {
     return <CreateFlashcards onClose={closeCreate} />;
   } else if (createType === 'notes') {
@@ -29,7 +50,7 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
   }
 
   return (
-    <div className="space-y-4 mt-6 p-4">
+    <div className="space-y-8 mt-6 p-4">
       <section>
         <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
           <Sparkles size={18} className="text-[#22C55E]" />
@@ -81,7 +102,25 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
         </div>
       </section>
 
-      <UploadFile isOpen={isModalOpen} onClose={closeModal} />
+      <section>
+        <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
+          <Sparkles size={18} className="text-blue-500" />
+          Your Uploads
+        </h2>
+        <div className="mt-4 flex flex-wrap gap-6">
+          <Folder 
+            title="Recent Files" 
+            onClick={() => console.log('Recent Files clicked')}
+            files={uploadedFiles}
+          />
+        </div>
+      </section>
+
+      <UploadFile 
+        isOpen={isModalOpen} 
+        onClose={closeModal} 
+        onUpload={handleFileUpload}
+      />
     </div>
   );
 };
