@@ -51,6 +51,22 @@ class MaterialViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(trashed_materials, many=True)
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'])
+    def public(self, request):
+        """
+        Custom endpoint to get public materials from other users.
+        GET /api/materials/public/
+        """
+        public_materials = Material.objects.filter(
+            public=True,
+            status='active'
+        ).exclude(
+            owner=request.user  # Exclude current user's materials
+        ).select_related('owner').order_by('-updated_at')
+        
+        serializer = self.get_serializer(public_materials, many=True)
+        return Response(serializer.data)
+    
     @action(detail=True, methods=['post'])
     def toggle_pin(self, request, pk=None):
         """
