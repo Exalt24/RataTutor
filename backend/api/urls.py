@@ -16,6 +16,7 @@ from .views import (
     FlashcardGenerationView,
     QuizGenerationView,
     CopyMaterialView,
+    AttachmentViewSet,
 )
 
 app_name = "api"
@@ -27,6 +28,7 @@ router.register(r"flashcard-sets", FlashcardSetViewSet, basename="flashcardset")
 router.register(r"flashcards", FlashcardViewSet, basename="flashcard")
 router.register(r"quizzes", QuizViewSet, basename="quiz")
 router.register(r"quiz-questions", QuizQuestionViewSet, basename="quizquestion")
+router.register(r"attachments", AttachmentViewSet, basename="attachment")
 
 urlpatterns = [
     # 1) Upload a file into an existing Material

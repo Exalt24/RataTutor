@@ -2,11 +2,11 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponse
+from django.conf.urls.static import static
 import os
 import mimetypes
 
 def custom_static_serve(request, path):
-    
     file_path = os.path.join(settings.STATIC_ROOT, path)
     
     if os.path.exists(file_path) and os.path.isfile(file_path):
@@ -27,11 +27,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('auth/', include('accounts.urls')),
-    
     path('', smart_redirect, name='root-redirect'),
-    
-    re_path(r'^.*$', redirect_to_frontend, name='catch-all-redirect'),
 ]
 
+# Add static and media URLs BEFORE the catch-all redirect
 if settings.DEBUG:
-    urlpatterns.insert(-1, re_path(r'^static/(?P<path>.*)$', custom_static_serve, name='custom-static'))
+    # Insert static files handler
+    urlpatterns += [re_path(r'^static/(?P<path>.*)$', custom_static_serve, name='custom-static')]
+    # Add media files handler 
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Catch-all redirect MUST be last
+urlpatterns += [re_path(r'^.*$', redirect_to_frontend, name='catch-all-redirect')]

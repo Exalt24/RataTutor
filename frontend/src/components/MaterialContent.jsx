@@ -2,19 +2,19 @@ import {
   ArrowLeft,
   BookOpen,
   ChevronDown,
-  Download,
   FileQuestion,
   FileText,
   Globe,
   HelpCircle,
   Lock,
   Paperclip,
-  Pencil
+  Pencil,
+  Upload
 } from "lucide-react";
 import React, { useState } from "react";
 import { useToast } from '../components/Toast/ToastContext';
-import { deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
-import Folder from "./Folder";
+import { deleteAttachment, deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
+import FilePreview from "./FilePreview"; // ✅ NEW: Import FilePreview component
 import MaterialFile from "./MaterialFile";
 import ViewFlashcards from "./ViewFlashcards";
 import ViewNotes from "./ViewNotes";
@@ -33,7 +33,7 @@ const EmptyState = () => (
   </div>
 );
 
-const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle }) => (
+const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, onUpload, readOnly }) => (
   <div className="flex items-center justify-between mb-4">
     <div className="flex items-center gap-3">
       <div className={`p-2.5 rounded-xl ${
@@ -58,7 +58,7 @@ const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle }) => (
         </span>
       </div>
     </div>
-    <div className="relative">
+    <div className="flex items-center gap-2">
       <button
         onClick={onToggle}
         className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 text-sm font-medium rounded-xl border label-text ${
@@ -110,7 +110,7 @@ const MaterialContent = ({
   material,
   isPublic,
   onVisibilityToggle,
-  onExport,
+  onUploadAttachment,
   onCreateFlashcards,
   onCreateNotes,
   onCreateQuiz,
@@ -122,11 +122,15 @@ const MaterialContent = ({
 }) => {
   const { showToast } = useToast();
   
-  // Only keep view-related state
+  // View-related state
   const [showViewFlashcards, setShowViewFlashcards] = useState(false);
   const [showViewQuiz, setShowViewQuiz] = useState(false);
   const [showViewNotes, setShowViewNotes] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
+  
+  // ✅ NEW: Preview modal state
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState(null);
   
   // Edit state - only for form inputs
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -165,6 +169,17 @@ const MaterialContent = ({
     setSelectedContent(null);
   };
 
+  // ✅ NEW: Preview handlers
+  const handlePreviewAttachment = (attachment) => {
+    setPreviewAttachment(attachment);
+    setShowPreview(true);
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setPreviewAttachment(null);
+  };
+
   const handleTitleEdit = () => {
     if (!readOnly) {
       setEditedTitle(material?.title || "");
@@ -177,7 +192,6 @@ const MaterialContent = ({
       try {
         await onTitleChange(editedTitle, editedDescription);
       } catch (error) {
-        // Reset form on error
         setEditedTitle(material?.title || "");
         setEditedDescription(material?.description || "");
       }
@@ -205,7 +219,6 @@ const MaterialContent = ({
     try {
       await onTitleChange(material?.title || "", editedDescription);
     } catch (error) {
-      // Reset form on error
       setEditedDescription(material?.description || "");
     }
     setIsEditingDescription(false);
@@ -233,43 +246,62 @@ const MaterialContent = ({
     if (type === "flashcard") {
       onCreateFlashcards(material, content, {
         onSuccess: (updatedFlashcardSet) => {
-          // Navigate directly to ViewFlashcards with the updated flashcard set
           setSelectedContent(updatedFlashcardSet);
           setShowViewFlashcards(true);
-          return false; // Tell MaterialsScreen to delay closing
+          return false;
         }
       });
     } else if (type === "note") {
-      // ✅ ENHANCED: Follow flashcard pattern for notes
       onCreateNotes(material, {
         editMode: true,
         editContent: content,
         onSuccess: (updatedNote) => {
-          // Navigate directly to ViewNotes with the updated note
           setSelectedContent(updatedNote);
           setShowViewNotes(true);
-          return false; // Tell MaterialsScreen to delay closing
+          return false;
         }
       });
     } else if (type === "quiz") {
-      // ✅ ENHANCED: Follow flashcard pattern for quiz
       onCreateQuiz(material, {
         editMode: true,
         editContent: content,
         onSuccess: (updatedQuiz) => {
-          // Navigate directly to ViewQuiz with the updated quiz
           setSelectedContent(updatedQuiz);
           setShowViewQuiz(true);
-          return false; // Tell MaterialsScreen to delay closing
+          return false;
         }
       });
     }
   };
 
+  const handleDownloadAttachment = (attachment) => {
+    try {
+      const link = document.createElement('a')
+      link.href = attachment.file
+      link.download = attachment.file.split('/').pop()
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      showToast({
+        variant: "success",
+        title: "Download started",
+        subtitle: `Downloading "${attachment.file.split('/').pop()}"`,
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      showToast({
+        variant: "error",
+        title: "Download failed",
+        subtitle: "Failed to download file. Please try again.",
+      });
+    }
+  }
+
   const handleDeleteContent = async (contentId, type) => {
     if (readOnly) return;
     
-    // Determine the content name for confirmation
     let contentName = '';
     let content = null;
     
@@ -300,7 +332,6 @@ const MaterialContent = ({
     }
 
     try {
-      // Call appropriate API based on type
       switch (type) {
         case "flashcard":
           await deleteFlashcardSet(contentId);
@@ -312,13 +343,12 @@ const MaterialContent = ({
           await deleteQuiz(contentId);
           break;
         case "attachment":
-          console.warn('Delete attachment API not implemented yet');
-          return;
+          await deleteAttachment(contentId);
+          break;
         default:
           throw new Error(`Unknown content type: ${type}`);
       }
 
-      // ✅ OPTION 1: Use refetch pattern (like EditProfileScreen)
       if (onRefreshMaterials) {
         try {
           await onRefreshMaterials();
@@ -326,7 +356,6 @@ const MaterialContent = ({
           console.error('Error refreshing materials after delete:', error);
         }
       } else {
-        // ✅ OPTION 2: Fallback to optimistic update (current approach)
         const updatedMaterial = { ...material };
         
         switch (type) {
@@ -366,21 +395,7 @@ const MaterialContent = ({
     }
   };
 
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
-    } else if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)}h ago`;
-    } else {
-      return `${Math.floor(diffInMinutes / 1440)}d ago`;
-    }
-  };
-
+  // View components remain the same...
   if (showViewFlashcards) {
     return (
       <ViewFlashcards
@@ -389,17 +404,14 @@ const MaterialContent = ({
         onClose={handleCloseView} 
         readOnly={readOnly}
         onSuccess={async (updatedFlashcardSet) => {
-          // ✅ OPTION 1: Use refetch pattern
           if (onRefreshMaterials) {
             try {
               await onRefreshMaterials();
-              // Update selected content for immediate UI feedback
               setSelectedContent(updatedFlashcardSet);
             } catch (error) {
               console.error('Error refreshing materials:', error);
             }
           } else {
-            // ✅ OPTION 2: Fallback to optimistic update
             const updatedMaterial = {
               ...material,
               flashcard_sets: material.flashcard_sets.map(set =>
@@ -415,17 +427,14 @@ const MaterialContent = ({
           }
         }}
         onEdit={(flashcardSet) => {
-          // Close ViewFlashcards and navigate to CreateFlashcards
           setShowViewFlashcards(false);
           setSelectedContent(null);
           
-          // Call onCreateFlashcards with success handler
           onCreateFlashcards(material, flashcardSet, {
             onSuccess: (updatedFlashcardSet) => {
-              // Navigate directly to ViewFlashcards with the updated flashcard set
               setSelectedContent(updatedFlashcardSet);
               setShowViewFlashcards(true);
-              return false; // Tell MaterialsScreen to delay closing
+              return false;
             }
           });
         }}
@@ -441,17 +450,14 @@ const MaterialContent = ({
         onClose={handleCloseView} 
         readOnly={readOnly}
         onSuccess={async (updatedNote) => {
-          // ✅ ENHANCED: Follow flashcard pattern for notes
           if (onRefreshMaterials) {
             try {
               await onRefreshMaterials();
-              // Update selected content for immediate UI feedback
               setSelectedContent(updatedNote);
             } catch (error) {
               console.error('Error refreshing materials:', error);
             }
           } else {
-            // ✅ OPTION 2: Fallback to optimistic update
             const updatedMaterial = {
               ...material,
               notes: material.notes.map(note =>
@@ -467,19 +473,16 @@ const MaterialContent = ({
           }
         }}
         onEdit={(note) => {
-          // ✅ ENHANCED: Close ViewNotes and navigate to CreateNotes
           setShowViewNotes(false);
           setSelectedContent(null);
           
-          // Call onCreateNotes with success handler
           onCreateNotes(material, {
             editMode: true,
             editContent: note,
             onSuccess: (updatedNote) => {
-              // Navigate directly to ViewNotes with the updated note
               setSelectedContent(updatedNote);
               setShowViewNotes(true);
-              return false; // Tell MaterialsScreen to delay closing
+              return false;
             }
           });
         }}
@@ -495,17 +498,14 @@ const MaterialContent = ({
         onClose={handleCloseView} 
         readOnly={readOnly}
         onSuccess={async (updatedQuiz) => {
-          // ✅ ENHANCED: Follow flashcard pattern for quiz
           if (onRefreshMaterials) {
             try {
               await onRefreshMaterials();
-              // Update selected content for immediate UI feedback
               setSelectedContent(updatedQuiz);
             } catch (error) {
               console.error('Error refreshing materials:', error);
             }
           } else {
-            // ✅ OPTION 2: Fallback to optimistic update
             const updatedMaterial = {
               ...material,
               quizzes: material.quizzes.map(quiz =>
@@ -521,19 +521,16 @@ const MaterialContent = ({
           }
         }}
         onEdit={(quiz) => {
-          // ✅ ENHANCED: Close ViewQuiz and navigate to CreateQuiz
           setShowViewQuiz(false);
           setSelectedContent(null);
           
-          // Call onCreateQuiz with success handler
           onCreateQuiz(material, {
             editMode: true,
             editContent: quiz,
             onSuccess: (updatedQuiz) => {
-              // Navigate directly to ViewQuiz with the updated quiz
               setSelectedContent(updatedQuiz);
               setShowViewQuiz(true);
-              return false; // Tell MaterialsScreen to delay closing
+              return false;
             }
           });
         }}
@@ -545,10 +542,236 @@ const MaterialContent = ({
 
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl overflow-hidden">
-        {/* Header */}
-        <div className="flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm">
-          <div className="max-w-[90rem] mx-auto px-6 py-4">
+      <>
+        <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl overflow-hidden">
+          {/* Header */}
+          <div className="flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm">
+            <div className="max-w-[90rem] mx-auto px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={onBack}
+                    className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+                  >
+                    <ArrowLeft size={20} className="text-gray-600" />
+                  </button>
+                  <div>
+                    <div className="flex items-center gap-3">
+                      {isEditingTitle && !readOnly ? (
+                        <input
+                          type="text"
+                          value={editedTitle}
+                          onChange={(e) => setEditedTitle(e.target.value)}
+                          onBlur={handleTitleSave}
+                          onKeyDown={handleTitleKeyDown}
+                          className="text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
+                          autoFocus
+                        />
+                      ) : (
+                        <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                          {material?.title || "Material"}
+                        </h1>
+                      )}
+                      {!readOnly && (
+                        <button
+                          onClick={handleTitleEdit}
+                          className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                          title="Edit Title"
+                        >
+                          <Pencil size={16} className="text-gray-600" />
+                        </button>
+                      )}
+                      <button
+                        onClick={onVisibilityToggle}
+                        className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                          isPublic 
+                            ? 'bg-white border-gray-300 hover:bg-gray-50' 
+                            : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                        } ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title={readOnly ? "Read-only mode" : (isPublic ? "Make Private" : "Make Public")}
+                        disabled={readOnly}
+                      >
+                        {isPublic ? (
+                          <>
+                            <Globe size={16} className="text-[#1b81d4]" />
+                            <span className="text-[#1b81d4] text-sm font-medium">Public</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock size={16} className="text-gray-600" />
+                            <span className="text-gray-600 text-sm font-medium">Private</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {isEditingDescription && !readOnly ? (
+                        <input
+                          type="text"
+                          value={editedDescription}
+                          onChange={(e) => setEditedDescription(e.target.value)}
+                          onBlur={handleDescriptionSave}
+                          onKeyDown={handleDescriptionKeyDown}
+                          className="text-sm text-gray-500 bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 w-full label-text"
+                          placeholder="Add a description..."
+                          autoFocus
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-500 label-text">
+                          {material?.description || "View and manage your content"}
+                        </p>
+                      )}
+                      {!readOnly && (
+                        <button
+                          onClick={handleDescriptionEdit}
+                          className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
+                          title="Edit Description"
+                        >
+                          <Pencil size={14} className="text-gray-600" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={onUploadAttachment}
+                    className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+                    title="Upload Attachment"
+                    disabled={readOnly}
+                  >
+                    <Upload size={20} className={readOnly ? "text-gray-400" : "text-gray-600"} />
+                  </button>
+                  {!readOnly && (
+                    <>
+                      <div className="h-6 w-px bg-gray-200"></div>
+                      <button
+                        className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                        onClick={() => onCreateFlashcards(material, null, {
+                          onSuccess: (newFlashcardSet) => {
+                            setSelectedContent(newFlashcardSet);
+                            setShowViewFlashcards(true);
+                            return false;
+                          }
+                        })}
+                      >
+                        <BookOpen size={16} />
+                        Create Flashcards
+                      </button>
+                      <button
+                        className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                        onClick={() => onCreateNotes(material, {
+                          onSuccess: (newNote) => {
+                            setSelectedContent(newNote);
+                            setShowViewNotes(true);
+                            return false;
+                          }
+                        })}
+                      >
+                        <FileText size={16} />
+                        Create Notes
+                      </button>
+                      <button
+                        className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+                        onClick={() => onCreateQuiz(material, {
+                          onSuccess: (newQuiz) => {
+                            setSelectedContent(newQuiz);
+                            setShowViewQuiz(true);
+                            return false;
+                          }
+                        })}
+                      >
+                        <HelpCircle size={16} />
+                        Create Quiz
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Sections */}
+          <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
+            <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
+              <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
+                
+                {/* Attachments Section */}
+                <div>
+                  <SectionHeader
+                    icon={Paperclip}
+                    title="Attachments"
+                    count={attachments.length}
+                    isExpanded={expandedSections.Attachments}
+                    onToggle={() => toggleSection("Attachments")}
+                    onUpload={onUploadAttachment}
+                    readOnly={readOnly}
+                  />
+                  {expandedSections.Attachments && (
+                    <SectionEmptyState title="Attachments" />
+                  )}
+                </div>
+
+                {/* Other sections */}
+                <div>
+                  <SectionHeader
+                    icon={BookOpen}
+                    title="Flashcards"
+                    count={flashcardSets.length}
+                    isExpanded={expandedSections.Flashcards}
+                    onToggle={() => toggleSection("Flashcards")}
+                  />
+                  {expandedSections.Flashcards && (
+                    <SectionEmptyState title="Flashcards" />
+                  )}
+                </div>
+
+                <div>
+                  <SectionHeader
+                    icon={HelpCircle}
+                    title="Quizzes"
+                    count={quizzes.length}
+                    isExpanded={expandedSections.Quizzes}
+                    onToggle={() => toggleSection("Quizzes")}
+                  />
+                  {expandedSections.Quizzes && (
+                    <SectionEmptyState title="Quizzes" />
+                  )}
+                </div>
+
+                <div>
+                  <SectionHeader
+                    icon={FileText}
+                    title="Notes"
+                    count={notes.length}
+                    isExpanded={expandedSections.Notes}
+                    onToggle={() => toggleSection("Notes")}
+                  />
+                  {expandedSections.Notes && (
+                    <SectionEmptyState title="Notes" />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ✅ NEW: File Preview Modal */}
+        <FilePreview 
+          attachment={previewAttachment}
+          isOpen={showPreview}
+          onClose={handleClosePreview}
+          onDownload={handleDownloadAttachment}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl">
+        <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
+          <div className="max-w-[90rem] mx-auto px-6 py-4 rounded-t-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
@@ -637,12 +860,12 @@ const MaterialContent = ({
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => onExport(material)}
+                  onClick={onUploadAttachment}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
-                  title="Export Material"
-                  aria-label="Export Material"
+                  title="Upload Attachment"
+                  disabled={readOnly}
                 >
-                  <Download size={20} className="text-gray-600" />
+                  <Upload size={20} className={readOnly ? "text-gray-400" : "text-gray-600"} />
                 </button>
                 {!readOnly && (
                   <>
@@ -651,13 +874,11 @@ const MaterialContent = ({
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
                       onClick={() => onCreateFlashcards(material, null, {
                         onSuccess: (newFlashcardSet) => {
-                          // Navigate directly to ViewFlashcards with the new flashcard set
                           setSelectedContent(newFlashcardSet);
                           setShowViewFlashcards(true);
-                          return false; // Tell MaterialsScreen to delay closing
+                          return false;
                         }
                       })}
-                      data-hover="Create Flashcards"
                     >
                       <BookOpen size={16} />
                       Create Flashcards
@@ -666,13 +887,11 @@ const MaterialContent = ({
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
                       onClick={() => onCreateNotes(material, {
                         onSuccess: (newNote) => {
-                          // Navigate directly to ViewNotes with the new note
                           setSelectedContent(newNote);
                           setShowViewNotes(true);
-                          return false; // Tell MaterialsScreen to delay closing
+                          return false;
                         }
                       })}
-                      data-hover="Create Notes"
                     >
                       <FileText size={16} />
                       Create Notes
@@ -681,13 +900,11 @@ const MaterialContent = ({
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
                       onClick={() => onCreateQuiz(material, {
                         onSuccess: (newQuiz) => {
-                          // Navigate directly to ViewQuiz with the new quiz
                           setSelectedContent(newQuiz);
                           setShowViewQuiz(true);
-                          return false; // Tell MaterialsScreen to delay closing
+                          return false;
                         }
                       })}
-                      data-hover="Create Quiz"
                     >
                       <HelpCircle size={16} />
                       Create Quiz
@@ -699,11 +916,11 @@ const MaterialContent = ({
           </div>
         </div>
 
-        {/* Content Sections */}
         <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
           <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
             <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
-              {/* Attachments Section - Always show first */}
+              
+              {/* ✅ ENHANCED: Attachments Section with Preview Support */}
               <div>
                 <SectionHeader
                   icon={Paperclip}
@@ -711,33 +928,32 @@ const MaterialContent = ({
                   count={attachments.length}
                   isExpanded={expandedSections.Attachments}
                   onToggle={() => toggleSection("Attachments")}
+                  onUpload={onUploadAttachment}
+                  readOnly={readOnly}
                 />
                 {expandedSections.Attachments && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    <Folder 
-                      title="Recent Files" 
-                      onClick={() => console.log('Recent Files clicked')}
-                      files={[]}
-                    />
-                    {attachments.length > 0 && attachments.map((attachment) => (
-                      <div key={attachment.id}>
+                  attachments.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {attachments.map((attachment) => (
                         <MaterialFile
+                          key={attachment.id}
                           content={{
                             id: attachment.id,
                             title: attachment.file?.split('/').pop() || 'File',
-                            description: attachment.description,
-                            createdAt: attachment.uploaded_at || attachment.created_at,
-                            tags: ["Attachment"],
-                            content: "Download",
-                            author: attachment.author || 'Unknown',
-                            file: attachment.file
+                            file: attachment.file, // ✅ This makes MaterialFile detect it as attachment
+                            uploaded_at: attachment.uploaded_at,
+                            created_at: attachment.created_at
                           }}
                           onDelete={(e, id) => handleDeleteContent(id, "attachment")}
+                          onDownload={handleDownloadAttachment}
+                          onPreview={handlePreviewAttachment} // ✅ NEW: Preview handler
                           readOnly={readOnly}
                         />
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <SectionEmptyState title="Attachments" />
+                  )
                 )}
               </div>
 
@@ -843,307 +1059,15 @@ const MaterialContent = ({
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl">
-      <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-        <div className="max-w-[90rem] mx-auto px-6 py-4 rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
-              >
-                <ArrowLeft size={20} className="text-gray-600" />
-              </button>
-              <div>
-                <div className="flex items-center gap-3">
-                  {isEditingTitle && !readOnly ? (
-                    <input
-                      type="text"
-                      value={editedTitle}
-                      onChange={(e) => setEditedTitle(e.target.value)}
-                      onBlur={handleTitleSave}
-                      onKeyDown={handleTitleKeyDown}
-                      className="text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
-                      autoFocus
-                    />
-                  ) : (
-                    <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                      {material?.title || "Material"}
-                    </h1>
-                  )}
-                  {!readOnly && (
-                    <button
-                      onClick={handleTitleEdit}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
-                      title="Edit Title"
-                    >
-                      <Pencil size={16} className="text-gray-600" />
-                    </button>
-                  )}
-                  <button
-                    onClick={onVisibilityToggle}
-                    className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
-                      isPublic 
-                        ? 'bg-white border-gray-300 hover:bg-gray-50' 
-                        : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                    } ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    title={readOnly ? "Read-only mode" : (isPublic ? "Make Private" : "Make Public")}
-                    disabled={readOnly}
-                  >
-                    {isPublic ? (
-                      <>
-                        <Globe size={16} className="text-[#1b81d4]" />
-                        <span className="text-[#1b81d4] text-sm font-medium">Public</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={16} className="text-gray-600" />
-                        <span className="text-gray-600 text-sm font-medium">Private</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  {isEditingDescription && !readOnly ? (
-                    <input
-                      type="text"
-                      value={editedDescription}
-                      onChange={(e) => setEditedDescription(e.target.value)}
-                      onBlur={handleDescriptionSave}
-                      onKeyDown={handleDescriptionKeyDown}
-                      className="text-sm text-gray-500 bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 w-full label-text"
-                      placeholder="Add a description..."
-                      autoFocus
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-500 label-text">
-                      {material?.description || "View and manage your content"}
-                    </p>
-                  )}
-                  {!readOnly && (
-                    <button
-                      onClick={handleDescriptionEdit}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
-                      title="Edit Description"
-                    >
-                      <Pencil size={14} className="text-gray-600" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => onExport(material)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
-                title="Export Material"
-                aria-label="Export Material"
-              >
-                <Download size={20} className="text-gray-600" />
-              </button>
-              {!readOnly && (
-                <>
-                  <div className="h-6 w-px bg-gray-200"></div>
-                  <button
-                    className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateFlashcards(material, null, {
-                      onSuccess: (newFlashcardSet) => {
-                        // Navigate directly to ViewFlashcards with the new flashcard set
-                        setSelectedContent(newFlashcardSet);
-                        setShowViewFlashcards(true);
-                        return false; // Tell MaterialsScreen to delay closing
-                      }
-                    })}
-                    data-hover="Create Flashcards"
-                  >
-                    <BookOpen size={16} />
-                    Create Flashcards
-                  </button>
-                  <button
-                    className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateNotes(material, {
-                      onSuccess: (newNote) => {
-                        // Navigate directly to ViewNotes with the new note
-                        setSelectedContent(newNote);
-                        setShowViewNotes(true);
-                        return false; // Tell MaterialsScreen to delay closing
-                      }
-                    })}
-                    data-hover="Create Notes"
-                  >
-                    <FileText size={16} />
-                    Create Notes
-                  </button>
-                  <button
-                    className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateQuiz(material, {
-                      onSuccess: (newQuiz) => {
-                        // Navigate directly to ViewQuiz with the new quiz
-                        setSelectedContent(newQuiz);
-                        setShowViewQuiz(true);
-                        return false; // Tell MaterialsScreen to delay closing
-                      }
-                    })}
-                    data-hover="Create Quiz"
-                  >
-                    <HelpCircle size={16} />
-                    Create Quiz
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
-        <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
-          <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
-            
-            {/* Attachments Section - Always show first */}
-            <div>
-              <SectionHeader
-                icon={Paperclip}
-                title="Attachments"
-                count={attachments.length}
-                isExpanded={expandedSections.Attachments}
-                onToggle={() => toggleSection("Attachments")}
-              />
-              {expandedSections.Attachments && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  <Folder 
-                    title="Recent Files" 
-                    onClick={() => console.log('Recent Files clicked')}
-                    files={[]}
-                  />
-                  {attachments.length > 0 && attachments.map((attachment) => (
-                    <div key={attachment.id}>
-                      <MaterialFile
-                        content={{
-                          id: attachment.id,
-                          title: attachment.file?.split('/').pop() || 'File',
-                          description: attachment.description,
-                          createdAt: attachment.uploaded_at || attachment.created_at,
-                          tags: ["Attachment"],
-                          content: "Download",
-                          author: attachment.author || 'Unknown',
-                          file: attachment.file
-                        }}
-                        onDelete={(e, id) => handleDeleteContent(id, "attachment")}
-                        readOnly={readOnly}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Flashcards Section */}
-            <div>
-              <SectionHeader
-                icon={BookOpen}
-                title="Flashcards"
-                count={flashcardSets.length}
-                isExpanded={expandedSections.Flashcards}
-                onToggle={() => toggleSection("Flashcards")}
-              />
-              {expandedSections.Flashcards && (
-                flashcardSets.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {flashcardSets.map((flashcardSet) => (
-                      <div
-                        key={flashcardSet.id}
-                        onClick={() => handleViewContent(flashcardSet, "flashcard")}
-                        className="cursor-pointer"
-                      >
-                        <MaterialFile
-                          content={flashcardSet}
-                          onDelete={(e, id) => handleDeleteContent(id, "flashcard")}
-                          onEdit={() => handleEditContent(flashcardSet, "flashcard")}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <SectionEmptyState title="Flashcards" />
-                )
-              )}
-            </div>
-
-            {/* Quiz Section */}
-            <div>
-              <SectionHeader
-                icon={HelpCircle}
-                title="Quizzes"
-                count={quizzes.length}
-                isExpanded={expandedSections.Quizzes}
-                onToggle={() => toggleSection("Quizzes")}
-              />
-              {expandedSections.Quizzes && (
-                quizzes.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {quizzes.map((quiz) => (
-                      <div
-                        key={quiz.id}
-                        onClick={() => handleViewContent(quiz, "quiz")}
-                        className="cursor-pointer"
-                      >
-                        <MaterialFile
-                          content={quiz}
-                          onDelete={(e, id) => handleDeleteContent(id, "quiz")}
-                          onEdit={() => handleEditContent(quiz, "quiz")}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <SectionEmptyState title="Quizzes" />
-                )
-              )}
-            </div>
-
-            {/* Notes Section */}
-            <div>
-              <SectionHeader
-                icon={FileText}
-                title="Notes"
-                count={notes.length}
-                isExpanded={expandedSections.Notes}
-                onToggle={() => toggleSection("Notes")}
-              />
-              {expandedSections.Notes && (
-                notes.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {notes.map((note) => (
-                      <div
-                        key={note.id}
-                        onClick={() => handleViewContent(note, "note")}
-                        className="cursor-pointer"
-                      >
-                        <MaterialFile
-                          content={note}
-                          onDelete={(e, id) => handleDeleteContent(id, "note")}
-                          onEdit={() => handleEditContent(note, "note")}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <SectionEmptyState title="Notes" />
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* ✅ NEW: File Preview Modal */}
+      <FilePreview 
+        attachment={previewAttachment}
+        isOpen={showPreview}
+        onClose={handleClosePreview}
+        onDownload={handleDownloadAttachment}
+      />
+    </>
   );
 };
 
