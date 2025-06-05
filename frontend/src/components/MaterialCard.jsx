@@ -1,4 +1,4 @@
-import { Clock, Copy, Globe, Lock, MoreVertical, Pencil, Pin, Trash } from 'lucide-react'
+import { Copy, Globe, Lock, MoreVertical, Pencil, Pin, RefreshCw, Trash } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 const MaterialCard = ({ 
@@ -16,7 +16,10 @@ const MaterialCard = ({
   onViewMaterial,
   getTagColor, // Function passed from parent
   getUpdatedLabel, // Function passed from parent  
-  timeAgo // Formatted time string passed from parent
+  timeAgo, // Formatted time string passed from parent
+  isSelected, // New prop for trash variant
+  onSelect, // New prop for trash variant
+  onRestore // New prop for restore functionality
 }) => {
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
@@ -35,8 +38,16 @@ const MaterialCard = ({
     }
   }, [])
 
-  const handleCardClick = () => {
-    onViewMaterial(file)
+  const handleCardClick = (e) => {
+    if (variant === 'trash') {
+      // Don't trigger selection if clicking on the checkbox or restore button
+      if (e.target.tagName === 'INPUT' || e.target.closest('button')) {
+        return
+      }
+      onSelect && onSelect(file.id)
+    } else {
+      onViewMaterial(file)
+    }
   }
 
   // Calculate tags based on API data structure
@@ -65,6 +76,72 @@ const MaterialCard = ({
     
     return tags;
   };
+
+  if (variant === 'trash') {
+    return (
+      <div className="relative" ref={cardRef}>
+        <div 
+          className={`exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer ${
+            isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+          }`}
+          onClick={handleCardClick}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onSelect && onSelect(file.id)
+                }}
+                className="mt-1"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold">{file.title}</h3>
+                <div className="flex items-center bottom-1">
+                  <Lock size={16} className="text-[#7BA7CC]" />
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onRestore && onRestore(file)
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC]"
+              title="Restore"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </div>
+          
+          {file.description && (
+            <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
+          )}
+          
+          {/* Updated time display */}
+          <p className="text-sm text-gray-600 mb-3">{timeAgo}</p>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-2">
+              {getContentTags().map((tag, index) => (
+                <span key={index} className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor ? getTagColor(tag) : 'bg-[#F0F0F0] text-[#4A4A4A]'}`}>
+                  {tag}
+                </span>
+              ))}
+              {getContentTags().length === 0 && (
+                <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">
+                  No content yet
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (variant === 'materials') {
     return (
@@ -221,37 +298,55 @@ const MaterialCard = ({
     )
   }
 
-  // Explore/Public materials variant (keeping existing logic)
+  // Explore/Public materials variant
   return (
-    <div 
-      className="exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer"
-      onClick={handleCardClick}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {file.typeIcon}
-          <h3 className="font-semibold">{file.title}</h3>
+    <div className="relative" ref={cardRef}>
+      <div 
+        className="exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer"
+        onClick={handleCardClick}
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">{file.title}</h3>
+              <div className="flex items-center bottom-1">
+                <Globe size={16} className="text-[#7BA7CC]" />
+              </div>
+            </div>
+          </div>
+          <button 
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC]"
+            onClick={(e) => {
+              e.stopPropagation()
+              onCopy && onCopy(file.id)
+            }}
+            title="Make a copy"
+          >
+            <Copy size={16} />
+          </button>
         </div>
-        <button 
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          onClick={() => onCopy(file.id)}
-          title="Make a copy"
-        >
-          <Copy size={18} className="text-gray-400" />
-        </button>
-      </div>
-      
-      <p className="text-sm text-gray-600 mb-3">By {file.author || file.owner}</p>
-      
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-        {file.description}
-      </p>
-      
-      <div className="flex items-center justify-end text-sm text-gray-500">
-        <span className="flex items-center gap-1">
-          <Clock size={16} />
-          {timeAgo || file.timeAgo}
-        </span>
+        
+        {file.description && (
+          <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
+        )}
+        
+        {/* Updated time display */}
+        <p className="text-sm text-gray-600 mb-3">{timeAgo}</p>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            {getContentTags().map((tag, index) => (
+              <span key={index} className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor ? getTagColor(tag) : 'bg-[#F0F0F0] text-[#4A4A4A]'}`}>
+                {tag}
+              </span>
+            ))}
+            {getContentTags().length === 0 && (
+              <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">
+                No content yet
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )

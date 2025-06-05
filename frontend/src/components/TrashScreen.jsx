@@ -1,8 +1,9 @@
-import { Clock, FileText, HelpCircle, Search, Trash2, X } from 'lucide-react'
+import { RefreshCw, Search, Trash2, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { getTrashedMaterials } from '../services/apiService'
 import DeleteModal from './DeleteModal'
 import { useLoading } from './Loading/LoadingContext'
+import MaterialCard from './MaterialCard'
 import { useToast } from './Toast/ToastContext'
 
 const TrashScreen = () => {
@@ -101,19 +102,6 @@ const TrashScreen = () => {
     setSearchQuery('')
   }
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'notes':
-        return <FileText size={16} className="text-green-500" />
-      case 'quiz':
-        return <HelpCircle size={16} className="text-blue-500" />
-      case 'flashcards':
-        return <Clock size={16} className="text-purple-500" />
-      default:
-        return <FileText size={16} className="text-gray-500" />
-    }
-  }
-
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -126,6 +114,14 @@ const TrashScreen = () => {
     } else {
       return `${Math.floor(diffInMinutes / 1440)}d ago`
     }
+  }
+
+  const getTagColor = (tag) => {
+    if (tag.includes('Flashcard')) return 'bg-[#FFB3BA] text-[#4A4A4A]'
+    if (tag.includes('Notes')) return 'bg-[#BAFFC9] text-[#4A4A4A]'
+    if (tag.includes('Quiz')) return 'bg-[#BAE1FF] text-[#4A4A4A]'
+    if (tag.includes('Files')) return 'bg-[#F0F0F0] text-[#4A4A4A]'
+    return 'bg-[#F0F0F0] text-[#4A4A4A]'
   }
 
   const toggleSelectAll = () => {
@@ -175,6 +171,64 @@ const TrashScreen = () => {
     } finally {
       hideLoading()
       setDeleteModalOpen(false);
+    }
+  }
+
+  const handleRestore = async (material) => {
+    try {
+      showLoading()
+      // For demonstration, just update the UI
+      setTrashItems(prev => prev.filter(item => item.id !== material.id))
+      setSelectedItems(prev => prev.filter(id => id !== material.id))
+      
+      showToast({
+        variant: "success",
+        title: "Material restored",
+        subtitle: "The material has been restored to your library.",
+      })
+
+      // Uncomment this to use real API
+      // await restoreMaterial(material.id)
+      // setTrashItems(prev => prev.filter(item => item.id !== material.id))
+      // setSelectedItems(prev => prev.filter(id => id !== material.id))
+    } catch (error) {
+      showToast({
+        variant: "error",
+        title: "Error restoring material",
+        subtitle: "Failed to restore the material. Please try again.",
+      })
+    } finally {
+      hideLoading()
+    }
+  }
+
+  const handleRestoreAll = async () => {
+    if (selectedItems.length === 0) return;
+    
+    try {
+      showLoading()
+      // For demonstration, just update the UI
+      setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      setSelectedItems([])
+      
+      showToast({
+        variant: "success",
+        title: "Materials restored",
+        subtitle: `${selectedItems.length} item(s) have been restored to your library.`,
+      })
+
+      // Uncomment this to use real API
+      // await Promise.all(selectedItems.map(id => restoreMaterial(id)))
+      // setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      // setSelectedItems([])
+    } catch (error) {
+      showToast({
+        variant: "error",
+        title: "Error restoring materials",
+        subtitle: "Failed to restore some items. Please try again.",
+      })
+    } finally {
+      hideLoading()
     }
   }
 
@@ -237,8 +291,25 @@ const TrashScreen = () => {
             Select All
           </button>
           <button 
+            data-hover="Restore Selected"
+            className={`exam-button-mini py-1 px-2 flex items-center gap-1 ${
+              selectedItems.length > 0 
+                ? 'text-[#7BA7CC] hover:text-[#1b81d4]' 
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
+            onClick={handleRestoreAll}
+            disabled={selectedItems.length === 0 || isLoading}
+          >
+            <RefreshCw size={16} />
+            Restore Selected
+          </button>
+          <button 
             data-hover="Delete Selected"
-            className={`exam-button-mini py-1 px-2 flex items-center gap-1 ${selectedItems.length > 0 ? 'text-red-500 hover:text-red-600' : 'text-gray-400 cursor-not-allowed'}`}
+            className={`exam-button-mini py-1 px-2 flex items-center gap-1 ${
+              selectedItems.length > 0 
+                ? 'text-red-500 hover:text-red-600' 
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
             onClick={handleDeleteSelected}
             disabled={selectedItems.length === 0 || isLoading}
           >
@@ -255,39 +326,17 @@ const TrashScreen = () => {
       ) : filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item) => (
-            <div 
+            <MaterialCard
               key={item.id}
-              className={`exam-card p-4 rounded-lg border transition-all duration-200 ${
-                selectedItems.includes(item.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={selectedItems.includes(item.id)}
-                  onChange={() => toggleSelectItem(item.id)}
-                  className="mt-1"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {getTypeIcon(item.type)}
-                    <h3 className="font-medium text-gray-800">{item.title}</h3>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-2">
-                      {item.content?.map((content, index) => (
-                        <span key={index} className="flex items-center gap-1">
-                          {getTypeIcon(content.type)}
-                          {content.count}
-                        </span>
-                      ))}
-                    </div>
-                    <span>Deleted {formatTimeAgo(item.deleted_at)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              file={item}
+              variant="trash"
+              isPublic={false}
+              timeAgo={formatTimeAgo(item.deleted_at)}
+              getTagColor={getTagColor}
+              isSelected={selectedItems.includes(item.id)}
+              onSelect={(id) => toggleSelectItem(id)}
+              onRestore={handleRestore}
+            />
           ))}
         </div>
       ) : (

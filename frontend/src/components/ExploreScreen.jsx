@@ -15,6 +15,14 @@ const ExploreScreen = () => {
     setShowMaterialContent(true)
   }
 
+  const getTagColor = (tag) => {
+    if (tag.includes('Flashcard')) return 'bg-[#FFB3BA] text-[#4A4A4A]'
+    if (tag.includes('Notes')) return 'bg-[#BAFFC9] text-[#4A4A4A]'
+    if (tag.includes('Quiz')) return 'bg-[#BAE1FF] text-[#4A4A4A]'
+    if (tag.includes('Files')) return 'bg-[#F0F0F0] text-[#4A4A4A]'
+    return 'bg-[#F0F0F0] text-[#4A4A4A]'
+  }
+
   const categories = [
     { id: 'all', name: 'All' },
     { id: 'notes', name: 'Notes' },
@@ -226,6 +234,7 @@ const ExploreScreen = () => {
               isPublic={true}
               onViewMaterial={handleViewMaterial}
               timeAgo={formatTimeAgo(item.createdAt)}
+              getTagColor={getTagColor}
             />
           ))}
         </div>
