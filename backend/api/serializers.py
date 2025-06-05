@@ -611,11 +611,4 @@ class MaterialSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get("request")
-
-        # Check if marking as trash requires description
-        if data.get("status") == "trash" and not data.get("description", "").strip():
-            raise serializers.ValidationError({
-                "description": "You must provide a description when marking a material as 'trash'."
-            })
-
         return data

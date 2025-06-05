@@ -1,6 +1,6 @@
 import { RefreshCw, Search, Trash2, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { getTrashedMaterials } from '../services/apiService'
+import { getTrashedMaterials, permanentDeleteMaterial, restoreMaterial } from '../services/apiService'
 import DeleteModal from './DeleteModal'
 import { useLoading } from './Loading/LoadingContext'
 import MaterialCard from './MaterialCard'
@@ -17,69 +17,8 @@ const TrashScreen = () => {
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
 
-  // Temporary data for demonstration
-  const tempTrashItems = [
-    {
-      id: 1,
-      title: "Introduction to Biology",
-      description: "Basic concepts of biology and cell structure",
-      type: "notes",
-      deleted_at: "2024-03-15T10:30:00",
-      content: [
-        { type: "notes", count: 5 },
-        { type: "flashcards", count: 20 }
-      ]
-    },
-    {
-      id: 2,
-      title: "Chemistry Quiz 1",
-      description: "Periodic table and chemical reactions",
-      type: "quiz",
-      deleted_at: "2024-03-14T15:45:00",
-      content: [
-        { type: "quiz", count: 15 }
-      ]
-    },
-    {
-      id: 3,
-      title: "Physics Formulas",
-      description: "Important formulas and equations",
-      type: "flashcards",
-      deleted_at: "2024-03-13T09:20:00",
-      content: [
-        { type: "flashcards", count: 30 }
-      ]
-    },
-    {
-      id: 4,
-      title: "Mathematics Notes",
-      description: "Calculus and linear algebra concepts",
-      type: "notes",
-      deleted_at: "2024-03-12T08:15:00",
-      content: [
-        { type: "notes", count: 8 },
-        { type: "flashcards", count: 25 }
-      ]
-    },
-    {
-      id: 5,
-      title: "History Quiz",
-      description: "World War II and Cold War",
-      type: "quiz",
-      deleted_at: "2024-03-11T16:30:00",
-      content: [
-        { type: "quiz", count: 20 }
-      ]
-    }
-  ]
-
   useEffect(() => {
-    // For demonstration, use temporary data
-    setTrashItems(tempTrashItems)
-    setIsLoading(false)
-    
-    // Uncomment this to use real API
-    // loadTrashItems()
+    loadTrashItems()
   }, [])
 
   const loadTrashItems = async () => {
@@ -148,7 +87,7 @@ const TrashScreen = () => {
   const confirmDeleteSelected = async () => {
     try {
       showLoading()
-      // For demonstration, just update the UI
+      await Promise.all(selectedItems.map(id => permanentDeleteMaterial(id)))
       setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
       setSelectedItems([])
       
@@ -157,12 +96,8 @@ const TrashScreen = () => {
         title: "Items deleted",
         subtitle: `${selectedItems.length} item(s) have been permanently deleted.`,
       })
-
-      // Uncomment this to use real API
-      // await Promise.all(selectedItems.map(id => deleteMaterial(id)))
-      // setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
-      // setSelectedItems([])
     } catch (error) {
+      console.error('Error deleting items:', error)
       showToast({
         variant: "error",
         title: "Error deleting items",
@@ -177,7 +112,7 @@ const TrashScreen = () => {
   const handleRestore = async (material) => {
     try {
       showLoading()
-      // For demonstration, just update the UI
+      const response = await restoreMaterial(material.id)
       setTrashItems(prev => prev.filter(item => item.id !== material.id))
       setSelectedItems(prev => prev.filter(id => id !== material.id))
       
@@ -186,12 +121,8 @@ const TrashScreen = () => {
         title: "Material restored",
         subtitle: "The material has been restored to your library.",
       })
-
-      // Uncomment this to use real API
-      // await restoreMaterial(material.id)
-      // setTrashItems(prev => prev.filter(item => item.id !== material.id))
-      // setSelectedItems(prev => prev.filter(id => id !== material.id))
     } catch (error) {
+      console.error('Error restoring material:', error)
       showToast({
         variant: "error",
         title: "Error restoring material",
@@ -207,7 +138,7 @@ const TrashScreen = () => {
     
     try {
       showLoading()
-      // For demonstration, just update the UI
+      await Promise.all(selectedItems.map(id => restoreMaterial(id)))
       setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
       setSelectedItems([])
       
@@ -216,11 +147,6 @@ const TrashScreen = () => {
         title: "Materials restored",
         subtitle: `${selectedItems.length} item(s) have been restored to your library.`,
       })
-
-      // Uncomment this to use real API
-      // await Promise.all(selectedItems.map(id => restoreMaterial(id)))
-      // setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
-      // setSelectedItems([])
     } catch (error) {
       showToast({
         variant: "error",
@@ -331,7 +257,7 @@ const TrashScreen = () => {
               file={item}
               variant="trash"
               isPublic={false}
-              timeAgo={formatTimeAgo(item.deleted_at)}
+              timeAgo={formatTimeAgo(item.updated_at)}
               getTagColor={getTagColor}
               isSelected={selectedItems.includes(item.id)}
               onSelect={(id) => toggleSelectItem(id)}
@@ -356,7 +282,7 @@ const TrashScreen = () => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDeleteSelected}
         title="Delete Selected Items"
-        message={`Are you sure you want to permanently delete ${selectedItems.length} item(s)? This action cannot be undone.`}
+        message={`Are you sure you want to permanently delete ${selectedItems.length} item${selectedItems.length !== 1 ? 's' : ''}? This action cannot be undone.`}
         confirmText="Delete Permanently"
       />
     </div>

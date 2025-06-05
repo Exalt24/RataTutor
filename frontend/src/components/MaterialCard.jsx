@@ -138,10 +138,7 @@ const MaterialCard = ({
                 onClick={(e) => e.stopPropagation()}
               />
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold">{file.title}</h3>
-                <div className="flex items-center bottom-1">
-                  <Lock size={16} className="text-[#7BA7CC]" />
-                </div>
+                <h3 className="font-semibold truncate max-w-[200px]">{file.title}</h3>
               </div>
             </div>
             <button

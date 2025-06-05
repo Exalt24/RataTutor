@@ -1,11 +1,13 @@
-import api from './api'; 
+import api from './api';
 
 // Materials
 export const getMaterials = () => api.get('/materials/');
 export const getMaterial = (id) => api.get(`/materials/${id}/`);
 export const createMaterial = (data) => api.post('/materials/', data);
 export const updateMaterial = (id, data) => api.patch(`/materials/${id}/`, data);
-export const deleteMaterial = (id) => api.delete(`/materials/${id}/`);
+export const softDeleteMaterial = (id) => api.delete(`/materials/${id}/`);
+export const permanentDeleteMaterial = (id) => api.post(`/materials/${id}/permanent_delete/`);
+export const restoreMaterial = (id) => api.patch(`/materials/${id}/`, { status: 'active' });
 
 export const getPublicMaterials = () => {
   return api.get('/materials/public/')

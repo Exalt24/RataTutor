@@ -1,6 +1,7 @@
 from .imports import viewsets, permissions, action, Response
 from ..models import Material
 from ..serializers import MaterialSerializer
+from django.http import Http404
 
 class MaterialViewSet(viewsets.ModelViewSet):
     serializer_class = MaterialSerializer
@@ -16,6 +17,18 @@ class MaterialViewSet(viewsets.ModelViewSet):
             status='active'  # Only show active materials by default
         ).order_by('-pinned', '-updated_at')  # Pinned first, then by recent updates
     
+    def get_object(self):
+        """
+        Override get_object to allow accessing materials in trash.
+        """
+        obj = Material.objects.filter(
+            owner=self.request.user,
+            id=self.kwargs['pk']
+        ).first()
+        if not obj:
+            raise Http404("No Material matches the given query.")
+        return obj
+    
     def perform_create(self, serializer):
         """
         Set the owner to the current authenticated user when creating a material.
@@ -27,6 +40,29 @@ class MaterialViewSet(viewsets.ModelViewSet):
         Ensure the owner doesn't change during updates.
         """
         serializer.save(owner=self.request.user)
+    
+    def perform_destroy(self, instance):
+        """
+        Override default delete to perform soft delete instead.
+        """
+        instance.status = 'trash'
+        instance.save(update_fields=['status', 'updated_at'])
+        return Response(status=204)
+    
+    @action(detail=True, methods=['post'])
+    def permanent_delete(self, request, pk=None):
+        """
+        Permanently delete a material from trash.
+        POST /api/materials/{id}/permanent_delete/
+        """
+        material = self.get_object()
+        if material.status != 'trash':
+            return Response(
+                {"detail": "Only materials in trash can be permanently deleted."},
+                status=400
+            )
+        material.delete()  # This will actually delete the material
+        return Response(status=204)
     
     @action(detail=False, methods=['get'])
     def pinned(self, request):
