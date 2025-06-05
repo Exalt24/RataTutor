@@ -290,30 +290,30 @@ const MaterialsScreen = ({
   }
 
   const confirmDelete = async () => {
-    try {
-      showLoading()
-      await softDeleteMaterial(materialToDelete.id)
-      
-      // Remove through Dashboard's state management
-      onRemoveMaterial(materialToDelete.id)
-      
-      showToast({
-        variant: "success",
-        title: "Material moved to trash",
-        subtitle: `"${materialToDelete.title}" has been moved to trash.`,
-      })
-    } catch (err) {
-      showToast({
-        variant: "error",
-        title: "Error moving to trash",
-        subtitle: "Failed to move material to trash. Please try again.",
-      })
-    } finally {
-      hideLoading()
-      setDeleteModalOpen(false);
-      setMaterialToDelete(null);
-    }
+  try {
+    showLoading()
+    await softDeleteMaterial(materialToDelete.id)
+    
+    // ✅ FIXED: Move to trash instead of just removing
+    onMoveMaterialToTrash(materialToDelete)
+    
+    showToast({
+      variant: "success",
+      title: "Material moved to trash",
+      subtitle: `"${materialToDelete.title}" has been moved to trash.`,
+    })
+  } catch (err) {
+    showToast({
+      variant: "error",
+      title: "Error moving to trash",
+      subtitle: "Failed to move material to trash. Please try again.",
+    })
+  } finally {
+    hideLoading()
+    setDeleteModalOpen(false);
+    setMaterialToDelete(null);
   }
+}
 
   const handleCreateMaterial = (newMaterial) => {
     // Add through Dashboard's state management
