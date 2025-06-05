@@ -6,29 +6,42 @@ import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
 import UploadFile from './UploadFile';
 
-const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generated }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const HomeScreen = ({ 
+  selectedFile, 
+  handleFileChange, 
+  uploadAndGenerate, 
+  generated,
+  materialsData,
+  onRefreshMaterials,
+  onAddMaterial,
+  onUpdateMaterial
+}) => {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isChooseModalOpen, setIsChooseModalOpen] = useState(false);
   const [createType, setCreateType] = useState(null);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [modalMode, setModalMode] = useState('upload'); // 'upload' or 'manual'
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openUploadModal = () => setIsUploadModalOpen(true);
+  const closeUploadModal = () => setIsUploadModalOpen(false);
 
-  const openCreate = (type) => {
+  const openManualCreate = (type) => {
     setCreateType(type);
+    setModalMode('manual');
+    setIsChooseModalOpen(true);
   };
 
   const closeCreate = () => {
     setCreateType(null);
+    setSelectedMaterial(null);
+    setIsChooseModalOpen(false);
   };
 
   const handleFileUpload = (files) => {
     const newFiles = files.map(file => {
-      // Get the file extension
       const extension = file.name.split('.').pop().toLowerCase();
       
-      // Map common extensions to their types
       let type = extension;
       if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
         type = 'image';
@@ -51,20 +64,67 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
         type: type,
         size: formatFileSize(file.size),
         date: new Date().toISOString().split('T')[0],
-        file: file // Store the actual file object
+        file: file
       };
     });
     setUploadedFiles(prev => [...prev, ...newFiles]);
-    closeModal();
+    closeUploadModal();
+    setModalMode('upload');
     setIsChooseModalOpen(true);
   };
 
-  const handleCreateChoice = (type, materialData) => {
-    setIsChooseModalOpen(false);
-    // Here you would typically handle the material data
-    // For example, if creating a new material, you might want to create it first
-    // Then pass the material ID to the creation component
-    openCreate(type);
+  const handleMaterialAndTypeChoice = async (type, materialData) => {
+    try {
+      let material = null;
+
+      if (materialData.isNew) {
+        // Create new material
+        const newMaterialData = {
+          title: materialData.name,
+          description: materialData.description || '',
+          status: 'active',
+          pinned: false,
+          public: false
+        };
+
+        // You'll need to import createMaterial from apiService
+        const { createMaterial } = await import('../services/apiService');
+        const response = await createMaterial(newMaterialData);
+        material = response.data;
+        
+        // Add to state
+        onAddMaterial(material);
+      } else {
+        // Use existing material
+        const materialId = parseInt(materialData.id);
+        material = materialsData.find(m => m.id === materialId);
+        
+        if (!material) {
+          console.error('Material not found with ID:', materialId);
+          console.log('Available materials:', materialsData.map(m => ({ id: m.id, title: m.title })));
+          throw new Error('Selected material not found');
+        }
+      }
+
+      if (material) {
+        setSelectedMaterial(material);
+        setCreateType(type);
+        setIsChooseModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error handling material selection:', error);
+      // You might want to show a toast error here
+      // showToast({ variant: "error", title: "Error", subtitle: error.message });
+    }
+  };
+
+  const handleCreationSuccess = async (newContent) => {
+    // Refresh materials to get updated data
+    await onRefreshMaterials();
+    
+    // Close the creation component
+    setCreateType(null);
+    setSelectedMaterial(null);
   };
 
   const formatFileSize = (bytes) => {
@@ -75,12 +135,24 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  if (createType === 'flashcards') {
-    return <CreateFlashcards onClose={closeCreate} />;
-  } else if (createType === 'notes') {
-    return <CreateNotes onClose={closeCreate} />;
-  } else if (createType === 'quiz') {
-    return <CreateQuiz onClose={closeCreate} />;
+  // If we have a selected material and create type, show the creation component
+  if (selectedMaterial && createType) {
+    const commonProps = {
+      material: selectedMaterial,
+      onClose: closeCreate,
+      onSuccess: handleCreationSuccess
+    };
+
+    switch (createType) {
+      case 'flashcards':
+        return <CreateFlashcards {...commonProps} mainMaterial={selectedMaterial} />;
+      case 'notes':
+        return <CreateNotes {...commonProps} />;
+      case 'quiz':
+        return <CreateQuiz {...commonProps} />;
+      default:
+        return null;
+    }
   }
 
   return (
@@ -94,30 +166,30 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
           {[
             { 
               icon: <FilePlus size={24} className="text-pink-500" />, 
-              title: 'Upload a PDF, PPT, Video, or Audio', 
+              title: 'Upload a PDF, PPT, DOCX, or TXT file',
               desc: 'Get flashcards, summaries & quiz questions instantly.', 
-              action: openModal,
+              action: openUploadModal,
               bgColor: 'bg-pink-50 hover:bg-pink-100'
             },
             { 
               icon: <HelpCircle size={24} className="text-[#22C55E]" />, 
               title: 'Create quiz manually', 
               desc: 'Create quiz questions without AI for free.', 
-              action: () => openCreate('quiz'),
+              action: () => openManualCreate('quiz'),
               bgColor: 'bg-[#22C55E]/10 hover:bg-[#22C55E]/20'
             },
             { 
               icon: <FileText size={24} className="text-blue-500" />, 
               title: 'Create flashcards manually', 
               desc: 'Create flashcards without AI for free.', 
-              action: () => openCreate('flashcards'),
+              action: () => openManualCreate('flashcards'),
               bgColor: 'bg-blue-50 hover:bg-blue-100'
             },
             { 
               icon: <Edit2 size={24} className="text-purple-500" />, 
               title: 'Create notes manually', 
               desc: 'Create notes without AI for free.', 
-              action: () => openCreate('notes'),
+              action: () => openManualCreate('notes'),
               bgColor: 'bg-purple-50 hover:bg-purple-100'
             }
           ].map((card, i) => (
@@ -137,15 +209,22 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
       </section>
 
       <UploadFile 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
+        isOpen={isUploadModalOpen} 
+        onClose={closeUploadModal} 
         onUpload={handleFileUpload}
       />
 
       <ChooseModal
         isOpen={isChooseModalOpen}
-        onClose={() => setIsChooseModalOpen(false)}
-        onCreate={handleCreateChoice}
+        onClose={() => {
+          setIsChooseModalOpen(false);
+          setCreateType(null);
+          setModalMode('upload');
+        }}
+        onCreate={handleMaterialAndTypeChoice}
+        existingMaterials={materialsData || []}
+        mode={modalMode}
+        preselectedType={createType}
       />
     </div>
   );
