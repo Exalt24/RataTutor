@@ -1,17 +1,16 @@
 // src/components/Hero.jsx
-import React, { useEffect, useState, useCallback } from "react";
-import "../styles/components/hero.css";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logotemp from "../assets/logotemp.png";
-import r1 from "../assets/phone.png";
 import r2 from "../assets/book2.png";
 import r3 from "../assets/eraser.png";
 import r4 from "../assets/laptop.png";
-import r5 from "../assets/tablet.png";
+import logotemp from "../assets/logotemp.png";
 import r6 from "../assets/pen.png";
-import AboutSlideCard from "./AboutSlideCard";
-import FeaturesSlideCard from "./FeaturesSlideCard";
+import r1 from "../assets/phone.png";
+import r5 from "../assets/tablet.png";
+import "../styles/components/hero.css";
 import DevelopersSlideCard from "./DevelopersSlideCard";
+import FeaturesSlideCard from "./FeaturesSlideCard";
 
 const developers = [
   { name: "Daniel Alexis Cruz", img: r1 },
@@ -62,6 +61,13 @@ export default function Hero() {
   const [fade, setFade] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [prevImageIndex, setPrevImageIndex] = useState(null);
+  const [activeCard, setActiveCard] = useState(1);
+
+  const handleCardClick = (cardId) => {
+    setActiveCard(cardId);
+    setFade(false);
+    setTimeout(() => setFade(true), 50);
+  };
 
   const handleImageClick = useCallback(() => {
     if (isAnimating) return;
@@ -93,11 +99,17 @@ export default function Hero() {
       <div className="container">
         {slides.map((s, i) => (
           <React.Fragment key={s.id}>
-            <input type="radio" name="slide" id={`c${s.id}`} defaultChecked={i === 0} />
+            <input 
+              type="radio" 
+              name="slide" 
+              id={`c${s.id}`} 
+              defaultChecked={i === 0} 
+              onChange={() => handleCardClick(s.id)}
+            />
             <label
               htmlFor={`c${s.id}`}
               className={`card ${s.cardClass}`}
-              style={s.id === 1 ? { background: bgColor[bgIndex], transition: "background 0.5s ease" } : {}}
+              style={s.id === 1 ? { background: bgColor[bgIndex] } : {}}
             >
               {/* LEFT IMAGE */}
               {s.id === 1 && topImages.map((img, index) => (
@@ -118,7 +130,7 @@ export default function Hero() {
                 </div>
               ))}
 
-              <div className="hero-center" style={{ background: "none" }}>
+              <div className="hero-center">
                 {(s.id === 1 || s.id === 2 || s.id === 3 || s.id === 4) ? (
                   <div className="flex items-center justify-start min-h-screen relative">
                     <div className="hero-content max-w-xl" style={{ position: "relative", zIndex: 20 }}>
@@ -162,7 +174,6 @@ export default function Hero() {
                           <p className="text-left text-gray-700 mb-6">
                           RataTutor is your AI-powered study companion, designed to streamline the way you learn. Below are the key tools and features that make studying more effective and personalized.
                           </p>
-                          <AboutSlideCard />
                         </div>
                       )}
 
@@ -175,7 +186,6 @@ export default function Hero() {
 
                       {s.id === 4 && (
                         <div className="w-full">
-                          <h2 className="exam-heading text-left mb-6">Developers</h2>
                           <DevelopersSlideCard />
                         </div>
                       )}
@@ -193,8 +203,14 @@ export default function Hero() {
                   />
                 </div>
                 <div className="description label-text mb-2 object-cover opacity-40 cursor-pointer" onClick={handleImageClick}>
-                  <h4 className={`pt-2 m-0 text-glow ${s.id === 1 && fade ? "image-clicked" : ""}`}>
+                  <h4 className={`pt-2 m-0 text-glow ${s.id === 1 && fade ? "image-clicked" : ""} ${s.id === 1 ? 'flex items-center' : ''}`}>
                     {s.heading}
+                    {s.id === 1 && (
+                      <div className="click-me-arrow px-4">
+                        <div className="arrow"></div>
+                        <span className="arrow-text">Click me!</span>
+                      </div>
+                    )}
                   </h4>
                 </div>
               </div>
