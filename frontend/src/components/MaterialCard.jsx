@@ -77,6 +77,44 @@ const MaterialCard = ({
     return tags;
   };
 
+  // ✅ ENHANCED: Create content handlers following the enhanced pattern
+  const handleCreateFlashcards = (e) => {
+    e.stopPropagation()
+    onCreateFlashcards(file, null, {
+      onSuccess: (newFlashcardSet) => {
+        // Auto-navigate to view the newly created flashcard set
+        // This will be handled by the parent component
+        console.log('MaterialCard - flashcard created:', newFlashcardSet);
+        return false; // Tell parent to delay modal closing for navigation
+      }
+    })
+    setShowMenu(false)
+  };
+
+  const handleCreateNotes = (e) => {
+    e.stopPropagation()
+    onCreateNotes(file, {
+      onSuccess: (newNote) => {
+        // Auto-navigate to view the newly created note
+        console.log('MaterialCard - note created:', newNote);
+        return false; // Tell parent to delay modal closing for navigation
+      }
+    })
+    setShowMenu(false)
+  };
+
+  const handleCreateQuiz = (e) => {
+    e.stopPropagation()
+    onCreateQuiz(file, {
+      onSuccess: (newQuiz) => {
+        // Auto-navigate to view the newly created quiz
+        console.log('MaterialCard - quiz created:', newQuiz);
+        return false; // Tell parent to delay modal closing for navigation
+      }
+    })
+    setShowMenu(false)
+  };
+
   if (variant === 'trash') {
     return (
       <div className="relative" ref={cardRef}>
@@ -196,37 +234,25 @@ const MaterialCard = ({
                     )}
                   </button>
                   
-                  {/* Add action buttons for creating content */}
+                  {/* ✅ ENHANCED: Updated create content buttons with enhanced options */}
                   <div className="h-px bg-gray-200 my-1"></div>
                   <button
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onCreateFlashcards(file)
-                      setShowMenu(false)
-                    }}
+                    onClick={handleCreateFlashcards}
                   >
                     <span className="w-3 h-3 bg-[#FFB3BA] rounded-full"></span>
                     Create Flashcards
                   </button>
                   <button
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onCreateNotes(file)
-                      setShowMenu(false)
-                    }}
+                    onClick={handleCreateNotes}
                   >
                     <span className="w-3 h-3 bg-[#BAFFC9] rounded-full"></span>
                     Create Notes
                   </button>
                   <button
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onCreateQuiz(file)
-                      setShowMenu(false)
-                    }}
+                    onClick={handleCreateQuiz}
                   >
                     <span className="w-3 h-3 bg-[#BAE1FF] rounded-full"></span>
                     Create Quiz
