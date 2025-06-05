@@ -58,7 +58,6 @@ const ProfileScreen = ({ onEditProfile, profileData }) => {
             {/* Avatar and Basic Info */}
             <div className="w-1/3 flex flex-col items-center space-y-4 pr-4">
               <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl opacity-20 blur-sm"></div>
                 <div 
                   className="w-28 h-28 rounded-xl overflow-hidden border-2 border-blue-100 bg-white relative"
                   style={{ backgroundColor: currentAvatar?.backgroundColor }}

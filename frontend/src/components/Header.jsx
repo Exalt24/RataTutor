@@ -1,8 +1,8 @@
 // src/components/Header.jsx
-import { Flame, LogOut, Plus, User } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import StreakModal from "./StreakModal";
+import { Flame, LogOut, User } from "lucide-react";
+import React, { useState } from "react";
 import { getCurrentAvatarOrDefault } from '../utils/avatarUtils';
+import StreakModal from "./StreakModal";
 
 const Header = ({
   onLogout,
@@ -43,8 +43,6 @@ const Header = ({
               {currentAvatar ? (
                 // Display avatar combination with background
                 <div className="relative">
-                  {/* Gradient ring effect */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full opacity-30 blur-sm group-hover:opacity-50 transition-opacity"></div>
                   <div 
                     className="relative w-8 h-8 rounded-full overflow-hidden shadow-lg border-2 border-white"
                     style={{ backgroundColor: currentAvatar.backgroundColor }}
