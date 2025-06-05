@@ -235,7 +235,9 @@ const Dashboard = () => {
           )}
           {screen === 'exams' && <ExamsScreen />}
           {screen === 'explore' && <ExploreScreen />}
-          {screen === 'rata' && <RataAIScreen />}
+          {screen === 'rata' && <RataAIScreen
+              materialsData={materialsData}
+           />}
           {screen === 'profile' && (
             <ProfileScreen 
               onEditProfile={() => setScreen('edit-profile')} 
