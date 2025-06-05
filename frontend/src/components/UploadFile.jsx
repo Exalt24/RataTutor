@@ -86,7 +86,7 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
         {/* "Select files" button (also triggers file picker) */}
         <button
           onClick={openFilePicker}
-          className="exam-button w-4/5 flex justify-center mx-auto"
+          className="exam-button-mini w-[50%] flex justify-center mx-auto"
           data-hover="Select files"
         >
           Select files
