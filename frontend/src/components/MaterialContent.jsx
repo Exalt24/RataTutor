@@ -13,11 +13,12 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useToast } from '../components/Toast/ToastContext';
+import { deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
+import Folder from "./Folder";
 import MaterialFile from "./MaterialFile";
 import ViewFlashcards from "./ViewFlashcards";
 import ViewNotes from "./ViewNotes";
 import ViewQuiz from "./ViewQuiz";
-import { deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12 rounded-xl">
@@ -568,9 +569,148 @@ const MaterialContent = ({
           </div>
         </div>
 
-        {/* Empty State */}
-        <div className="flex-1 flex items-center justify-center">
-          <EmptyState />
+        {/* Content Sections */}
+        <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
+          <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
+            <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
+              {/* Attachments Section - Always show first */}
+              <div>
+                <SectionHeader
+                  icon={Paperclip}
+                  title="Attachments"
+                  count={attachments.length}
+                  isExpanded={expandedSections.Attachments}
+                  onToggle={() => toggleSection("Attachments")}
+                />
+                {expandedSections.Attachments && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <Folder 
+                      title="Recent Files" 
+                      onClick={() => console.log('Recent Files clicked')}
+                      files={[]}
+                    />
+                    {attachments.length > 0 && attachments.map((attachment) => (
+                      <div key={attachment.id}>
+                        <MaterialFile
+                          content={{
+                            id: attachment.id,
+                            title: attachment.file?.split('/').pop() || 'File',
+                            description: attachment.description,
+                            createdAt: attachment.uploaded_at || attachment.created_at,
+                            tags: ["Attachment"],
+                            content: "Download",
+                            author: attachment.author || 'Unknown',
+                            file: attachment.file
+                          }}
+                          onDelete={(e, id) => handleDeleteContent(id, "attachment")}
+                          readOnly={readOnly}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Flashcards Section */}
+              <div>
+                <SectionHeader
+                  icon={BookOpen}
+                  title="Flashcards"
+                  count={flashcardSets.length}
+                  isExpanded={expandedSections.Flashcards}
+                  onToggle={() => toggleSection("Flashcards")}
+                />
+                {expandedSections.Flashcards && (
+                  flashcardSets.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {flashcardSets.map((flashcardSet) => (
+                        <div
+                          key={flashcardSet.id}
+                          onClick={() => handleViewContent(flashcardSet, "flashcard")}
+                          className="cursor-pointer"
+                        >
+                          <MaterialFile
+                            content={flashcardSet}
+                            onDelete={(e, id) => handleDeleteContent(id, "flashcard")}
+                            onEdit={() => handleEditContent(flashcardSet, "flashcard")}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <SectionEmptyState title="Flashcards" />
+                  )
+                )}
+              </div>
+
+              {/* Quiz Section */}
+              <div>
+                <SectionHeader
+                  icon={HelpCircle}
+                  title="Quizzes"
+                  count={quizzes.length}
+                  isExpanded={expandedSections.Quizzes}
+                  onToggle={() => toggleSection("Quizzes")}
+                />
+                {expandedSections.Quizzes && (
+                  quizzes.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {quizzes.map((quiz) => (
+                        <div
+                          key={quiz.id}
+                          onClick={() => handleViewContent(quiz, "quiz")}
+                          className="cursor-pointer"
+                        >
+                          <MaterialFile
+                            content={quiz}
+                            onDelete={(e, id) => handleDeleteContent(id, "quiz")}
+                            onEdit={() => handleEditContent(quiz, "quiz")}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <SectionEmptyState title="Quizzes" />
+                  )
+                )}
+              </div>
+
+              {/* Notes Section */}
+              <div>
+                <SectionHeader
+                  icon={FileText}
+                  title="Notes"
+                  count={notes.length}
+                  isExpanded={expandedSections.Notes}
+                  onToggle={() => toggleSection("Notes")}
+                />
+                {expandedSections.Notes && (
+                  notes.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {notes.map((note) => (
+                        <div
+                          key={note.id}
+                          onClick={() => handleViewContent(note, "note")}
+                          className="cursor-pointer"
+                        >
+                          <MaterialFile
+                            content={note}
+                            onDelete={(e, id) => handleDeleteContent(id, "note")}
+                            onEdit={() => handleEditContent(note, "note")}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <SectionEmptyState title="Notes" />
+                  )
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -720,17 +860,55 @@ const MaterialContent = ({
         <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
           <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
             
+            {/* Attachments Section - Always show first */}
+            <div>
+              <SectionHeader
+                icon={Paperclip}
+                title="Attachments"
+                count={attachments.length}
+                isExpanded={expandedSections.Attachments}
+                onToggle={() => toggleSection("Attachments")}
+              />
+              {expandedSections.Attachments && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <Folder 
+                    title="Recent Files" 
+                    onClick={() => console.log('Recent Files clicked')}
+                    files={[]}
+                  />
+                  {attachments.length > 0 && attachments.map((attachment) => (
+                    <div key={attachment.id}>
+                      <MaterialFile
+                        content={{
+                          id: attachment.id,
+                          title: attachment.file?.split('/').pop() || 'File',
+                          description: attachment.description,
+                          createdAt: attachment.uploaded_at || attachment.created_at,
+                          tags: ["Attachment"],
+                          content: "Download",
+                          author: attachment.author || 'Unknown',
+                          file: attachment.file
+                        }}
+                        onDelete={(e, id) => handleDeleteContent(id, "attachment")}
+                        readOnly={readOnly}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Flashcards Section */}
-            {flashcardSets.length > 0 && (
-              <div>
-                <SectionHeader
-                  icon={BookOpen}
-                  title="Flashcards"
-                  count={flashcardSets.length}
-                  isExpanded={expandedSections.Flashcards}
-                  onToggle={() => toggleSection("Flashcards")}
-                />
-                {expandedSections.Flashcards && (
+            <div>
+              <SectionHeader
+                icon={BookOpen}
+                title="Flashcards"
+                count={flashcardSets.length}
+                isExpanded={expandedSections.Flashcards}
+                onToggle={() => toggleSection("Flashcards")}
+              />
+              {expandedSections.Flashcards && (
+                flashcardSets.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {flashcardSets.map((flashcardSet) => (
                       <div
@@ -747,52 +925,23 @@ const MaterialContent = ({
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Notes Section */}
-            {notes.length > 0 && (
-              <div>
-                <SectionHeader
-                  icon={FileText}
-                  title="Notes"
-                  count={notes.length}
-                  isExpanded={expandedSections.Notes}
-                  onToggle={() => toggleSection("Notes")}
-                />
-                {expandedSections.Notes && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {notes.map((note) => (
-                      <div
-                        key={note.id}
-                        onClick={() => handleViewContent(note, "note")}
-                        className="cursor-pointer"
-                      >
-                        <MaterialFile
-                          content={note}
-                          onDelete={(e, id) => handleDeleteContent(id, "note")}
-                          onEdit={() => handleEditContent(note, "note")}
-                          readOnly={readOnly}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                ) : (
+                  <SectionEmptyState title="Flashcards" />
+                )
+              )}
+            </div>
 
             {/* Quiz Section */}
-            {quizzes.length > 0 && (
-              <div>
-                <SectionHeader
-                  icon={HelpCircle}
-                  title="Quizzes"
-                  count={quizzes.length}
-                  isExpanded={expandedSections.Quizzes}
-                  onToggle={() => toggleSection("Quizzes")}
-                />
-                {expandedSections.Quizzes && (
+            <div>
+              <SectionHeader
+                icon={HelpCircle}
+                title="Quizzes"
+                count={quizzes.length}
+                isExpanded={expandedSections.Quizzes}
+                onToggle={() => toggleSection("Quizzes")}
+              />
+              {expandedSections.Quizzes && (
+                quizzes.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {quizzes.map((quiz) => (
                       <div
@@ -809,90 +958,44 @@ const MaterialContent = ({
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-            )}
+                ) : (
+                  <SectionEmptyState title="Quizzes" />
+                )
+              )}
+            </div>
 
-            {/* Attachments Section */}
-            {attachments.length > 0 && (
-              <div>
-                <SectionHeader
-                  icon={Paperclip}
-                  title="Attachments"
-                  count={attachments.length}
-                  isExpanded={expandedSections.Attachments}
-                  onToggle={() => toggleSection("Attachments")}
-                />
-                {expandedSections.Attachments && (
+            {/* Notes Section */}
+            <div>
+              <SectionHeader
+                icon={FileText}
+                title="Notes"
+                count={notes.length}
+                isExpanded={expandedSections.Notes}
+                onToggle={() => toggleSection("Notes")}
+              />
+              {expandedSections.Notes && (
+                notes.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {attachments.map((attachment) => (
-                      <div key={attachment.id}>
+                    {notes.map((note) => (
+                      <div
+                        key={note.id}
+                        onClick={() => handleViewContent(note, "note")}
+                        className="cursor-pointer"
+                      >
                         <MaterialFile
-                          content={{
-                            id: attachment.id,
-                            title: attachment.file?.split('/').pop() || 'File',
-                            description: attachment.description,
-                            createdAt: attachment.uploaded_at || attachment.created_at,
-                            tags: ["Attachment"],
-                            content: "Download",
-                            author: attachment.author || 'Unknown',
-                            file: attachment.file
-                          }}
-                          onDelete={(e, id) => handleDeleteContent(id, "attachment")}
+                          content={note}
+                          onDelete={(e, id) => handleDeleteContent(id, "note")}
+                          onEdit={() => handleEditContent(note, "note")}
                           readOnly={readOnly}
                         />
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Show empty states for sections with no content */}
-            {flashcardSets.length === 0 && (
-              <div>
-                <SectionHeader
-                  icon={BookOpen}
-                  title="Flashcards"
-                  count={0}
-                  isExpanded={expandedSections.Flashcards}
-                  onToggle={() => toggleSection("Flashcards")}
-                />
-                {expandedSections.Flashcards && (
-                  <SectionEmptyState title="Flashcards" />
-                )}
-              </div>
-            )}
-
-            {notes.length === 0 && (
-              <div>
-                <SectionHeader
-                  icon={FileText}
-                  title="Notes"
-                  count={0}
-                  isExpanded={expandedSections.Notes}
-                  onToggle={() => toggleSection("Notes")}
-                />
-                {expandedSections.Notes && (
+                ) : (
                   <SectionEmptyState title="Notes" />
-                )}
-              </div>
-            )}
-
-            {quizzes.length === 0 && (
-              <div>
-                <SectionHeader
-                  icon={HelpCircle}
-                  title="Quizzes"
-                  count={0}
-                  isExpanded={expandedSections.Quizzes}
-                  onToggle={() => toggleSection("Quizzes")}
-                />
-                {expandedSections.Quizzes && (
-                  <SectionEmptyState title="Quizzes" />
-                )}
-              </div>
-            )}
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>

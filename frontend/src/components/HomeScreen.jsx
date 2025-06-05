@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import CreateFlashcards from './CreateFlashcards';
 import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
-import Folder from './Folder';
 import UploadFile from './UploadFile';
 
 const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generated }) => {
@@ -122,20 +121,6 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="exam-subheading sm:text-sm flex items-center gap-2">
-          <Sparkles size={18} className="text-blue-500" />
-          Your Uploads
-        </h2>
-        <div className="mt-4 flex flex-wrap gap-6">
-          <Folder 
-            title="Recent Files" 
-            onClick={() => console.log('Recent Files clicked')}
-            files={uploadedFiles}
-          />
         </div>
       </section>
 
