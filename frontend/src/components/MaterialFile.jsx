@@ -1,8 +1,8 @@
-import { BookOpen, Clock, FileText, HelpCircle, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { BookOpen, FileText, HelpCircle, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 
-const MaterialFile = ({ content, onDelete, onEdit }) => {
+const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -32,30 +32,48 @@ const MaterialFile = ({ content, onDelete, onEdit }) => {
 
     if (diffInDays < 1) {
       if (diffInHours < 1) {
-        return `${diffInMinutes} minutes ago`;
+        return `${diffInMinutes}m ago`;
       } else {
-        return `${diffInHours} hours ago`;
+        return `${diffInHours}h ago`;
       }
     } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
+      return `${diffInDays}d ago`;
     } else if (diffInWeeks < 4) {
-      return `${diffInWeeks} weeks ago`;
+      return `${diffInWeeks}w ago`;
     } else {
       return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     }
   };
 
-  // Get icon based on content type
-  const getContentIcon = () => {
-    if (content.tags?.includes('Flashcard')) {
-      return <BookOpen size={20} className="text-blue-500" />;
-    } else if (content.tags?.includes('Notes')) {
-      return <FileText size={20} className="text-purple-500" />;
-    } else if (content.tags?.includes('Quiz')) {
-      return <HelpCircle size={20} className="text-green-500" />;
+  // Get icon and content type based on content object
+  const getContentInfo = () => {
+    if (content.flashcards || content.cards) {
+      return {
+        icon: <BookOpen size={18} className="text-blue-500" />,
+        type: "Flashcard",
+        content: `${content.flashcards?.length || content.cards?.length || 0} cards`
+      };
+    } else if (content.content) {
+      return {
+        icon: <FileText size={18} className="text-purple-500" />,
+        type: "Notes",
+        content: content.content
+      };
+    } else if (content.questions) {
+      return {
+        icon: <HelpCircle size={18} className="text-green-500" />,
+        type: "Quiz",
+        content: `${content.questions?.length || 0} questions`
+      };
     }
-    return <FileText size={20} className="text-blue-500" />; // Default icon
+    return {
+      icon: <FileText size={18} className="text-blue-500" />,
+      type: "Notes",
+      content: ""
+    };
   };
+
+  const contentInfo = getContentInfo();
 
   // Delete handler
   const handleDeleteClick = (e) => {
@@ -67,19 +85,21 @@ const MaterialFile = ({ content, onDelete, onEdit }) => {
   // Edit handler
   const handleEditClick = (e) => {
     e.stopPropagation(); // Stop event from bubbling up
-    onEdit && onEdit(content);
+    if (onEdit) {
+      onEdit(content);
+    }
     setShowMenu(false);
   };
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col justify-between h-full">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              {getContentIcon()}
-              <h3 className="text-lg font-semibold text-gray-900 truncate label-text" title={content.title || 'Untitled'}>{content.title || 'Untitled'}</h3>
-            </div>
+    <div className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl">
+      <div className="exam-card p-4 hover:shadow-lg transition-shadow">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            {contentInfo.icon}
+            <h3 className="font-semibold">{content.title || 'Untitled'}</h3>
+          </div>
+          {!readOnly && (
             <div className="relative" ref={menuRef}>
               <button
                 onClick={(e) => {
@@ -109,12 +129,18 @@ const MaterialFile = ({ content, onDelete, onEdit }) => {
                 </div>
               )}
             </div>
-          </div>
-          <p className="text-sm text-gray-600 mb-2 label-text">By {content.author || 'Unknown'}</p>
+          )}
         </div>
-        <div className="flex items-center justify-end text-gray-500 text-xs label-text">
-          <Clock size={12} className="mr-1" />
-          {formatRelativeTime(content.createdAt || new Date())}
+        
+        {content.description && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            {content.description}
+          </p>
+        )}
+        
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <span>{contentInfo.content?.length > 100 ? `${contentInfo.content.substring(0, 100)}...` : contentInfo.content}</span>
+          <span>{formatRelativeTime(content.updated_at || content.created_at || new Date())}</span>
         </div>
       </div>
     </div>
@@ -125,18 +151,23 @@ MaterialFile.propTypes = {
   content: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     title: PropTypes.string,
-    createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    tags: PropTypes.arrayOf(PropTypes.string),
-    author: PropTypes.string,
     description: PropTypes.string,
+    content: PropTypes.string,
+    flashcards: PropTypes.array,
+    cards: PropTypes.array,
+    questions: PropTypes.array,
+    updated_at: PropTypes.string,
+    created_at: PropTypes.string,
   }).isRequired,
   onDelete: PropTypes.func,
   onEdit: PropTypes.func,
+  readOnly: PropTypes.bool,
 };
 
 MaterialFile.defaultProps = {
   onDelete: null,
   onEdit: null,
+  readOnly: false,
 };
 
 export default MaterialFile;
