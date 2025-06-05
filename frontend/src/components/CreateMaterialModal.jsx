@@ -144,9 +144,9 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleClose}>
-      <div className="bg-white rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+      <div className="letter-no-lines max-w-md" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 p-3">
           <h2 className="text-lg font-semibold label-text">Create New Material</h2>
           <button
             onClick={handleClose}
@@ -173,7 +173,7 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <div className="space-y-4 p-3">
             {/* Title Field - Uses materialTitle validator */}
             <ValidatedInput
               label="Title"

@@ -45,7 +45,7 @@ const UploadFile = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="letter1 p-6 space-y-6 shadow-lg border border-gray-200 relative w-full max-w-sm md:max-w-md lg:max-w-xl"
+        className="letter-no-lines p-6 space-y-6 shadow-lg border border-gray-200 relative w-full max-w-sm md:max-w-md lg:max-w-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -58,7 +58,7 @@ const UploadFile = ({ isOpen, onClose }) => {
 
         {/* Drag & drop area */}
         <div
-          className="bg-white/60 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg py-8 px-4 cursor-pointer hover:border-gray-400 w-4/5 mx-auto"
+          className="bg-white/60 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg py-8 mt-10 px-4 cursor-pointer hover:border-gray-400 w-4/5 mx-auto"
           onClick={openFilePicker}
           onDragOver={handleDragOver}
           onDrop={handleDrop}

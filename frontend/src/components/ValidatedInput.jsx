@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { defaultValidators } from "../utils/validation";
+import React, { useEffect, useState } from "react";
 import "../styles/components/validated-input.css";
+import { defaultValidators } from "../utils/validation";
 
 export default function ValidatedInput({
   label,
@@ -62,7 +62,7 @@ export default function ValidatedInput({
     if (type === "textarea") {
       return (
         <div>
-          <label className="label-text block text-sm font-medium text-gray-700 mb-2">
+          <label className="label-text block text-sm  font-medium text-gray-700 mb-2">
             {label} {required && "*"}
           </label>
           <textarea
@@ -131,7 +131,7 @@ export default function ValidatedInput({
             {...commonProps}
             rows={rows}
             cols={cols}
-            className={`label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none ${
+            className={`label-text w-full px-5 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none ${
               error ? 'border-red-500 ring-red-500' : ''
             }`}
           />
@@ -149,7 +149,7 @@ export default function ValidatedInput({
           <input
             {...commonProps}
             type={type === "password" ? (show ? "text" : "password") : type}
-            className={`label-text w-full px-5 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+            className={`label-text w-full px-5 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
               error ? 'border-red-500 ring-red-500' : ''
             } ${type === "password" ? 'pr-12' : ''}`}
           />
@@ -183,7 +183,7 @@ export default function ValidatedInput({
             {...commonProps}
             rows={rows}
             cols={cols}
-            className="form-input form-textarea"
+            className="form-input form-textarea "
           />
           <label htmlFor={name}>{label}</label>
         </div>
