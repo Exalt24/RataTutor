@@ -1,7 +1,7 @@
 import { CloudUpload, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
-const UploadFile = ({ isOpen, onClose }) => {
+const UploadFile = ({ isOpen, onClose, onUpload }) => {
   const [files, setFiles] = useState([]);
   const inputRef = useRef(null);
 
@@ -39,6 +39,15 @@ const UploadFile = ({ isOpen, onClose }) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Handle upload
+  const handleUpload = () => {
+    if (files.length > 0) {
+      onUpload(files);
+      setFiles([]); // Clear the files after upload
+      onClose(); // Close the modal
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
@@ -74,7 +83,7 @@ const UploadFile = ({ isOpen, onClose }) => {
           </p>
         </div>
 
-        {/* “Select files” button (also triggers file picker) */}
+        {/* "Select files" button (also triggers file picker) */}
         <button
           onClick={openFilePicker}
           className="exam-button w-4/5 flex justify-center mx-auto"
@@ -126,10 +135,7 @@ const UploadFile = ({ isOpen, onClose }) => {
               Cancel
             </button>
             <button
-              onClick={() => {
-                // TODO: Implement upload functionality
-                onClose();
-              }}
+              onClick={handleUpload}
               className="exam-button-mini"
               data-hover="Upload"
             >
