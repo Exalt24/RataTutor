@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Download, FileText, AlertCircle, Eye, Loader2, ExternalLink, Code, Monitor } from 'lucide-react';
+import { AlertCircle, Code, Download, ExternalLink, Eye, FileText, Loader2, Monitor, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
   const [content, setContent] = useState('');
@@ -127,11 +127,11 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
     
     return (
       <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-        <div className="flex items-center gap-2 text-amber-800">
+        <div className="flex items-center gap-2 text-amber-800 label-text">
           <Code size={16} />
-          <span className="text-sm font-medium">Development Mode</span>
+          <span className="text-sm font-medium label-text">Development Mode</span>
         </div>
-        <p className="text-xs text-amber-700 mt-1">
+        <p className="text-xs text-amber-700 mt-1 label-text">
           Some preview features are limited in development. All previews will work perfectly in production with Cloudinary.
         </p>
       </div>
@@ -143,11 +143,11 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
     
     return (
       <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-center gap-2 text-green-800">
+        <div className="flex items-center gap-2 text-green-800 label-text">
           <Monitor size={16} />
-          <span className="text-sm font-medium">Production Ready</span>
+          <span className="text-sm font-medium label-text">Production Ready</span>
         </div>
-        <p className="text-xs text-green-700 mt-1">
+        <p className="text-xs text-green-700 mt-1 label-text">
           File hosted on CDN - all preview features available.
         </p>
       </div>
@@ -157,10 +157,10 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
   const renderPreviewContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center h-96">
-          <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center justify-center h-full min-h-[400px] py-8">
+          <div className="flex flex-col items-center justify-center gap-2">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <p className="text-gray-600">Loading {previewType.toUpperCase()} preview...</p>
+            <p className="text-gray-600 label-text">Loading {previewType.toUpperCase()} preview...</p>
           </div>
         </div>
       );
@@ -168,16 +168,16 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
 
     if (error) {
       return (
-        <div className="flex items-center justify-center h-96">
-          <div className="flex flex-col items-center gap-4 text-center max-w-md">
-            <AlertCircle className="h-12 w-12 text-yellow-500" />
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">Preview Not Available</h3>
-              <p className="text-gray-600 text-sm mb-4">{error}</p>
+        <div className="flex items-center justify-center h-full min-h-[400px] py-8">
+          <div className="flex flex-col items-center justify-center gap-3 text-center max-w-md px-4">
+            <AlertCircle className="h-10 w-10 text-yellow-500" />
+            <div className="flex flex-col items-center justify-center gap-3">
+              <h3 className="font-medium text-gray-900 label-text">Preview Not Available</h3>
+              <p className="text-gray-600 text-sm label-text">{error}</p>
               
               {isDevelopment() && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
-                  <p className="text-xs text-blue-800">
+                <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg w-full">
+                  <p className="text-xs text-blue-800 label-text">
                     💡 <strong>Development Tip:</strong> This will work in production when files are served from Cloudinary or other CDNs.
                   </p>
                 </div>
@@ -185,7 +185,8 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
               
               <button
                 onClick={() => onDownload && onDownload(attachment)}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="exam-button-mini flex items-center justify-center gap-2 px-3 py-2 label-text"
+                data-hover="Download"
               >
                 <Download size={16} />
                 Download File
@@ -199,8 +200,8 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
     switch (previewType) {
       case 'txt':
         return (
-          <div className="h-96 overflow-auto bg-gray-50 rounded-lg p-4 border">
-            <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono leading-relaxed">
+          <div className="h-full min-h-[400px] overflow-auto bg-gray-50 rounded-lg p-4 border">
+            <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono leading-relaxed label-text">
               {content}
             </pre>
           </div>
@@ -208,7 +209,7 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
       
       case 'pdf':
         return (
-          <div className="h-96 rounded-lg overflow-hidden border shadow-inner">
+          <div className="h-full min-h-[400px] rounded-lg overflow-hidden border shadow-inner">
             <iframe
               src={`${content}#toolbar=1&navpanes=1&scrollbar=1`}
               className="w-full h-full"
@@ -221,7 +222,7 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
       
       case 'docx':
         return (
-          <div className="h-96 flex flex-col">
+          <div className="h-full min-h-[400px] flex flex-col">
             {/* Show embedded viewer only if not in development or if Cloudinary */}
             {!isDevelopment() || isCloudinaryUrl() ? (
               <>
@@ -235,28 +236,28 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
                   />
                 </div>
                 
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800 mb-3 font-medium">
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800 mb-2 font-medium text-center label-text">
                     📄 Word Document Options:
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap justify-center gap-2">
                     <button
                       onClick={() => openInExternalViewer('google')}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 text-xs px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors label-text"
                     >
                       <ExternalLink size={12} />
                       Open in Google Docs
                     </button>
                     <button
                       onClick={() => openInExternalViewer('office')}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 text-xs px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors label-text"
                     >
                       <ExternalLink size={12} />
                       Open in Office Online
                     </button>
                     <button
                       onClick={() => onDownload && onDownload(attachment)}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors label-text"
                     >
                       <Download size={12} />
                       Download
@@ -268,11 +269,11 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <h3 className="font-medium text-gray-900 mb-2">Development Mode</h3>
-                  <p className="text-sm text-gray-600 mb-4">DOCX preview requires production URLs</p>
+                  <h3 className="font-medium text-gray-900 mb-2 label-text">Development Mode</h3>
+                  <p className="text-sm text-gray-600 mb-4 label-text">DOCX preview requires production URLs</p>
                   <button
                     onClick={() => onDownload && onDownload(attachment)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors label-text"
                   >
                     <Download size={16} />
                     Download File
@@ -285,7 +286,7 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
       
       case 'pptx':
         return (
-          <div className="h-96 flex flex-col">
+          <div className="h-full min-h-[400px] flex flex-col">
             {!isDevelopment() || isCloudinaryUrl() ? (
               <>
                 <div className="flex-1 rounded-lg overflow-hidden border shadow-inner bg-gray-50">
@@ -298,28 +299,28 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
                   />
                 </div>
                 
-                <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                  <p className="text-sm text-orange-800 mb-3 font-medium">
+                <div className="mt-2 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <p className="text-sm text-orange-800 mb-2 font-medium label-text">
                     📊 PowerPoint Options:
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap justify-center gap-2">
                     <button
                       onClick={() => openInExternalViewer('google')}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 text-xs px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors label-text"
                     >
                       <ExternalLink size={12} />
                       Open in Google Docs
                     </button>
                     <button
                       onClick={() => openInExternalViewer('office')}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 text-xs px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors label-text"
                     >
                       <ExternalLink size={12} />
                       Open in Office Online
                     </button>
                     <button
                       onClick={() => onDownload && onDownload(attachment)}
-                      className="inline-flex items-center gap-1 text-xs px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                      className="inline-flex items-center justify-center gap-1 text-xs px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors label-text"
                     >
                       <Download size={12} />
                       Download
@@ -331,11 +332,11 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <h3 className="font-medium text-gray-900 mb-2">Development Mode</h3>
-                  <p className="text-sm text-gray-600 mb-4">PPTX preview requires production URLs</p>
+                  <h3 className="font-medium text-gray-900 mb-2 label-text">Development Mode</h3>
+                  <p className="text-sm text-gray-600 mb-4 label-text">PPTX preview requires production URLs</p>
                   <button
                     onClick={() => onDownload && onDownload(attachment)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors label-text"
                   >
                     <Download size={16} />
                     Download File
@@ -348,22 +349,18 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
       
       default:
         return (
-          <div className="flex items-center justify-center h-96">
+          <div className="flex items-center justify-center h-full min-h-[400px] py-8">
             <div className="flex flex-col items-center gap-3 text-center">
-              <FileText className="h-12 w-12 text-gray-400" />
-              <div>
-                <h3 className="font-medium text-gray-900 mb-1">Preview Not Supported</h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  {previewType.toUpperCase()} files cannot be previewed in the browser
-                </p>
-                <button
-                  onClick={() => onDownload && onDownload(attachment)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  <Download size={16} />
-                  Download File
-                </button>
-              </div>
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <h3 className="font-medium text-gray-900 mb-2 label-text">Preview not available</h3>
+              <p className="text-sm text-gray-600 label-text">This file type cannot be previewed directly.</p>
+              <button
+                onClick={() => onDownload && onDownload(attachment)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors label-text"
+              >
+                <Download size={16} />
+                Download File
+              </button>
             </div>
           </div>
         );
@@ -376,63 +373,41 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
   const fileExtension = getFileExtension(attachment?.file).toUpperCase();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      <div className="relative w-full max-w-2xl mx-auto bg-white rounded-lg shadow-xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+        <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Eye className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg text-blue-600">
+               <Eye size={20} />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 truncate max-w-md">
-                {fileName}
-              </h2>
-              <p className="text-sm text-gray-500">
-                {fileExtension} File Preview
-              </p>
+            <div className="flex flex-col">
+               <h3 className="font-semibold text-gray-800 text-base md:text-lg truncate max-w-sm label-text">{fileName}</h3>
+               <span className="text-xs text-gray-500 label-text">{fileExtension} File Preview</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onDownload && onDownload(attachment)}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              title="Download"
-            >
-              <Download size={16} />
-              Download
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Close"
-            >
-              <X size={20} className="text-gray-600" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <X size={20} className="text-gray-500" />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 p-6 overflow-hidden bg-gray-50">
+        {/* Content Area with Scrollbar */}
+        <div className="flex-1 overflow-y-auto p-4">
           {renderDevelopmentWarning()}
           {renderProductionInfo()}
           {renderPreviewContent()}
         </div>
 
-        {/* Footer with file info */}
-        <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>File: {fileName}</span>
-            <div className="flex items-center gap-4">
+        {/* Footer */}
+        <div className="flex items-center justify-between p-4 border-t text-xs text-gray-500 label-text">
+           <span>File: {fileName}</span>
+           <div className="flex items-center gap-4">
               <span>Type: {fileExtension}</span>
-              {isDevelopment() && (
-                <span className="text-amber-600 font-medium">Development Mode</span>
-              )}
-              {isCloudinaryUrl() && (
-                <span className="text-green-600 font-medium">CDN Hosted</span>
-              )}
-            </div>
-          </div>
+              {isDevelopment() && <span className="text-amber-600 font-medium label-text">Development Mode</span>}
+           </div>
         </div>
       </div>
     </div>
