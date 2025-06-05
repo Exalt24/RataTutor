@@ -1,6 +1,6 @@
 export const USERNAME_REGEX = /^[\w.@+-]{3,}$/
 export const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/
+export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&_]).{8,}$/
 export const FULL_NAME_REGEX = /^[a-zA-Z\s\-'\.]+$/
 
 export const defaultValidators = {
