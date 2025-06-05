@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { getConversation, chatConversation } from "../services/apiService"; // adjust the import path as needed
 
 const RataAIScreen = ({ materialsData }) => {
   const [messages, setMessages] = useState([]);
@@ -22,6 +23,27 @@ const RataAIScreen = ({ materialsData }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [conversation, setConversation] = useState(null);
+
+  const conversationId = 1; // hardcoded for now
+
+  const fetchConversation = () => {
+    getConversation(conversationId)
+      .then((response) => {
+        setConversation(response.data);
+        setMessages(response.data.messages || []);
+      })
+      .catch((err) => {
+        console.error("Error fetching conversation:", err);
+        setError("Failed to load conversation.");
+      });
+  };
+
+  useEffect(() => {
+    fetchConversation();
+  }, []);
+  // empty dependency array → runs once on mount
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -108,12 +130,25 @@ const RataAIScreen = ({ materialsData }) => {
         material.attachments.length > 0
     );
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages([...messages, { role: "user", content: input }]);
+  const handleSend = async () => {
+  if (!input.trim()) return;
+  setLoading(true);
+
+  try {
+    const response = await chatConversation(conversationId, input);
+
+    // If the response already includes the AI reply:
+    if (response.data && response.data.complete) {
+      await fetchConversation();
+    }
     setInput("");
-    // TODO: Add API call to get AI response
-  };
+  } catch (err) {
+    console.error("Error sending message:", err);
+    setError("Failed to send message.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -202,30 +237,47 @@ const RataAIScreen = ({ materialsData }) => {
               </div>
             </div>
           ) : (
-            messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+            messages.map((message, index) => {
+              const isUser = message.role === "user";
+              const localTime = new Date(message.timestamp).toLocaleTimeString(
+                [],
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              );
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-xl p-4 break-words shadow-sm label-text ${
-                    message.role === "user"
-                      ? "text-white"
-                      : "text-gray-800 bg-white"
-                  }`}
-                  style={{
-                    backgroundColor:
-                      message.role === "user" ? "var(--pastel-blue)" : "white",
-                    wordBreak: "break-word",
-                    overflowWrap: "break-word",
-                  }}
+                  key={index}
+                  className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
-                  {message.content}
+                  <div
+                    className={`flex flex-col max-w-[80%] space-y-1 ${
+                      isUser ? "items-end" : "items-start"
+                    }`}
+                  >
+                    <div
+                      className={`rounded-xl p-4 break-words shadow-sm label-text ${
+                        isUser ? "text-white" : "text-gray-800 bg-white"
+                      }`}
+                      style={{
+                        backgroundColor: isUser
+                          ? "var(--pastel-blue)"
+                          : "white",
+                        wordBreak: "break-word",
+                        overflowWrap: "break-word",
+                      }}
+                    >
+                      {message.content}
+                    </div>
+                    <span className="text-xs text-gray-400 px-2">
+                      {localTime}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -259,7 +311,6 @@ const RataAIScreen = ({ materialsData }) => {
                 }
                 className="w-full p-3 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none min-h-[40px] max-h-[120px] bg-gray-50 overflow-hidden"
                 rows={1}
-                disabled={!selectedMaterial}
                 style={{
                   transition: "height 0.1s ease-out",
                 }}
@@ -270,7 +321,6 @@ const RataAIScreen = ({ materialsData }) => {
               className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm"
               title="Send message"
               style={{ backgroundColor: "var(--pastel-blue)" }}
-              disabled={!selectedMaterial}
             >
               <Send size={20} />
             </button>
@@ -368,21 +418,27 @@ const RataAIScreen = ({ materialsData }) => {
                       </button>
                       {expandedFolders[`${fileIndex}-flashcards`] && (
                         <div className="ml-6 mt-2 space-y-2">
-                         {material.flashcard_sets.map((flashcard_set, flashIndex) => (
-                            <div
-                              key={flashIndex}
-                              className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
-                              onClick={() => handleFileSelect(flashcard_set, material)}
-                            >
-                              <div className="font-medium text-gray-800">
-                                {flashcard_set.title}
+                          {material.flashcard_sets.map(
+                            (flashcard_set, flashIndex) => (
+                              <div
+                                key={flashIndex}
+                                className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                                onClick={() =>
+                                  handleFileSelect(flashcard_set, material)
+                                }
+                              >
+                                <div className="font-medium text-gray-800">
+                                  {flashcard_set.title}
+                                </div>
+                                <div className="text-gray-500 text-[10px]">
+                                  Created{" "}
+                                  {new Date(
+                                    flashcard_set.created_at
+                                  ).toLocaleString()}
+                                </div>
                               </div>
-                              <div className="text-gray-500 text-[10px]">
-                                Created{" "}
-                                {new Date(flashcard_set.created_at).toLocaleString()}
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          )}
                         </div>
                       )}
                     </div>

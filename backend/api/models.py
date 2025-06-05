@@ -101,32 +101,55 @@ class Note(models.Model):
         return f"Note '{self.title}'"
 
 
+
 class AIConversation(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="conversations",
+        null=False,
+        blank=False,
+        help_text="The user who owns this conversation"
+    )
+
     material = models.ForeignKey(
         Material,
         on_delete=models.CASCADE,
-        related_name="conversations"
+        related_name="conversations",
+        null=True,
+        blank=True,  # Allow conversations without a material
     )
+
     messages = models.JSONField(default=list, blank=True)
     last_user_message = models.TextField(blank=True, null=True)
+    context = models.TextField(default="", blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
+    def addToMessage(self):
         if self.last_user_message:
             if not isinstance(self.messages, list):
                 self.messages = []
+
+            # Only append if it's not a duplicate of the last message
             if not self.messages or self.messages[-1].get("content") != self.last_user_message:
                 self.messages.append({
                     "role": "user",
                     "content": self.last_user_message,
                     "timestamp": timezone.now().isoformat()
                 })
-        super().save(*args, **kwargs)
+
+                if self.context:
+                    self.context += f"\n user: {self.last_user_message}"
+                else:
+                    self.context = f"user: {self.last_user_message}"
+
 
     def __str__(self):
-        return f"AIConversation for {self.material.title} (ID: {self.id})"
+        if self.material:
+            return f"AIConversation for {self.material.title} (ID: {self.id})"
+        return f"AIConversation (ID: {self.id}) — No Material"
 
 
 class Quiz(models.Model):
