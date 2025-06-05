@@ -1,7 +1,7 @@
 'use client';
-import React, { isValidElement } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import React, { isValidElement } from 'react';
 
 const pastelActiveLight = 'bg-gradient-to-br from-[#FFE1E7] via-[#FFB3C4] to-[#FF90A8]';
 const pastelHoverLight = 'hover:from-[#FFB3C4] hover:via-[#FF90A8] hover:to-[#FF6B8A]';
@@ -70,7 +70,7 @@ export function AccordionItem({ children, value }) {
       data-active={isActive || undefined}
       data-value={value}
       className={`
-        rounded-xl overflow-hidden mb-3 border-2 transition-all
+        rounded-xl overflow-hidden mb-3 border-2 transition-all 
         ${isActive
           ? `${pastelActiveLight} ${pastelBorderLight} `
           : `bg-white ${pastelBorderLight} hover:shadow-md`}
@@ -88,7 +88,7 @@ export function AccordionHeader({ children, customIcon, className }) {
       data-active={isActive || undefined}
       className={`
         group p-4 cursor-pointer font-semibold flex justify-between items-center
-        text-black transition-all
+        text-black transition-all min-w-[315px]
         ${isActive ? `${pastelHeaderActive}` : `${pastelHeader}`}
         ${pastelHoverLight} ${pastelHeaderHover}
       `}
@@ -111,21 +111,22 @@ export function AccordionPanel({ children, className }) {
       {isActive && (
         <motion.div
           data-active={isActive || undefined}
-          initial={{ height: 0, overflow: 'hidden' }}
-          animate={{ height: 'auto', overflow: 'hidden' }}
+          initial={{ height: 0 }}
+          animate={{ height: 'auto' }}
           exit={{ height: 0 }}
           transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
-          className={`group bg-pink-50 transition-all ${className}`}
+          className={`group bg-pink-50 ${className}`}
+          style={{ overflow: 'hidden' }}
         >
-          <motion.article
-            initial={{ clipPath: 'polygon(0 0, 100% 0, 100% 0, 0 0)' }}
-            animate={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0% 100%)' }}
-            exit={{ clipPath: 'polygon(0 0, 100% 0, 100% 0, 0 0)' }}
-            transition={{ type: 'spring', duration: 0.4, bounce: 0 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="p-3 text-sm text-gray-800"
           >
             {children}
-          </motion.article>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

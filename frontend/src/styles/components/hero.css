@@ -33,11 +33,11 @@ input[type="radio"] {
   overflow: hidden;
   display: flex;
   align-items: flex-end;
-  transition: all 0.6s cubic-bezier(0.28, -0.03, 0, 0.99);
+  transition: all 0.5s ease-in-out;
   background-size: cover;
   flex: 0 0 auto;
   box-shadow: 0px 5px 30px -5px rgba(0, 0, 0, 0.5);
-  will-change: width;
+  will-change: width, transform;
 }
 
 input:checked + label.card {
@@ -130,16 +130,22 @@ input:not(:checked) + label.card .description {
   left: 40%;
   transform: translate(-50%, -50%);
   text-align: start;
-  visibility: hidden;
-  transition: visibility 0.6s ease;
+  opacity: 0;
+  transition: all 0.5s ease-in-out;
+  pointer-events: none;
+  transform: translate(-50%, -48%);
 }
 
 input:checked + label.card .hero-center {
-  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
 }
 
-input:not(:checked) + label.card .row .description {
-  display: none;
+input:not(:checked) + label.card .hero-center {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -48%);
 }
 
 .hero-actions {
@@ -217,41 +223,73 @@ input:not(:checked) + label.card .row .description {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
+.text-glow {
+  color: #000;
+}
 
-.image-clicked {
-  animation: pop 0.4s ease;
+.text-glow:hover {
+  color: #000;
+}
+
+.heading-arrow-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.click-me-arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: bounce 2s infinite;
+  white-space: nowrap;
+  margin-top: 6px;
+}
+
+.arrow-text {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.arrow {
+  width: 15px;
+  height: 2px;
+  background-color: #666;
+  position: relative;
+}
+
+.arrow::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid #666;
+  border-left: 2px solid #666;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes pop {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
 
-.text-glow {
-  color: #000;
-  transition: all 0.3s ease;
-}
-
-.text-glow:hover {
-  animation: darkGlow 2.5s ease-in-out infinite;
-}
-
-@keyframes darkGlow {
-  0%, 100% {
-    text-shadow:
-      0 0 6px #d6b3ff,   
-      0 0 12px #bb88ff,  
-      0 0 18px #a366ff,  
-      0 0 24px #8041d9;  
-  }
-  50% {
-    text-shadow:
-      0 0 10px #e0ccff, 
-      0 0 20px #c299ff,  
-      0 0 30px #a366ff,
-      0 0 40px #8041d9;
-  }
+.image-clicked {
+  transform: scale(1);
 }
 
 /* LeftImage */
@@ -316,7 +354,6 @@ input:not(:checked) + label.card .row .description {
   animation: swipeOut 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-
 .hover-card {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
@@ -324,4 +361,19 @@ input:not(:checked) + label.card .row .description {
 .group:hover .hover-card {
   opacity: 1;
   transform: translateY(0);
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
