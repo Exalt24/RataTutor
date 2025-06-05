@@ -76,16 +76,28 @@ class FlashcardAdmin(admin.ModelAdmin):
 
 @admin.register(AIConversation)
 class AIConversationAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'material',
-        'last_user_message',
-        'created_at',
-        'updated_at'
+    list_display = ('id', 'user', 'material', 'last_user_message', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'material__title', 'last_user_message', 'context')
+    list_filter = ('created_at', 'updated_at', 'user')
+    readonly_fields = ('created_at', 'updated_at', 'messages', 'context')
+
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'material', 'last_user_message')
+        }),
+        ('System Info', {
+            'fields': ('messages', 'context', 'created_at', 'updated_at')
+        }),
     )
-    search_fields = ('material__title', 'last_user_message')
-    list_filter = ('created_at', 'updated_at')
-    readonly_fields = ('created_at', 'updated_at')
+
+    def has_add_permission(self, request):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
 
 
 @admin.register(Quiz)

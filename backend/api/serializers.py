@@ -317,6 +317,11 @@ class AIConversationSerializer(serializers.ModelSerializer):
         help_text="The latest user message; it will be appended to messages on save.",
     )
 
+    context = serializers.CharField(
+        read_only=True,
+        help_text="Accumulated user message history as plain text."
+    )
+
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
@@ -327,10 +332,11 @@ class AIConversationSerializer(serializers.ModelSerializer):
             "material",
             "messages",
             "last_user_message",
+            "context",               # ✅ Include it here
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "messages", "created_at", "updated_at"]
+        read_only_fields = ["id", "messages", "context", "created_at", "updated_at"]
 
     def validate_last_user_message(self, value):
         clean = value.strip()
@@ -340,14 +346,15 @@ class AIConversationSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get("request")
-        mat = data.get("material")
-        if request and hasattr(request, "user"):
-            if hasattr(mat, "owner") and mat.owner != request.user:
-                raise serializers.ValidationError("You do not have permission to modify this Material's conversation.")
+        material = data.get("material")
+
+        if request and hasattr(request, "user") and material:
+            if hasattr(material, "owner") and material.owner != request.user:
+                raise serializers.ValidationError("You do not have permission to use this Material.")
+
         if not data.get("last_user_message"):
             raise serializers.ValidationError("You must supply 'last_user_message'.")
         return data
-
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
     quiz = serializers.PrimaryKeyRelatedField(
