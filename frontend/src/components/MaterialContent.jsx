@@ -239,14 +239,30 @@ const MaterialContent = ({
           return false; // Tell MaterialsScreen to delay closing
         }
       });
-    } else if (type === "quiz") {
-      const quiz = quizzes.find(q => q.id === content.id) || content;
-      setSelectedContent(quiz);
-      setShowViewQuiz(true);
     } else if (type === "note") {
-      const note = notes.find(n => n.id === content.id) || content;
-      setSelectedContent(note);
-      setShowViewNotes(true);
+      // ✅ ENHANCED: Follow flashcard pattern for notes
+      onCreateNotes(material, {
+        editMode: true,
+        editContent: content,
+        onSuccess: (updatedNote) => {
+          // Navigate directly to ViewNotes with the updated note
+          setSelectedContent(updatedNote);
+          setShowViewNotes(true);
+          return false; // Tell MaterialsScreen to delay closing
+        }
+      });
+    } else if (type === "quiz") {
+      // ✅ ENHANCED: Follow flashcard pattern for quiz
+      onCreateQuiz(material, {
+        editMode: true,
+        editContent: content,
+        onSuccess: (updatedQuiz) => {
+          // Navigate directly to ViewQuiz with the updated quiz
+          setSelectedContent(updatedQuiz);
+          setShowViewQuiz(true);
+          return false; // Tell MaterialsScreen to delay closing
+        }
+      });
     }
   };
 
@@ -417,12 +433,112 @@ const MaterialContent = ({
     );
   }
 
-  if (showViewQuiz) {
-    return <ViewQuiz material={selectedContent} onClose={handleCloseView} readOnly={readOnly} />;
+  if (showViewNotes) {
+    return (
+      <ViewNotes
+        mainMaterial={material}
+        material={selectedContent} 
+        onClose={handleCloseView} 
+        readOnly={readOnly}
+        onSuccess={async (updatedNote) => {
+          // ✅ ENHANCED: Follow flashcard pattern for notes
+          if (onRefreshMaterials) {
+            try {
+              await onRefreshMaterials();
+              // Update selected content for immediate UI feedback
+              setSelectedContent(updatedNote);
+            } catch (error) {
+              console.error('Error refreshing materials:', error);
+            }
+          } else {
+            // ✅ OPTION 2: Fallback to optimistic update
+            const updatedMaterial = {
+              ...material,
+              notes: material.notes.map(note =>
+                note.id === updatedNote.id ? updatedNote : note
+              )
+            };
+            
+            setSelectedContent(updatedNote);
+            
+            if (onMaterialUpdate) {
+              onMaterialUpdate(updatedMaterial);
+            }
+          }
+        }}
+        onEdit={(note) => {
+          // ✅ ENHANCED: Close ViewNotes and navigate to CreateNotes
+          setShowViewNotes(false);
+          setSelectedContent(null);
+          
+          // Call onCreateNotes with success handler
+          onCreateNotes(material, {
+            editMode: true,
+            editContent: note,
+            onSuccess: (updatedNote) => {
+              // Navigate directly to ViewNotes with the updated note
+              setSelectedContent(updatedNote);
+              setShowViewNotes(true);
+              return false; // Tell MaterialsScreen to delay closing
+            }
+          });
+        }}
+      />
+    );
   }
 
-  if (showViewNotes) {
-    return <ViewNotes material={selectedContent} onClose={handleCloseView} readOnly={readOnly} />;
+  if (showViewQuiz) {
+    return (
+      <ViewQuiz
+        mainMaterial={material}
+        material={selectedContent} 
+        onClose={handleCloseView} 
+        readOnly={readOnly}
+        onSuccess={async (updatedQuiz) => {
+          // ✅ ENHANCED: Follow flashcard pattern for quiz
+          if (onRefreshMaterials) {
+            try {
+              await onRefreshMaterials();
+              // Update selected content for immediate UI feedback
+              setSelectedContent(updatedQuiz);
+            } catch (error) {
+              console.error('Error refreshing materials:', error);
+            }
+          } else {
+            // ✅ OPTION 2: Fallback to optimistic update
+            const updatedMaterial = {
+              ...material,
+              quizzes: material.quizzes.map(quiz =>
+                quiz.id === updatedQuiz.id ? updatedQuiz : quiz
+              )
+            };
+            
+            setSelectedContent(updatedQuiz);
+            
+            if (onMaterialUpdate) {
+              onMaterialUpdate(updatedMaterial);
+            }
+          }
+        }}
+        onEdit={(quiz) => {
+          // ✅ ENHANCED: Close ViewQuiz and navigate to CreateQuiz
+          setShowViewQuiz(false);
+          setSelectedContent(null);
+          
+          // Call onCreateQuiz with success handler
+          onCreateQuiz(material, {
+            editMode: true,
+            editContent: quiz,
+            onSuccess: (updatedQuiz) => {
+              // Navigate directly to ViewQuiz with the updated quiz
+              setSelectedContent(updatedQuiz);
+              setShowViewQuiz(true);
+              return false; // Tell MaterialsScreen to delay closing
+            }
+          });
+        }}
+      />
+    );
   }
 
   const totalItems = flashcardSets.length + notes.length + quizzes.length + attachments.length;
@@ -548,7 +664,14 @@ const MaterialContent = ({
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateNotes(material)}
+                      onClick={() => onCreateNotes(material, {
+                        onSuccess: (newNote) => {
+                          // Navigate directly to ViewNotes with the new note
+                          setSelectedContent(newNote);
+                          setShowViewNotes(true);
+                          return false; // Tell MaterialsScreen to delay closing
+                        }
+                      })}
                       data-hover="Create Notes"
                     >
                       <FileText size={16} />
@@ -556,7 +679,14 @@ const MaterialContent = ({
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateQuiz(material)}
+                      onClick={() => onCreateQuiz(material, {
+                        onSuccess: (newQuiz) => {
+                          // Navigate directly to ViewQuiz with the new quiz
+                          setSelectedContent(newQuiz);
+                          setShowViewQuiz(true);
+                          return false; // Tell MaterialsScreen to delay closing
+                        }
+                      })}
                       data-hover="Create Quiz"
                     >
                       <HelpCircle size={16} />
@@ -835,7 +965,14 @@ const MaterialContent = ({
                   </button>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateNotes(material)}
+                    onClick={() => onCreateNotes(material, {
+                      onSuccess: (newNote) => {
+                        // Navigate directly to ViewNotes with the new note
+                        setSelectedContent(newNote);
+                        setShowViewNotes(true);
+                        return false; // Tell MaterialsScreen to delay closing
+                      }
+                    })}
                     data-hover="Create Notes"
                   >
                     <FileText size={16} />
@@ -843,7 +980,14 @@ const MaterialContent = ({
                   </button>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateQuiz(material)}
+                    onClick={() => onCreateQuiz(material, {
+                      onSuccess: (newQuiz) => {
+                        // Navigate directly to ViewQuiz with the new quiz
+                        setSelectedContent(newQuiz);
+                        setShowViewQuiz(true);
+                        return false; // Tell MaterialsScreen to delay closing
+                      }
+                    })}
                     data-hover="Create Quiz"
                   >
                     <HelpCircle size={16} />

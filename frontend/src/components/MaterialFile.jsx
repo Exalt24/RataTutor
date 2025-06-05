@@ -1,4 +1,4 @@
-import { BookOpen, FileText, HelpCircle, MoreVertical, Trash2 } from 'lucide-react';
+import { BookOpen, Edit3, FileText, HelpCircle, MoreVertical, Trash2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -51,29 +51,40 @@ const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
       return {
         icon: <BookOpen size={18} className="text-blue-500" />,
         type: "Flashcard",
-        content: `${content.flashcards?.length || content.cards?.length || 0} cards`
+        content: `${content.flashcards?.length || content.cards?.length || 0} cards`,
+        colorClass: "text-blue-500"
       };
     } else if (content.content) {
       return {
         icon: <FileText size={18} className="text-purple-500" />,
         type: "Notes",
-        content: content.content
+        content: `${content.content.length} characters`,
+        colorClass: "text-purple-500"
       };
     } else if (content.questions) {
       return {
         icon: <HelpCircle size={18} className="text-green-500" />,
         type: "Quiz",
-        content: `${content.questions?.length || 0} questions`
+        content: `${content.questions?.length || 0} questions`,
+        colorClass: "text-green-500"
       };
     }
     return {
       icon: <FileText size={18} className="text-blue-500" />,
       type: "Notes",
-      content: ""
+      content: "",
+      colorClass: "text-blue-500"
     };
   };
 
   const contentInfo = getContentInfo();
+
+  // ✅ ENHANCED: Edit handler following the same pattern as delete
+  const handleEditClick = (e) => {
+    e.stopPropagation(); // Stop event from bubbling up
+    onEdit && onEdit();
+    setShowMenu(false);
+  };
 
   // Delete handler
   const handleDeleteClick = (e) => {
@@ -103,13 +114,30 @@ const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
               </button>
               {showMenu && (
                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                    onClick={handleDeleteClick}
-                  >
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
+                  {/* ✅ ENHANCED: Add Edit menu item for all content types */}
+                  {onEdit && (
+                    <button
+                      className={`label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${contentInfo.colorClass} flex items-center gap-2`}
+                      onClick={handleEditClick}
+                    >
+                      <Edit3 size={14} />
+                      Edit {contentInfo.type}
+                    </button>
+                  )}
+                  {/* ✅ Add separator if both edit and delete are available */}
+                  {onEdit && onDelete && (
+                    <hr className="my-1 border-gray-100" />
+                  )}
+                  {/* ✅ Delete option (existing) */}
+                  {onDelete && (
+                    <button
+                      className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                      onClick={handleDeleteClick}
+                    >
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
+                  )}
                 </div>
               )}
             </div>
