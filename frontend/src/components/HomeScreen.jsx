@@ -1,5 +1,6 @@
 import { Edit2, FilePlus, FileText, HelpCircle, Sparkles } from 'lucide-react';
 import React, { useState } from 'react';
+import ChooseModal from './ChooseModal';
 import CreateFlashcards from './CreateFlashcards';
 import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
@@ -7,6 +8,7 @@ import UploadFile from './UploadFile';
 
 const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generated }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChooseModalOpen, setIsChooseModalOpen] = useState(false);
   const [createType, setCreateType] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
@@ -53,6 +55,16 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
       };
     });
     setUploadedFiles(prev => [...prev, ...newFiles]);
+    closeModal();
+    setIsChooseModalOpen(true);
+  };
+
+  const handleCreateChoice = (type, materialData) => {
+    setIsChooseModalOpen(false);
+    // Here you would typically handle the material data
+    // For example, if creating a new material, you might want to create it first
+    // Then pass the material ID to the creation component
+    openCreate(type);
   };
 
   const formatFileSize = (bytes) => {
@@ -128,6 +140,12 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
         isOpen={isModalOpen} 
         onClose={closeModal} 
         onUpload={handleFileUpload}
+      />
+
+      <ChooseModal
+        isOpen={isChooseModalOpen}
+        onClose={() => setIsChooseModalOpen(false)}
+        onCreate={handleCreateChoice}
       />
     </div>
   );
