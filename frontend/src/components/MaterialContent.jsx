@@ -17,6 +17,7 @@ import MaterialFile from "./MaterialFile";
 import ViewFlashcards from "./ViewFlashcards";
 import ViewNotes from "./ViewNotes";
 import ViewQuiz from "./ViewQuiz";
+import { deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12 rounded-xl">
@@ -282,46 +283,121 @@ const MaterialContent = ({
     if (type === "flashcard") {
       // Ensure we have the complete flashcard set data
       const flashcardSet = flashcardSets.find(set => set.id === content.id) || content;
-      onCreateFlashcards({
-        id: flashcardSet.id,
-        title: flashcardSet.title,
-        description: flashcardSet.description,
-        flashcards: flashcardSet.flashcards?.map(card => ({
-          id: card.id,
-          question: card.question || card.front,
-          answer: card.answer || card.back
-        })) || [],
-        material: material.id
-      });
+      setSelectedContent(flashcardSet);
+      setShowViewFlashcards(true);
     } else if (type === "quiz") {
       // Ensure we have the complete quiz data
       const quiz = quizzes.find(q => q.id === content.id) || content;
-      onCreateQuiz({
-        id: quiz.id,
-        title: quiz.title,
-        description: quiz.description,
-        questions: quiz.questions || [],
-        material: material.id
-      });
+      setSelectedContent(quiz);
+      setShowViewQuiz(true);
     } else if (type === "note") {
       // Ensure we have the complete note data
       const note = notes.find(n => n.id === content.id) || content;
-      onCreateNotes({
-        id: note.id,
-        title: note.title,
-        description: note.description,
-        content: note.content,
-        material: material.id
-      });
+      setSelectedContent(note);
+      setShowViewNotes(true);
     }
   };
 
-  const handleDeleteContent = (contentId, type) => {
-    if (readOnly) return;
+const handleDeleteContent = async (contentId, type) => {
+  if (readOnly) return;
+  
+  // Import these at the top of your file first!
+  // import { deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
+  
+  // Determine the content name for confirmation
+  let contentName = '';
+  let content = null;
+  
+  switch (type) {
+    case "flashcard":
+      content = flashcardSets.find(set => set.id === contentId);
+      contentName = content?.title || 'flashcard set';
+      break;
+    case "note":
+      content = notes.find(note => note.id === contentId);
+      contentName = content?.title || 'note';
+      break;
+    case "quiz":
+      content = quizzes.find(quiz => quiz.id === contentId);
+      contentName = content?.title || 'quiz';
+      break;
+    case "attachment":
+      content = attachments.find(att => att.id === contentId);
+      contentName = content?.file?.split('/').pop() || 'attachment';
+      break;
+    default:
+      console.error('Unknown content type:', type);
+      return;
+  }
+
+  // Confirm deletion
+  if (!confirm(`Are you sure you want to delete "${contentName}"? This action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    // Call appropriate API based on type
+    switch (type) {
+      case "flashcard":
+        await deleteFlashcardSet(contentId);
+        break;
+      case "note":
+        await deleteNote(contentId);
+        break;
+      case "quiz":
+        await deleteQuiz(contentId);
+        break;
+      case "attachment":
+        // You'll need to add deleteAttachment to your API service
+        console.warn('Delete attachment API not implemented yet');
+        return;
+      default:
+        throw new Error(`Unknown content type: ${type}`);
+    }
+
+    // Update local material state by removing the deleted item
+    const updatedMaterial = { ...localMaterial };
     
-    // TODO: Implement API calls to delete content
-    console.log(`Delete ${type} with ID: ${contentId}`);
-  };
+    switch (type) {
+      case "flashcard":
+        updatedMaterial.flashcard_sets = flashcardSets.filter(set => set.id !== contentId);
+        break;
+      case "note":
+        updatedMaterial.notes = notes.filter(note => note.id !== contentId);
+        break;
+      case "quiz":
+        updatedMaterial.quizzes = quizzes.filter(quiz => quiz.id !== contentId);
+        break;
+      case "attachment":
+        updatedMaterial.attachments = attachments.filter(att => att.id !== contentId);
+        break;
+    }
+
+    // Update local state
+    setLocalMaterial(updatedMaterial);
+
+    // Call parent's update function to sync with Dashboard
+    if (onMaterialUpdate) {
+      onMaterialUpdate(updatedMaterial);
+    }
+
+    // Show success message
+    showToast({
+      variant: "success",
+      title: "Content deleted",
+      subtitle: `"${contentName}" has been deleted successfully.`,
+    });
+
+  } catch (error) {
+    console.error(`Error deleting ${type}:`, error);
+    
+    showToast({
+      variant: "error",
+      title: "Delete failed",
+      subtitle: `Failed to delete "${contentName}". Please try again.`,
+    });
+  }
+};
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -675,6 +751,7 @@ const MaterialContent = ({
                         className="cursor-pointer"
                       >
                         <MaterialFile
+                          mainMaterial={localMaterial}
                           content={flashcardSet}
                           onDelete={(e, id) => handleDeleteContent(id, "flashcard")}
                           onEdit={() => handleEditContent(flashcardSet, "flashcard")}
