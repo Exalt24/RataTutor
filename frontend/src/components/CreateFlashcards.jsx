@@ -1,10 +1,10 @@
-import { AlertCircle, ArrowLeft, ArrowUpDown, GripVertical, Trash2 } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft, ArrowUpDown, Globe, GripVertical, Lock, Trash2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import ValidatedInput from '../components/ValidatedInput';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
-import ValidatedInput from '../components/ValidatedInput';
-import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
 import { defaultValidators } from '../utils/validation';
+import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
 
 const CreateFlashcards = ({ 
   material, 
@@ -35,7 +35,6 @@ const CreateFlashcards = ({
   // Initialize form data based on mode (create vs edit)
   useEffect(() => {
     if (isEditMode && flashcardSet) {
-      console.log('Initializing edit mode with flashcard set:', flashcardSet);
       // Edit mode: populate with existing data
       setFormData({
         title: flashcardSet.title || '',
@@ -44,15 +43,12 @@ const CreateFlashcards = ({
 
       // Convert existing flashcards to the expected format
       const existingCards = flashcardSet.flashcards || flashcardSet.cards || [];
-      console.log('Existing cards:', existingCards);
       if (existingCards.length > 0) {
-        const formattedCards = existingCards.map(card => ({
+        setItems(existingCards.map(card => ({
           front: card.question || card.front || '',
           back: card.answer || card.back || '',
           id: card.id // Keep track of existing card IDs for updates
-        }));
-        console.log('Formatted cards:', formattedCards);
-        setItems(formattedCards);
+        })));
       } else {
         setItems([{ front: '', back: '' }]);
       }
@@ -203,18 +199,18 @@ const CreateFlashcards = ({
     return errors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (submitting) return;
-
-    // Check if all required fields are valid
-    if (!validities.title) {
-      setBannerErrors(['Please fix the errors in the form before submitting.']);
+  const handleSave = async () => {
+    setBannerErrors([]);
+    
+    // Validate flashcards
+    const flashcardErrors = validateFlashcards();
+    if (flashcardErrors.length > 0) {
+      setBannerErrors(flashcardErrors);
       return;
     }
 
     setSubmitting(true);
-    setBannerErrors([]);
+    showLoading();
 
     try {
       // Prepare flashcard data - only include non-empty valid cards
@@ -233,17 +229,11 @@ const CreateFlashcards = ({
           const backError = defaultValidators.flashcardAnswer(item.back);
           return !frontError && !backError;
         })
-        .map(item => {
-          const card = {
-            question: item.front.trim(),
-            answer: item.back.trim()
-          };
-          // Only include id for existing cards
-          if (item.id) {
-            card.id = item.id;
-          }
-          return card;
-        });
+        .map(item => ({
+          question: item.front.trim(),
+          answer: item.back.trim(),
+          ...(item.id && { id: item.id }) // Include ID for existing cards if editing
+        }));
 
       // Double-check we have valid cards before submitting
       if (validFlashcards.length === 0) {
@@ -255,26 +245,18 @@ const CreateFlashcards = ({
         material: material.id,
         title: formData.title,
         description: formData.description,
-        cards: validFlashcards // Changed from flashcards to cards to match backend expectation
+        flashcards: validFlashcards
       };
 
-      console.log('Current items state:', items);
-      console.log('Valid flashcards to send:', validFlashcards);
-      console.log('Flashcard set data:', flashcardSetData);
-      console.log('Is edit mode:', isEditMode);
-      console.log('Flashcard set ID:', flashcardSet?.id);
+      console.log(`${isEditMode ? 'Updating' : 'Creating'} flashcard set data:`, flashcardSetData);
 
       let response;
       if (isEditMode) {
         // Update existing flashcard set
-        console.log('Updating flashcard set with ID:', flashcardSet.id);
         response = await updateFlashcardSet(flashcardSet.id, flashcardSetData);
-        console.log('Update response:', response);
       } else {
         // Create new flashcard set
-        console.log('Creating new flashcard set');
         response = await createFlashcardSet(flashcardSetData);
-        console.log('Create response:', response);
       }
 
       showToast({
@@ -283,29 +265,58 @@ const CreateFlashcards = ({
         subtitle: `${isEditMode ? 'Updated' : 'Created'} ${validFlashcards.length} flashcards in "${formData.title}" set.`,
       });
 
-      onSuccess && onSuccess(response.data);
-      onClose && onClose();
-    } catch (error) {
-      console.error('Full error object:', error);
-      console.error('Error response:', error.response);
-      console.error('Error data:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error headers:', error.response?.headers);
-      
-      let errorMessage = 'Failed to save flashcards. Please try again.';
-      if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error.response?.data) {
-        // Handle validation errors
-        const errors = Object.entries(error.response.data)
-          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-          .join('\n');
-        errorMessage = errors;
+      if (onSuccess) {
+        onSuccess(response.data);
       }
+
+      onClose();
+
+    } catch (err) {
+      // Enhanced error handling
+      const data = err.response?.data || {};
+      const msgs = [];
+
+      // Handle nested validation errors (for flashcards)
+      if (data.cards && Array.isArray(data.cards)) {
+        data.cards.forEach((cardErrors, index) => {
+          if (typeof cardErrors === 'object' && cardErrors !== null) {
+            Object.entries(cardErrors).forEach(([field, errors]) => {
+              if (Array.isArray(errors)) {
+                errors.forEach(error => {
+                  msgs.push(`Card ${index + 1} - ${field}: ${error}`);
+                });
+              } else if (typeof errors === 'string') {
+                msgs.push(`Card ${index + 1} - ${field}: ${errors}`);
+              }
+            });
+          }
+        });
+      }
+
+      // Handle other errors
+      Object.entries(data).forEach(([key, val]) => {
+        if (key !== 'cards') { // Skip cards as we handled them above
+          if (Array.isArray(val)) {
+            val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
+          } else if (typeof val === "string") {
+            msgs.push(val);
+          }
+        }
+      });
+
+      if (msgs.length === 0) {
+        msgs.push(`Failed to ${isEditMode ? 'update' : 'create'} flashcards. Please try again.`);
+      }
+
+      setBannerErrors(msgs);
       
-      setBannerErrors([errorMessage]);
+      console.log('Full error object:', err);
+      console.log('Error response:', err.response);
+      console.log('Error data:', err.response?.data);
+
     } finally {
       setSubmitting(false);
+      hideLoading();
     }
   };
 
@@ -614,7 +625,7 @@ const CreateFlashcards = ({
               Cancel
             </button>
             <button
-              onClick={handleSubmit}
+              onClick={handleSave}
               className={`exam-button-mini ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               data-hover={
                 submitting 
