@@ -234,7 +234,7 @@ const Dashboard = () => {
             />
           )}
           {screen === 'exams' && <ExamsScreen />}
-          {screen === 'explore' && <ExploreScreen />}
+          {screen === 'explore' && <ExploreScreen onRefreshMaterials={fetchMaterialsData} />}
           {screen === 'rata' && <RataAIScreen
               materialsData={materialsData}
            />}
