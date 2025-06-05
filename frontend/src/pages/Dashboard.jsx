@@ -137,36 +137,6 @@ const Dashboard = () => {
     setMaterialsData(prevMaterials => [material, ...prevMaterials]);
   };
 
-  const updateMaterialWithNewContent = async (materialId, newContent, contentType) => {
-  try {
-    setMaterialsData(prevMaterials => 
-      prevMaterials.map(material => {
-        if (material.id === materialId) {
-          const updatedMaterial = { ...material };
-          
-          switch (contentType) {
-            case 'flashcard_set':
-              updatedMaterial.flashcard_sets = [
-                ...(material.flashcard_sets || []), 
-                newContent
-              ];
-              break;
-            // ... other cases
-          }
-          
-          return updatedMaterial;
-        }
-        return material;
-      })
-    );
-    
-    console.log(`Added new ${contentType} to material ${materialId}:`, newContent);
-  } catch (error) {
-    console.error(`Error updating material with new ${contentType}:`, error);
-  }
-};
-
-
   const getBgColor = () => {
     switch (screen) {
       case 'home':
