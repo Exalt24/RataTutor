@@ -2,7 +2,7 @@ import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, Upload, X } 
 import React, { useEffect, useRef, useState } from 'react'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
-import { deleteMaterial, toggleMaterialPin, toggleMaterialVisibility, updateMaterial, uploadAttachment } from '../services/apiService'
+import { softDeleteMaterial, toggleMaterialPin, toggleMaterialVisibility, updateMaterial, uploadAttachment } from '../services/apiService'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
@@ -292,21 +292,21 @@ const MaterialsScreen = ({
   const confirmDelete = async () => {
     try {
       showLoading()
-      await deleteMaterial(materialToDelete.id)
+      await softDeleteMaterial(materialToDelete.id)
       
       // Remove through Dashboard's state management
       onRemoveMaterial(materialToDelete.id)
       
       showToast({
         variant: "success",
-        title: "Material deleted",
-        subtitle: `"${materialToDelete.title}" has been deleted successfully.`,
+        title: "Material moved to trash",
+        subtitle: `"${materialToDelete.title}" has been moved to trash.`,
       })
     } catch (err) {
       showToast({
         variant: "error",
-        title: "Error deleting material",
-        subtitle: "Failed to delete material. Please try again.",
+        title: "Error moving to trash",
+        subtitle: "Failed to move material to trash. Please try again.",
       })
     } finally {
       hideLoading()
