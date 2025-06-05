@@ -81,16 +81,6 @@ const Header = ({
                 </button>
                 <button
                   onClick={() => {
-                    onStreak();
-                    setOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2 hover:bg-gray-50 transition space-x-2 text-sm"
-                >
-                  <Flame size={16} className="text-orange-500" />
-                  <span className="label-text">View Streak</span>
-                </button>
-                <button
-                  onClick={() => {
                     onLogout();
                     setOpen(false);
                   }}
