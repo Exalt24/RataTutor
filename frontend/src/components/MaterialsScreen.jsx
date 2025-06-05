@@ -211,6 +211,11 @@ const MaterialsScreen = ({
 
   const handleDelete = async (material) => {
     try {
+
+      if (!window.confirm(`Are you sure you want to delete "${material.title}"? This action cannot be undone.`)) {
+        return
+      }
+
       showLoading()
       await deleteMaterial(material.id)
       
