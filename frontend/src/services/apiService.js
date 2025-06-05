@@ -82,3 +82,5 @@ export const createConversation = (data) => api.post('/conversations/create/', d
 export const chatConversation = (conversationId, prompt) =>
   api.post(`/conversations/${conversationId}/chat/`, { prompt });
 export const getConversation = (conversationId) => api.get(`/conversations/${conversationId}/`);
+
+export const deleteAttachment = (id) => api.delete(`/attachments/${id}/`);

@@ -45,7 +45,7 @@ const MaterialCard = ({
     
     // Check for flashcard sets
     if (file.flashcard_sets && file.flashcard_sets.length > 0) {
-      tags.push(`Flashcards (${file.flashcard_sets.length})`);
+      tags.push(`Flashcard Sets (${file.flashcard_sets.length})`);
     }
     
     // Check for notes
@@ -171,9 +171,7 @@ const MaterialCard = ({
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
                     onClick={(e) => {
                       e.stopPropagation()
-                      if (confirm(`Are you sure you want to delete "${file.title}"? This action cannot be undone.`)) {
-                        onDelete(file)
-                      }
+                      onDelete(file)
                       setShowMenu(false)
                     }}
                   >

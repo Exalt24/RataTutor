@@ -36,6 +36,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 class NoteSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
+        required=False,
         help_text="ID of an existing Material to which this note belongs.",
     )
     title = serializers.CharField(
@@ -173,6 +174,7 @@ class FlashcardSerializer(serializers.ModelSerializer):
 class FlashcardSetSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
+        required=False,
         help_text="ID of the Material this flashcard set belongs to."
     )
     title = serializers.CharField(
@@ -291,6 +293,7 @@ class FlashcardSetSerializer(serializers.ModelSerializer):
 class AIConversationSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
+        required=False,
         help_text="ID of the Material to which this conversation belongs.",
     )
 
@@ -408,6 +411,7 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
 class QuizSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(
         queryset=Material.objects.all(),
+        required=False,
         help_text="ID of the Material to which this quiz belongs.",
     )
     title = serializers.CharField(

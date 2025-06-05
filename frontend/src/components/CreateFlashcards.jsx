@@ -7,6 +7,7 @@ import { defaultValidators } from '../utils/validation';
 import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
 
 const CreateFlashcards = ({ 
+  mainMaterial, // Main material to associate with flashcard set
   material, 
   flashcardSet = null, // New prop for editing mode
   onClose, 
@@ -242,7 +243,6 @@ const CreateFlashcards = ({
       }
 
       const flashcardSetData = {
-        material: material.id,
         title: formData.title,
         description: formData.description,
         flashcards: validFlashcards
@@ -391,7 +391,7 @@ const CreateFlashcards = ({
               </h2>
               {material && (
                 <p className="text-sm text-gray-600 mt-1">
-                  for "{material.title}"
+                  for "{mainMaterial.title}"
                   {isEditMode && (
                     <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
                       Editing: {flashcardSet.title}

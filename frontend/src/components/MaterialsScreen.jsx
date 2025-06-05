@@ -69,7 +69,7 @@ const MaterialsScreen = ({
   }, [])
 
   const getTagColor = (tag) => {
-    if (tag.toLowerCase().includes('flashcards')) {
+    if (tag.toLowerCase().includes('flashcard set')) {
       return 'bg-[#FFB3BA] text-[#7D1F1F]' // Soft red
     } else if (tag.toLowerCase().includes('note')) {
       return 'bg-[#BAFFC9] text-[#1F7D2F]' // Soft green
@@ -210,10 +210,6 @@ const MaterialsScreen = ({
   }
 
   const handleDelete = async (material) => {
-    if (!confirm(`Are you sure you want to delete "${material.title}"? This action cannot be undone.`)) {
-      return
-    }
-
     try {
       showLoading()
       await deleteMaterial(material.id)
