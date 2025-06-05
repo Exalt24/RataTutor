@@ -11,7 +11,7 @@ import {
   Paperclip,
   Pencil
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useToast } from '../components/Toast/ToastContext';
 import MaterialFile from "./MaterialFile";
 import ViewFlashcards from "./ViewFlashcards";
@@ -116,21 +116,23 @@ const MaterialContent = ({
   onBack,
   onTitleChange,
   onMaterialUpdate,
+  onRefreshMaterials,
   readOnly = false
 }) => {
   const { showToast } = useToast();
   
-  // Local material state for optimistic updates
-  const [localMaterial, setLocalMaterial] = useState(material);
+  // Only keep view-related state
   const [showViewFlashcards, setShowViewFlashcards] = useState(false);
   const [showViewQuiz, setShowViewQuiz] = useState(false);
   const [showViewNotes, setShowViewNotes] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
-  const [isMaterialPublic, setIsMaterialPublic] = useState(isPublic);
+  
+  // Edit state - only for form inputs
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(material?.title || "");
+  const [editedTitle, setEditedTitle] = useState("");
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [editedDescription, setEditedDescription] = useState(material?.description || "");
+  const [editedDescription, setEditedDescription] = useState("");
+  
   const [expandedSections, setExpandedSections] = useState({
     Flashcards: true,
     Notes: true,
@@ -138,19 +140,11 @@ const MaterialContent = ({
     Attachments: true
   });
 
-  // Update local state when prop changes (from parent updates)
-  useEffect(() => {
-    setLocalMaterial(material);
-    setIsMaterialPublic(isPublic);
-    setEditedTitle(material?.title || "");
-    setEditedDescription(material?.description || "");
-  }, [isPublic, material]);
-
-  // Extract content from local material state
-  const flashcardSets = localMaterial?.flashcard_sets || [];
-  const notes = localMaterial?.notes || [];
-  const quizzes = localMaterial?.quizzes || [];
-  const attachments = localMaterial?.attachments || [];
+  // Extract content directly from props
+  const flashcardSets = material?.flashcard_sets || [];
+  const notes = material?.notes || [];
+  const quizzes = material?.quizzes || [];
+  const attachments = material?.attachments || [];
 
   const handleViewContent = (item, type) => {
     setSelectedContent(item);
@@ -170,45 +164,22 @@ const MaterialContent = ({
     setSelectedContent(null);
   };
 
-  const handleVisibilityToggle = () => {
-    setIsMaterialPublic(!isMaterialPublic);
-    onVisibilityToggle();
-  };
-
   const handleTitleEdit = () => {
     if (!readOnly) {
+      setEditedTitle(material?.title || "");
       setIsEditingTitle(true);
     }
   };
 
   const handleTitleSave = async () => {
-    if (editedTitle.trim() && (editedTitle !== localMaterial?.title || editedDescription !== localMaterial?.description)) {
+    if (editedTitle.trim() && (editedTitle !== material?.title || editedDescription !== material?.description)) {
       try {
-        // Optimistically update local state immediately
-        const updatedMaterial = {
-          ...localMaterial,
-          title: editedTitle,
-          description: editedDescription
-        };
-        setLocalMaterial(updatedMaterial);
-        
-        // Call parent's update function (this updates MaterialsScreen and Dashboard state)
         await onTitleChange(editedTitle, editedDescription);
-        
       } catch (error) {
-        // If API call fails, revert to original values
+        // Reset form on error
         setEditedTitle(material?.title || "");
         setEditedDescription(material?.description || "");
-        setLocalMaterial(material);
-        
-        showToast({
-          variant: "error",
-          title: "Update failed",
-          subtitle: "Failed to update material. Please try again.",
-        });
       }
-    } else {
-      setEditedTitle(localMaterial?.title || "");
     }
     setIsEditingTitle(false);
   };
@@ -218,44 +189,23 @@ const MaterialContent = ({
       handleTitleSave();
     } else if (e.key === 'Escape') {
       setIsEditingTitle(false);
-      setEditedTitle(localMaterial?.title || "");
+      setEditedTitle(material?.title || "");
     }
   };
 
   const handleDescriptionEdit = () => {
     if (!readOnly) {
+      setEditedDescription(material?.description || "");
       setIsEditingDescription(true);
     }
   };
 
   const handleDescriptionSave = async () => {
-    if (editedDescription !== localMaterial?.description || editedTitle !== localMaterial?.title) {
-      try {
-        // Optimistically update local state immediately
-        const updatedMaterial = {
-          ...localMaterial,
-          title: editedTitle,
-          description: editedDescription
-        };
-        setLocalMaterial(updatedMaterial);
-        
-        // Call parent's update function
-        await onTitleChange(editedTitle, editedDescription);
-        
-      } catch (error) {
-        // If API call fails, revert to original values
-        setEditedTitle(localMaterial?.title || "");
-        setEditedDescription(localMaterial?.description || "");
-        setLocalMaterial(material);
-        
-        showToast({
-          variant: "error",
-          title: "Update failed",
-          subtitle: "Failed to update material. Please try again.",
-        });
-      }
-    } else {
-      setEditedDescription(localMaterial?.description || "");
+    try {
+      await onTitleChange(material?.title || "", editedDescription);
+    } catch (error) {
+      // Reset form on error
+      setEditedDescription(material?.description || "");
     }
     setIsEditingDescription(false);
   };
@@ -265,7 +215,7 @@ const MaterialContent = ({
       handleDescriptionSave();
     } else if (e.key === 'Escape') {
       setIsEditingDescription(false);
-      setEditedDescription(localMaterial?.description || "");
+      setEditedDescription(material?.description || "");
     }
   };
 
@@ -279,125 +229,126 @@ const MaterialContent = ({
   const handleEditContent = (content, type) => {
     if (readOnly) return;
     
-    // For editing, we'll use the create functions with the existing content
     if (type === "flashcard") {
-      // Ensure we have the complete flashcard set data
-      const flashcardSet = flashcardSets.find(set => set.id === content.id) || content;
-      setSelectedContent(flashcardSet);
-      setShowViewFlashcards(true);
+      onCreateFlashcards(material, content, {
+        onSuccess: (updatedFlashcardSet) => {
+          // Navigate directly to ViewFlashcards with the updated flashcard set
+          setSelectedContent(updatedFlashcardSet);
+          setShowViewFlashcards(true);
+          return false; // Tell MaterialsScreen to delay closing
+        }
+      });
     } else if (type === "quiz") {
-      // Ensure we have the complete quiz data
       const quiz = quizzes.find(q => q.id === content.id) || content;
       setSelectedContent(quiz);
       setShowViewQuiz(true);
     } else if (type === "note") {
-      // Ensure we have the complete note data
       const note = notes.find(n => n.id === content.id) || content;
       setSelectedContent(note);
       setShowViewNotes(true);
     }
   };
 
-const handleDeleteContent = async (contentId, type) => {
-  if (readOnly) return;
-  
-  // Import these at the top of your file first!
-  // import { deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
-  
-  // Determine the content name for confirmation
-  let contentName = '';
-  let content = null;
-  
-  switch (type) {
-    case "flashcard":
-      content = flashcardSets.find(set => set.id === contentId);
-      contentName = content?.title || 'flashcard set';
-      break;
-    case "note":
-      content = notes.find(note => note.id === contentId);
-      contentName = content?.title || 'note';
-      break;
-    case "quiz":
-      content = quizzes.find(quiz => quiz.id === contentId);
-      contentName = content?.title || 'quiz';
-      break;
-    case "attachment":
-      content = attachments.find(att => att.id === contentId);
-      contentName = content?.file?.split('/').pop() || 'attachment';
-      break;
-    default:
-      console.error('Unknown content type:', type);
-      return;
-  }
-
-  // Confirm deletion
-  if (!confirm(`Are you sure you want to delete "${contentName}"? This action cannot be undone.`)) {
-    return;
-  }
-
-  try {
-    // Call appropriate API based on type
+  const handleDeleteContent = async (contentId, type) => {
+    if (readOnly) return;
+    
+    // Determine the content name for confirmation
+    let contentName = '';
+    let content = null;
+    
     switch (type) {
       case "flashcard":
-        await deleteFlashcardSet(contentId);
+        content = flashcardSets.find(set => set.id === contentId);
+        contentName = content?.title || 'flashcard set';
         break;
       case "note":
-        await deleteNote(contentId);
+        content = notes.find(note => note.id === contentId);
+        contentName = content?.title || 'note';
         break;
       case "quiz":
-        await deleteQuiz(contentId);
+        content = quizzes.find(quiz => quiz.id === contentId);
+        contentName = content?.title || 'quiz';
         break;
       case "attachment":
-        // You'll need to add deleteAttachment to your API service
-        console.warn('Delete attachment API not implemented yet');
-        return;
+        content = attachments.find(att => att.id === contentId);
+        contentName = content?.file?.split('/').pop() || 'attachment';
+        break;
       default:
-        throw new Error(`Unknown content type: ${type}`);
+        console.error('Unknown content type:', type);
+        return;
     }
 
-    // Update local material state by removing the deleted item
-    const updatedMaterial = { ...localMaterial };
-    
-    switch (type) {
-      case "flashcard":
-        updatedMaterial.flashcard_sets = flashcardSets.filter(set => set.id !== contentId);
-        break;
-      case "note":
-        updatedMaterial.notes = notes.filter(note => note.id !== contentId);
-        break;
-      case "quiz":
-        updatedMaterial.quizzes = quizzes.filter(quiz => quiz.id !== contentId);
-        break;
-      case "attachment":
-        updatedMaterial.attachments = attachments.filter(att => att.id !== contentId);
-        break;
+    if (!confirm(`Are you sure you want to delete "${contentName}"? This action cannot be undone.`)) {
+      return;
     }
 
-    // Update local state
-    setLocalMaterial(updatedMaterial);
+    try {
+      // Call appropriate API based on type
+      switch (type) {
+        case "flashcard":
+          await deleteFlashcardSet(contentId);
+          break;
+        case "note":
+          await deleteNote(contentId);
+          break;
+        case "quiz":
+          await deleteQuiz(contentId);
+          break;
+        case "attachment":
+          console.warn('Delete attachment API not implemented yet');
+          return;
+        default:
+          throw new Error(`Unknown content type: ${type}`);
+      }
 
-    // Call parent's update function to sync with Dashboard
-    if (onMaterialUpdate) {
-      onMaterialUpdate(updatedMaterial);
+      // ✅ OPTION 1: Use refetch pattern (like EditProfileScreen)
+      if (onRefreshMaterials) {
+        try {
+          await onRefreshMaterials();
+        } catch (error) {
+          console.error('Error refreshing materials after delete:', error);
+        }
+      } else {
+        // ✅ OPTION 2: Fallback to optimistic update (current approach)
+        const updatedMaterial = { ...material };
+        
+        switch (type) {
+          case "flashcard":
+            updatedMaterial.flashcard_sets = flashcardSets.filter(set => set.id !== contentId);
+            break;
+          case "note":
+            updatedMaterial.notes = notes.filter(note => note.id !== contentId);
+            break;
+          case "quiz":
+            updatedMaterial.quizzes = quizzes.filter(quiz => quiz.id !== contentId);
+            break;
+          case "attachment":
+            updatedMaterial.attachments = attachments.filter(att => att.id !== contentId);
+            break;
+        }
+
+        if (onMaterialUpdate) {
+          onMaterialUpdate(updatedMaterial);
+        }
+      }
+
+      showToast({
+        variant: "success",
+        title: "Content deleted",
+        subtitle: `"${contentName}" has been deleted successfully.`,
+      });
+
+    } catch (error) {
+      console.error(`Error deleting ${type}:`, error);
+      
+      showToast({
+        variant: "error",
+        title: "Delete failed",
+        subtitle: `Failed to delete "${contentName}". Please try again.`,
+      });
     }
+  };
 
-    // Show success message
-    showToast({
-      variant: "success",
-      title: "Content deleted",
-      subtitle: `"${contentName}" has been deleted successfully.`,
-    });
-
-  } catch (error) {
-    console.error(`Error deleting ${type}:`, error);
-    
-    showToast({
-      variant: "error",
-      title: "Delete failed",
-      subtitle: `Failed to delete "${contentName}". Please try again.`,
-    });
-  }
-};
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -415,31 +366,54 @@ const handleDeleteContent = async (contentId, type) => {
 
   if (showViewFlashcards) {
     return (
-    <ViewFlashcards
-      mainMaterial={localMaterial}
-      material={selectedContent} 
-      onClose={handleCloseView} 
-      readOnly={readOnly}
-      onSuccess={(updatedFlashcardSet) => {
-        // Update the local material state with the updated flashcard set
-        const updatedMaterial = {
-            ...localMaterial,
-            flashcard_sets: localMaterial.flashcard_sets.map(set =>
-              set.id === updatedFlashcardSet.id ? updatedFlashcardSet : set
-            )
-          };
-          setLocalMaterial(updatedMaterial);
-          
-          // Also update the selected content to reflect changes
-          setSelectedContent(updatedFlashcardSet);
-          
-          // Call parent's update function to sync with Dashboard
-          if (onMaterialUpdate) {
-            onMaterialUpdate(updatedMaterial);
+      <ViewFlashcards
+        mainMaterial={material}
+        material={selectedContent} 
+        onClose={handleCloseView} 
+        readOnly={readOnly}
+        onSuccess={async (updatedFlashcardSet) => {
+          // ✅ OPTION 1: Use refetch pattern
+          if (onRefreshMaterials) {
+            try {
+              await onRefreshMaterials();
+              // Update selected content for immediate UI feedback
+              setSelectedContent(updatedFlashcardSet);
+            } catch (error) {
+              console.error('Error refreshing materials:', error);
+            }
+          } else {
+            // ✅ OPTION 2: Fallback to optimistic update
+            const updatedMaterial = {
+              ...material,
+              flashcard_sets: material.flashcard_sets.map(set =>
+                set.id === updatedFlashcardSet.id ? updatedFlashcardSet : set
+              )
+            };
+            
+            setSelectedContent(updatedFlashcardSet);
+            
+            if (onMaterialUpdate) {
+              onMaterialUpdate(updatedMaterial);
+            }
           }
-      }}
-    />
-  );
+        }}
+        onEdit={(flashcardSet) => {
+          // Close ViewFlashcards and navigate to CreateFlashcards
+          setShowViewFlashcards(false);
+          setSelectedContent(null);
+          
+          // Call onCreateFlashcards with success handler
+          onCreateFlashcards(material, flashcardSet, {
+            onSuccess: (updatedFlashcardSet) => {
+              // Navigate directly to ViewFlashcards with the updated flashcard set
+              setSelectedContent(updatedFlashcardSet);
+              setShowViewFlashcards(true);
+              return false; // Tell MaterialsScreen to delay closing
+            }
+          });
+        }}
+      />
+    );
   }
 
   if (showViewQuiz) {
@@ -480,7 +454,7 @@ const handleDeleteContent = async (contentId, type) => {
                       />
                     ) : (
                       <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                        {localMaterial?.title || "Material"}
+                        {material?.title || "Material"}
                       </h1>
                     )}
                     {!readOnly && (
@@ -493,16 +467,16 @@ const handleDeleteContent = async (contentId, type) => {
                       </button>
                     )}
                     <button
-                      onClick={handleVisibilityToggle}
+                      onClick={onVisibilityToggle}
                       className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
-                        isMaterialPublic 
+                        isPublic 
                           ? 'bg-white border-gray-300 hover:bg-gray-50' 
                           : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
                       } ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      title={readOnly ? "Read-only mode" : (isMaterialPublic ? "Make Private" : "Make Public")}
+                      title={readOnly ? "Read-only mode" : (isPublic ? "Make Private" : "Make Public")}
                       disabled={readOnly}
                     >
-                      {isMaterialPublic ? (
+                      {isPublic ? (
                         <>
                           <Globe size={16} className="text-[#1b81d4]" />
                           <span className="text-[#1b81d4] text-sm font-medium">Public</span>
@@ -529,7 +503,7 @@ const handleDeleteContent = async (contentId, type) => {
                       />
                     ) : (
                       <p className="text-sm text-gray-500 label-text">
-                        {localMaterial?.description || "View and manage your content"}
+                        {material?.description || "View and manage your content"}
                       </p>
                     )}
                     {!readOnly && (
@@ -546,7 +520,7 @@ const handleDeleteContent = async (contentId, type) => {
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => onExport(localMaterial)}
+                  onClick={() => onExport(material)}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                   title="Export Material"
                   aria-label="Export Material"
@@ -558,7 +532,14 @@ const handleDeleteContent = async (contentId, type) => {
                     <div className="h-6 w-px bg-gray-200"></div>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateFlashcards(localMaterial)}
+                      onClick={() => onCreateFlashcards(material, null, {
+                        onSuccess: (newFlashcardSet) => {
+                          // Navigate directly to ViewFlashcards with the new flashcard set
+                          setSelectedContent(newFlashcardSet);
+                          setShowViewFlashcards(true);
+                          return false; // Tell MaterialsScreen to delay closing
+                        }
+                      })}
                       data-hover="Create Flashcards"
                     >
                       <BookOpen size={16} />
@@ -566,7 +547,7 @@ const handleDeleteContent = async (contentId, type) => {
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateNotes(localMaterial)}
+                      onClick={() => onCreateNotes(material)}
                       data-hover="Create Notes"
                     >
                       <FileText size={16} />
@@ -574,7 +555,7 @@ const handleDeleteContent = async (contentId, type) => {
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateQuiz(localMaterial)}
+                      onClick={() => onCreateQuiz(material)}
                       data-hover="Create Quiz"
                     >
                       <HelpCircle size={16} />
@@ -621,7 +602,7 @@ const handleDeleteContent = async (contentId, type) => {
                     />
                   ) : (
                     <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                      {localMaterial?.title || "Material"}
+                      {material?.title || "Material"}
                     </h1>
                   )}
                   {!readOnly && (
@@ -634,16 +615,16 @@ const handleDeleteContent = async (contentId, type) => {
                     </button>
                   )}
                   <button
-                    onClick={handleVisibilityToggle}
+                    onClick={onVisibilityToggle}
                     className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
-                      isMaterialPublic 
+                      isPublic 
                         ? 'bg-white border-gray-300 hover:bg-gray-50' 
                         : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
                     } ${readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    title={readOnly ? "Read-only mode" : (isMaterialPublic ? "Make Private" : "Make Public")}
+                    title={readOnly ? "Read-only mode" : (isPublic ? "Make Private" : "Make Public")}
                     disabled={readOnly}
                   >
-                    {isMaterialPublic ? (
+                    {isPublic ? (
                       <>
                         <Globe size={16} className="text-[#1b81d4]" />
                         <span className="text-[#1b81d4] text-sm font-medium">Public</span>
@@ -670,7 +651,7 @@ const handleDeleteContent = async (contentId, type) => {
                     />
                   ) : (
                     <p className="text-sm text-gray-500 label-text">
-                      {localMaterial?.description || "View and manage your content"}
+                      {material?.description || "View and manage your content"}
                     </p>
                   )}
                   {!readOnly && (
@@ -687,7 +668,7 @@ const handleDeleteContent = async (contentId, type) => {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => onExport(localMaterial)}
+                onClick={() => onExport(material)}
                 className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                 title="Export Material"
                 aria-label="Export Material"
@@ -699,7 +680,14 @@ const handleDeleteContent = async (contentId, type) => {
                   <div className="h-6 w-px bg-gray-200"></div>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateFlashcards(localMaterial)}
+                    onClick={() => onCreateFlashcards(material, null, {
+                      onSuccess: (newFlashcardSet) => {
+                        // Navigate directly to ViewFlashcards with the new flashcard set
+                        setSelectedContent(newFlashcardSet);
+                        setShowViewFlashcards(true);
+                        return false; // Tell MaterialsScreen to delay closing
+                      }
+                    })}
                     data-hover="Create Flashcards"
                   >
                     <BookOpen size={16} />
@@ -707,7 +695,7 @@ const handleDeleteContent = async (contentId, type) => {
                   </button>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateNotes(localMaterial)}
+                    onClick={() => onCreateNotes(material)}
                     data-hover="Create Notes"
                   >
                     <FileText size={16} />
@@ -715,7 +703,7 @@ const handleDeleteContent = async (contentId, type) => {
                   </button>
                   <button
                     className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                    onClick={() => onCreateQuiz(localMaterial)}
+                    onClick={() => onCreateQuiz(material)}
                     data-hover="Create Quiz"
                   >
                     <HelpCircle size={16} />
@@ -751,7 +739,6 @@ const handleDeleteContent = async (contentId, type) => {
                         className="cursor-pointer"
                       >
                         <MaterialFile
-                          mainMaterial={localMaterial}
                           content={flashcardSet}
                           onDelete={(e, id) => handleDeleteContent(id, "flashcard")}
                           onEdit={() => handleEditContent(flashcardSet, "flashcard")}

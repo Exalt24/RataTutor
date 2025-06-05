@@ -1,4 +1,4 @@
-import { BookOpen, FileText, HelpCircle, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { BookOpen, FileText, HelpCircle, MoreVertical, Trash2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -82,15 +82,6 @@ const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
     setShowMenu(false);
   };
 
-  // Edit handler
-  const handleEditClick = (e) => {
-    e.stopPropagation(); // Stop event from bubbling up
-    if (onEdit) {
-      onEdit(content);
-    }
-    setShowMenu(false);
-  };
-
   return (
     <div className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl">
       <div className="exam-card p-4 hover:shadow-lg transition-shadow">
@@ -112,13 +103,6 @@ const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
               </button>
               {showMenu && (
                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-700 flex items-center gap-2"
-                    onClick={handleEditClick}
-                  >
-                    <Pencil size={14} />
-                    Edit
-                  </button>
                   <button
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
                     onClick={handleDeleteClick}
