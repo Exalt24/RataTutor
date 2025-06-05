@@ -97,7 +97,7 @@ const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             {contentInfo.icon}
-            <h3 className="font-semibold">{content.title || 'Untitled'}</h3>
+            <h3 className="font-semibold md:truncate md:max-w-[150px] text-sm">{content.title || 'Untitled'}</h3>
           </div>
           {!readOnly && (
             <div className="relative" ref={menuRef}>
@@ -133,7 +133,7 @@ const MaterialFile = ({ content, onDelete, onEdit, readOnly = false }) => {
         </div>
         
         {content.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+          <p className="text-sm text-gray-600 mb-3 truncate">
             {content.description}
           </p>
         )}

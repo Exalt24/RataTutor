@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useCallback } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
-import { updateProfile } from "../services/authService";
 import ValidatedInput from '../components/ValidatedInput';
+import { updateProfile } from "../services/authService";
 import { avatarCombinations, getCurrentAvatar } from '../utils/avatarUtils';
 
 const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
@@ -67,8 +67,6 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
                   <div className="text-white text-sm font-medium">Select Avatar</div>
                 )}
               </div>
-              {/* Gradient ring effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full opacity-20 blur-sm"></div>
             </div>
           </div>
 
@@ -91,7 +89,7 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
                     <div 
                       className={`w-full h-full rounded-full overflow-hidden border-3 transition-all relative ${
                         selectedAvatar?.id === avatarCombo.id 
-                          ? 'border-blue-500 shadow-lg shadow-blue-200' 
+                          ? 'border-blue-500' 
                           : 'border-gray-200 group-hover:border-blue-300'
                       }`}
                       style={{ backgroundColor: avatarCombo.backgroundColor }}
@@ -350,12 +348,9 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
             </button>
           </div>
           
-          {/* Avatar Upload */}
+          {/* Avatar Section */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative group">
-              {/* Gradient ring effect */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-full opacity-20 blur-md group-hover:opacity-30 transition-opacity pointer-events-none"></div>
-              
               <div 
                 className="relative w-32 h-32 rounded-full overflow-hidden cursor-pointer shadow-xl border-4 border-white transition-all duration-300 group-hover:scale-105"
                 style={{ backgroundColor: selectedAvatar.backgroundColor }}
