@@ -8,8 +8,8 @@ import {
   Globe,
   HelpCircle,
   Lock,
-  Pencil,
-  Paperclip
+  Paperclip,
+  Pencil
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useToast } from '../components/Toast/ToastContext';
@@ -278,15 +278,41 @@ const MaterialContent = ({
   const handleEditContent = (content, type) => {
     if (readOnly) return;
     
+    // For editing, we'll use the create functions with the existing content
     if (type === "flashcard") {
-      setSelectedContent(content);
-      setShowViewFlashcards(true);
+      // Ensure we have the complete flashcard set data
+      const flashcardSet = flashcardSets.find(set => set.id === content.id) || content;
+      onCreateFlashcards({
+        id: flashcardSet.id,
+        title: flashcardSet.title,
+        description: flashcardSet.description,
+        flashcards: flashcardSet.flashcards?.map(card => ({
+          id: card.id,
+          question: card.question || card.front,
+          answer: card.answer || card.back
+        })) || [],
+        material: material.id
+      });
     } else if (type === "quiz") {
-      setSelectedContent(content);
-      setShowViewQuiz(true);
+      // Ensure we have the complete quiz data
+      const quiz = quizzes.find(q => q.id === content.id) || content;
+      onCreateQuiz({
+        id: quiz.id,
+        title: quiz.title,
+        description: quiz.description,
+        questions: quiz.questions || [],
+        material: material.id
+      });
     } else if (type === "note") {
-      setSelectedContent(content);
-      setShowViewNotes(true);
+      // Ensure we have the complete note data
+      const note = notes.find(n => n.id === content.id) || content;
+      onCreateNotes({
+        id: note.id,
+        title: note.title,
+        description: note.description,
+        content: note.content,
+        material: material.id
+      });
     }
   };
 
@@ -645,44 +671,15 @@ const MaterialContent = ({
                     {flashcardSets.map((flashcardSet) => (
                       <div
                         key={flashcardSet.id}
-                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
+                        onClick={() => handleViewContent(flashcardSet, "flashcard")}
+                        className="cursor-pointer"
                       >
-                        <div
-                          onClick={() => handleViewContent(flashcardSet, "flashcard")}
-                          className="cursor-pointer"
-                        >
-                          <div className="exam-card p-4 hover:shadow-lg transition-shadow">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <BookOpen size={18} className="text-blue-500" />
-                                <h3 className="font-semibold">{flashcardSet.title}</h3>
-                              </div>
-                              {!readOnly && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteContent(flashcardSet.id, "flashcard");
-                                  }}
-                                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
-                                  title="Delete"
-                                >
-                                  ×
-                                </button>
-                              )}
-                            </div>
-                            
-                            {flashcardSet.description && (
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                {flashcardSet.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                              <span>{flashcardSet.flashcards?.length || 0} cards</span>
-                              <span>{formatDate(flashcardSet.updated_at)}</span>
-                            </div>
-                          </div>
-                        </div>
+                        <MaterialFile
+                          content={flashcardSet}
+                          onDelete={(e, id) => handleDeleteContent(id, "flashcard")}
+                          onEdit={() => handleEditContent(flashcardSet, "flashcard")}
+                          readOnly={readOnly}
+                        />
                       </div>
                     ))}
                   </div>
@@ -705,44 +702,15 @@ const MaterialContent = ({
                     {notes.map((note) => (
                       <div
                         key={note.id}
-                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
+                        onClick={() => handleViewContent(note, "note")}
+                        className="cursor-pointer"
                       >
-                        <div
-                          onClick={() => handleViewContent(note, "note")}
-                          className="cursor-pointer"
-                        >
-                          <div className="exam-card p-4 hover:shadow-lg transition-shadow">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <FileText size={18} className="text-purple-500" />
-                                <h3 className="font-semibold">{note.title}</h3>
-                              </div>
-                              {!readOnly && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteContent(note.id, "note");
-                                  }}
-                                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
-                                  title="Delete"
-                                >
-                                  ×
-                                </button>
-                              )}
-                            </div>
-                            
-                            {note.description && (
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                {note.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                              <span>{note.content?.length > 100 ? `${note.content.substring(0, 100)}...` : note.content}</span>
-                              <span>{formatDate(note.created_at)}</span>
-                            </div>
-                          </div>
-                        </div>
+                        <MaterialFile
+                          content={note}
+                          onDelete={(e, id) => handleDeleteContent(id, "note")}
+                          onEdit={() => handleEditContent(note, "note")}
+                          readOnly={readOnly}
+                        />
                       </div>
                     ))}
                   </div>
@@ -765,44 +733,15 @@ const MaterialContent = ({
                     {quizzes.map((quiz) => (
                       <div
                         key={quiz.id}
-                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
+                        onClick={() => handleViewContent(quiz, "quiz")}
+                        className="cursor-pointer"
                       >
-                        <div
-                          onClick={() => handleViewContent(quiz, "quiz")}
-                          className="cursor-pointer"
-                        >
-                          <div className="exam-card p-4 hover:shadow-lg transition-shadow">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <HelpCircle size={18} className="text-green-500" />
-                                <h3 className="font-semibold">{quiz.title}</h3>
-                              </div>
-                              {!readOnly && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteContent(quiz.id, "quiz");
-                                  }}
-                                  className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
-                                  title="Delete"
-                                >
-                                  ×
-                                </button>
-                              )}
-                            </div>
-                            
-                            {quiz.description && (
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                                {quiz.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                              <span>{quiz.questions?.length || 0} questions</span>
-                              <span>{formatDate(quiz.created_at)}</span>
-                            </div>
-                          </div>
-                        </div>
+                        <MaterialFile
+                          content={quiz}
+                          onDelete={(e, id) => handleDeleteContent(id, "quiz")}
+                          onEdit={() => handleEditContent(quiz, "quiz")}
+                          readOnly={readOnly}
+                        />
                       </div>
                     ))}
                   </div>
@@ -823,45 +762,21 @@ const MaterialContent = ({
                 {expandedSections.Attachments && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {attachments.map((attachment) => (
-                      <div
-                        key={attachment.id}
-                        className="relative transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl rounded-xl"
-                      >
-                        <div className="exam-card p-4 hover:shadow-lg transition-shadow">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <Paperclip size={18} className="text-orange-500" />
-                              <h3 className="font-semibold text-sm truncate">
-                                {attachment.file?.split('/').pop() || 'File'}
-                              </h3>
-                            </div>
-                            {!readOnly && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteContent(attachment.id, "attachment");
-                                }}
-                                className="p-1 hover:bg-red-100 rounded-full transition-colors text-red-500"
-                                title="Delete"
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-sm text-gray-500">
-                            <a 
-                              href={attachment.file} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:underline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Download
-                            </a>
-                            <span>{formatDate(attachment.uploaded_at)}</span>
-                          </div>
-                        </div>
+                      <div key={attachment.id}>
+                        <MaterialFile
+                          content={{
+                            id: attachment.id,
+                            title: attachment.file?.split('/').pop() || 'File',
+                            description: attachment.description,
+                            createdAt: attachment.uploaded_at || attachment.created_at,
+                            tags: ["Attachment"],
+                            content: "Download",
+                            author: attachment.author || 'Unknown',
+                            file: attachment.file
+                          }}
+                          onDelete={(e, id) => handleDeleteContent(id, "attachment")}
+                          readOnly={readOnly}
+                        />
                       </div>
                     ))}
                   </div>

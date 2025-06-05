@@ -1,4 +1,4 @@
-import { Clock, Copy, Globe, Lock, MoreVertical, Pin, Trash } from 'lucide-react'
+import { Clock, Copy, Globe, Lock, MoreVertical, Pencil, Pin, Trash } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 const MaterialCard = ({ 
@@ -157,10 +157,23 @@ const MaterialCard = ({
                   
                   <div className="h-px bg-gray-200 my-1"></div>
                   <button
+                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onViewMaterial(file)
+                      setShowMenu(false)
+                    }}
+                  >
+                    <Pencil size={14} />
+                    Edit
+                  </button>
+                  <button
                     className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onDelete(file) // Pass the material object, not title
+                      if (confirm(`Are you sure you want to delete "${file.title}"? This action cannot be undone.`)) {
+                        onDelete(file)
+                      }
                       setShowMenu(false)
                     }}
                   >
