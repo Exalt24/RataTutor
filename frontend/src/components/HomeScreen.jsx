@@ -1,10 +1,13 @@
 import { Edit2, FilePlus, FileText, HelpCircle, Sparkles } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useLoading } from './Loading/LoadingContext';
+import { useToast } from './Toast/ToastContext';
 import ChooseModal from './ChooseModal';
 import CreateFlashcards from './CreateFlashcards';
 import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
-import UploadFile from './UploadFile';
+import UploadFile from './UploadFile'; // This now uses the enhanced version
+import UploadPurposeModal from './UploadPurposeModal';
 
 const HomeScreen = ({ 
   selectedFile, 
@@ -17,11 +20,17 @@ const HomeScreen = ({
   onUpdateMaterial
 }) => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUploadPurposeModalOpen, setIsUploadPurposeModalOpen] = useState(false);
   const [isChooseModalOpen, setIsChooseModalOpen] = useState(false);
   const [createType, setCreateType] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [modalMode, setModalMode] = useState('upload'); // 'upload' or 'manual'
+  const [modalMode, setModalMode] = useState('upload'); // 'upload', 'manual', or 'attachment'
+
+  // Add refs and hooks for file upload functionality
+  const fileInputRef = useRef(null);
+  const { showLoading, hideLoading } = useLoading();
+  const { showToast } = useToast();
 
   const openUploadModal = () => setIsUploadModalOpen(true);
   const closeUploadModal = () => setIsUploadModalOpen(false);
@@ -36,9 +45,13 @@ const HomeScreen = ({
     setCreateType(null);
     setSelectedMaterial(null);
     setIsChooseModalOpen(false);
+    setIsUploadPurposeModalOpen(false);
+    setUploadedFiles([]);
+    setModalMode('upload');
   };
 
   const handleFileUpload = (files) => {
+    // Files are already validated in the UploadFile component
     const newFiles = files.map(file => {
       const extension = file.name.split('.').pop().toLowerCase();
       
@@ -67,9 +80,21 @@ const HomeScreen = ({
         file: file
       };
     });
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    
+    setUploadedFiles(newFiles);
     closeUploadModal();
-    setModalMode('upload');
+    setIsUploadPurposeModalOpen(true);
+  };
+
+  const handlePurposeChoice = (purpose) => {
+    setIsUploadPurposeModalOpen(false);
+    
+    if (purpose === 'ai-generate') {
+      setModalMode('upload'); // Regular upload mode with content type selection
+    } else if (purpose === 'attach-files') {
+      setModalMode('attachment'); // Attachment mode with material selection only
+    }
+    
     setIsChooseModalOpen(true);
   };
 
@@ -108,13 +133,79 @@ const HomeScreen = ({
 
       if (material) {
         setSelectedMaterial(material);
-        setCreateType(type);
-        setIsChooseModalOpen(false);
+        
+        // Handle different modal modes
+        if (modalMode === 'attachment') {
+          // Upload files as attachments
+          await handleAttachmentUpload(material);
+        } else if (modalMode === 'upload') {
+          // AI generation mode - TODO: Implement AI generation logic
+          // For now, just show a placeholder message
+          showToast({
+            variant: "info",
+            title: "AI Generation Coming Soon",
+            subtitle: `AI generation for ${type} will be implemented soon. Files have been attached to "${material.title}" instead.`,
+          });
+          
+          // Temporarily attach files until AI is implemented
+          await handleAttachmentUpload(material);
+        } else {
+          // Manual creation mode (flashcards, notes, quiz)
+          setCreateType(type);
+          setIsChooseModalOpen(false);
+        }
       }
     } catch (error) {
       console.error('Error handling material selection:', error);
-      // You might want to show a toast error here
-      // showToast({ variant: "error", title: "Error", subtitle: error.message });
+      showToast({ 
+        variant: "error", 
+        title: "Error", 
+        subtitle: error.message || "Failed to process selection. Please try again." 
+      });
+    }
+  };
+
+  // Handle attachment upload to selected material
+  const handleAttachmentUpload = async (material) => {
+    if (uploadedFiles.length === 0) return;
+
+    try {
+      showLoading();
+      
+      // Import uploadAttachment function
+      const { uploadAttachment } = await import('../services/apiService');
+      
+      // Upload all files (validation already done in handleFileUpload)
+      const uploadPromises = uploadedFiles.map(fileData => {
+        return uploadAttachment(material.id, fileData.file);
+      });
+
+      await Promise.all(uploadPromises);
+      
+      // Refresh materials data to get updated attachments
+      await onRefreshMaterials();
+      
+      // Close modal and reset state
+      setIsChooseModalOpen(false);
+      setUploadedFiles([]);
+      setSelectedMaterial(null);
+      setModalMode('upload');
+
+      showToast({
+        variant: "success",
+        title: "Files uploaded successfully",
+        subtitle: `${uploadedFiles.length} file(s) have been attached to "${material.title}".`,
+      });
+
+    } catch (error) {
+      console.error('Error uploading attachments:', error);
+      showToast({
+        variant: "error",
+        title: "Upload failed",
+        subtitle: error.response?.data?.error || error.message || "Failed to upload files. Please try again.",
+      });
+    } finally {
+      hideLoading();
     }
   };
 
@@ -166,8 +257,8 @@ const HomeScreen = ({
           {[
             { 
               icon: <FilePlus size={24} className="text-pink-500" />, 
-              title: 'Upload a PDF, PPT, DOCX, or TXT file',
-              desc: 'Get flashcards, summaries & quiz questions instantly.', 
+              title: 'Upload Files',
+              desc: 'Upload files for AI generation or attach to materials.', 
               action: openUploadModal,
               bgColor: 'bg-pink-50 hover:bg-pink-100'
             },
@@ -214,11 +305,22 @@ const HomeScreen = ({
         onUpload={handleFileUpload}
       />
 
+      <UploadPurposeModal
+        isOpen={isUploadPurposeModalOpen}
+        onClose={() => {
+          setIsUploadPurposeModalOpen(false);
+          setUploadedFiles([]);
+        }}
+        onChoosePurpose={handlePurposeChoice}
+        uploadedFiles={uploadedFiles}
+      />
+
       <ChooseModal
         isOpen={isChooseModalOpen}
         onClose={() => {
           setIsChooseModalOpen(false);
           setCreateType(null);
+          setUploadedFiles([]);
           setModalMode('upload');
         }}
         onCreate={handleMaterialAndTypeChoice}

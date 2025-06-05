@@ -7,7 +7,7 @@ const ChooseModal = ({
   onClose, 
   onCreate, 
   existingMaterials = [],
-  mode = 'upload', // 'upload' or 'manual'
+  mode = 'upload', // 'upload', 'manual', or 'attachment'
   preselectedType = null // for manual mode, the content type is already selected
 }) => {
   const [selectedMaterial, setSelectedMaterial] = useState('');
@@ -43,21 +43,21 @@ const ChooseModal = ({
     {
       icon: <FileText size={24} className="text-blue-500" aria-label="Flashcards icon" />,
       title: 'Create Flashcards',
-      desc: mode === 'upload' ? 'Generate flashcards from your uploaded content' : 'Create flashcards for this material',
+      desc: mode === 'upload' ? 'Generate flashcards using AI from your uploaded content' : 'Create flashcards for this material',
       type: 'flashcards',
       bgColor: 'bg-blue-50 hover:bg-blue-100'
     },
     {
       icon: <HelpCircle size={24} className="text-[#22C55E]" aria-label="Quiz icon" />,
       title: 'Create Quiz',
-      desc: mode === 'upload' ? 'Generate quiz questions from your uploaded content' : 'Create quiz questions for this material',
+      desc: mode === 'upload' ? 'Generate quiz questions using AI from your uploaded content' : 'Create quiz questions for this material',
       type: 'quiz',
       bgColor: 'bg-green-50 hover:bg-green-100'
     },
     {
       icon: <Edit2 size={24} className="text-purple-500" aria-label="Notes icon" />,
       title: 'Create Notes',
-      desc: mode === 'upload' ? 'Generate notes from your uploaded content' : 'Create notes for this material',
+      desc: mode === 'upload' ? 'Generate notes using AI from your uploaded content' : 'Create notes for this material',
       type: 'notes',
       bgColor: 'bg-purple-50 hover:bg-purple-100'
     }
@@ -66,11 +66,21 @@ const ChooseModal = ({
   const handleCreate = () => {
     if (!isMaterialStepValid()) return;
     
+    // For attachment mode, just proceed with material selection (no content type needed)
+    if (mode === 'attachment') {
+      const materialData = isCreatingNew 
+        ? { name: newMaterialName, description: newMaterialDescription, isNew: true }
+        : { id: parseInt(selectedMaterial), isNew: false };
+      
+      onCreate(null, materialData); // No type needed for attachments
+      return;
+    }
+    
     // For manual mode with preselected type, skip content type selection
     if (mode === 'manual' && preselectedType) {
       const materialData = isCreatingNew 
         ? { name: newMaterialName, description: newMaterialDescription, isNew: true }
-        : { id: parseInt(selectedMaterial), isNew: false }; // Convert to number
+        : { id: parseInt(selectedMaterial), isNew: false };
       
       onCreate(preselectedType, materialData);
       return;
@@ -81,14 +91,14 @@ const ChooseModal = ({
     
     const materialData = isCreatingNew 
       ? { name: newMaterialName, description: newMaterialDescription, isNew: true }
-      : { id: parseInt(selectedMaterial), isNew: false }; // Convert to number
+      : { id: parseInt(selectedMaterial), isNew: false };
     
     onCreate(selectedType, materialData);
   };
 
   const handleContinue = () => {
-    if (mode === 'manual' && preselectedType) {
-      // Skip to creation directly for manual mode with preselected type
+    if (mode === 'attachment' || (mode === 'manual' && preselectedType)) {
+      // Skip to creation directly for attachment mode or manual mode with preselected type
       handleCreate();
     } else {
       // Go to content type selection
@@ -112,6 +122,10 @@ const ChooseModal = ({
   };
 
   const getModalTitle = () => {
+    if (mode === 'attachment') {
+      return 'Upload Attachments - Choose Material';
+    }
+    
     if (mode === 'manual' && preselectedType) {
       const typeNames = {
         flashcards: 'Flashcards',
@@ -129,6 +143,10 @@ const ChooseModal = ({
   };
 
   const getButtonText = () => {
+    if (mode === 'attachment') {
+      return 'Upload Files';
+    }
+    
     if (mode === 'manual' && preselectedType) {
       return 'Create';
     }
@@ -331,8 +349,10 @@ const ChooseModal = ({
     </>
   );
 
-  // For manual mode with preselected type, only show material step
-  const shouldShowContentStep = step === 'content' && !(mode === 'manual' && preselectedType);
+  // For attachment mode or manual mode with preselected type, only show material step
+  const shouldShowContentStep = step === 'content' && 
+                                mode !== 'attachment' && 
+                                !(mode === 'manual' && preselectedType);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="modal-title">

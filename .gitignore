@@ -38,5 +38,9 @@ htmlcov/
 *.njsproj
 *.sln
 
+# Django media files (user uploads)
+backend/media/
+backend/attachments/
+
 # MacOS
 .DS_Store
