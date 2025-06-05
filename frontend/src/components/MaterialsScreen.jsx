@@ -7,6 +7,7 @@ import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
 import CreateQuiz from './CreateQuiz'
+import DeleteModal from './DeleteModal'
 import MaterialCard from './MaterialCard'
 import MaterialContent from './MaterialContent'
 
@@ -44,6 +45,8 @@ const MaterialsScreen = ({
   const [isFromExplore, setIsFromExplore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState(null);
 
   const typeDropdownRef = useRef(null)
   const updatedDropdownRef = useRef(null)
@@ -210,22 +213,22 @@ const MaterialsScreen = ({
   }
 
   const handleDelete = async (material) => {
+    setMaterialToDelete(material);
+    setDeleteModalOpen(true);
+  }
+
+  const confirmDelete = async () => {
     try {
-
-      if (!window.confirm(`Are you sure you want to delete "${material.title}"? This action cannot be undone.`)) {
-        return
-      }
-
       showLoading()
-      await deleteMaterial(material.id)
+      await deleteMaterial(materialToDelete.id)
       
       // Remove through Dashboard's state management
-      onRemoveMaterial(material.id)
+      onRemoveMaterial(materialToDelete.id)
       
       showToast({
         variant: "success",
         title: "Material deleted",
-        subtitle: `"${material.title}" has been deleted successfully.`,
+        subtitle: `"${materialToDelete.title}" has been deleted successfully.`,
       })
     } catch (err) {
       showToast({
@@ -235,6 +238,8 @@ const MaterialsScreen = ({
       })
     } finally {
       hideLoading()
+      setDeleteModalOpen(false);
+      setMaterialToDelete(null);
     }
   }
 
@@ -583,6 +588,17 @@ const MaterialsScreen = ({
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
             onCreated={handleCreateMaterial}
+          />
+
+          <DeleteModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setMaterialToDelete(null);
+            }}
+            onConfirm={confirmDelete}
+            title="Delete Material"
+            message={`Are you sure you want to delete "${materialToDelete?.title}"? This action cannot be undone.`}
           />
         </>
       )}

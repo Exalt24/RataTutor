@@ -1,6 +1,7 @@
 import { Clock, FileText, HelpCircle, Search, Trash2, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { getTrashedMaterials } from '../services/apiService'
+import DeleteModal from './DeleteModal'
 import { useLoading } from './Loading/LoadingContext'
 import { useToast } from './Toast/ToastContext'
 
@@ -10,6 +11,7 @@ const TrashScreen = () => {
   const [selectedItems, setSelectedItems] = useState([])
   const [trashItems, setTrashItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
@@ -143,33 +145,36 @@ const TrashScreen = () => {
   }
 
   const handleDeleteSelected = async () => {
-    if (selectedItems.length === 0) return
-    if (confirm(`Are you sure you want to permanently delete ${selectedItems.length} item(s)? This action cannot be undone.`)) {
-      try {
-        showLoading()
-        // For demonstration, just update the UI
-        setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
-        setSelectedItems([])
-        
-        showToast({
-          variant: "success",
-          title: "Items deleted",
-          subtitle: `${selectedItems.length} item(s) have been permanently deleted.`,
-        })
+    if (selectedItems.length === 0) return;
+    setDeleteModalOpen(true);
+  }
 
-        // Uncomment this to use real API
-        // await Promise.all(selectedItems.map(id => deleteMaterial(id)))
-        // setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
-        // setSelectedItems([])
-      } catch (error) {
-        showToast({
-          variant: "error",
-          title: "Error deleting items",
-          subtitle: "Failed to delete some items. Please try again.",
-        })
-      } finally {
-        hideLoading()
-      }
+  const confirmDeleteSelected = async () => {
+    try {
+      showLoading()
+      // For demonstration, just update the UI
+      setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      setSelectedItems([])
+      
+      showToast({
+        variant: "success",
+        title: "Items deleted",
+        subtitle: `${selectedItems.length} item(s) have been permanently deleted.`,
+      })
+
+      // Uncomment this to use real API
+      // await Promise.all(selectedItems.map(id => deleteMaterial(id)))
+      // setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      // setSelectedItems([])
+    } catch (error) {
+      showToast({
+        variant: "error",
+        title: "Error deleting items",
+        subtitle: "Failed to delete some items. Please try again.",
+      })
+    } finally {
+      hideLoading()
+      setDeleteModalOpen(false);
     }
   }
 
@@ -296,6 +301,15 @@ const TrashScreen = () => {
           </p>
         </div>
       )}
+
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDeleteSelected}
+        title="Delete Selected Items"
+        message={`Are you sure you want to permanently delete ${selectedItems.length} item(s)? This action cannot be undone.`}
+        confirmText="Delete Permanently"
+      />
     </div>
   )
 }
