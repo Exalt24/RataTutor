@@ -50,15 +50,15 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
     const ext = filename?.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'pdf':
-        return '📄';
+        return <Paperclip size={18} className="text-orange-500" />;
       case 'docx':
-        return '📝';
+        return <Paperclip size={18} className="text-orange-500" />;
       case 'pptx':
-        return '📊';
+        return <Paperclip size={18} className="text-orange-500" />;
       case 'txt':
-        return '📋';
+        return <Paperclip size={18} className="text-orange-500" />;
       default:
-        return '📁';
+        return <Paperclip size={18} className="text-orange-500" />;
     }
   };
 
@@ -66,15 +66,15 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
     const ext = filename?.split('.').pop()?.toLowerCase();
     switch (ext) {
       case 'pdf':
-        return 'PDF Document';
+        return <span className="label-text text-xs">PDF Document</span>;
       case 'docx':
-        return 'Word Document';
+        return <span className="label-text text-xs">Word Document</span>;
       case 'pptx':
-        return 'PowerPoint';
+        return <span className="label-text text-xs">PowerPoint</span>;
       case 'txt':
-        return 'Text File';
+        return <span className="label-text text-xs">Text File</span>;
       default:
-        return 'File';
+        return <span className="label-text text-xs">File</span>;
     }
   };
 
@@ -190,16 +190,16 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
           <div className="flex items-center gap-2">
             {/* Show file emoji for attachments, regular icon for others */}
             {contentInfo.isAttachment ? (
-              <div className="text-2xl">{contentInfo.fileIcon}</div>
+              getFileIcon(content.file)
             ) : (
               contentInfo.icon
             )}
-            <h3 className="font-semibold md:truncate md:max-w-[150px] text-sm">
+            <h4 className="font-semibold md:truncate md:max-w-[150px] text-lg label-text">
               {contentInfo.isAttachment 
                 ? (content.file?.split('/').pop() || content.title || 'Unknown File')
                 : (content.title || 'Untitled')
               }
-            </h3>
+            </h4>
           </div>
           {!readOnly && (
             <div className="relative" ref={menuRef}>
@@ -217,7 +217,7 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
                   {/* ✅ NEW: Preview option for supported attachments */}
                   {contentInfo.isAttachment && contentInfo.canPreview && onPreview && (
                     <button
-                      className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-green-600 flex items-center gap-2"
+                      className="label-text w-full px-4 py-2 text-sm hover:bg-gray-50 text-green-600 flex items-center gap-2"
                       onClick={handlePreviewClick}
                     >
                       <Eye size={14} />
@@ -228,7 +228,7 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
                   {/* Download option for attachments */}
                   {contentInfo.isAttachment && onDownload && (
                     <button
-                      className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-blue-600 flex items-center gap-2"
+                      className="label-text w-full px-4 py-2 text-sm hover:bg-gray-50 text-blue-600 flex items-center gap-2"
                       onClick={handleDownloadClick}
                     >
                       <Download size={14} />
@@ -239,7 +239,7 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
                   {/* Edit option (only for non-attachments) */}
                   {!contentInfo.isAttachment && onEdit && (
                     <button
-                      className={`label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${contentInfo.colorClass} flex items-center gap-2`}
+                      className={`label-text w-full px-4 py-2 text-sm hover:bg-gray-50 ${contentInfo.colorClass} flex items-center gap-2`}
                       onClick={handleEditClick}
                     >
                       <Edit3 size={14} />
@@ -247,15 +247,10 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
                     </button>
                   )}
                   
-                  {/* Add separator if multiple options are available */}
-                  {((contentInfo.isAttachment && (contentInfo.canPreview || onDownload)) || (!contentInfo.isAttachment && onEdit)) && onDelete && (
-                    <hr className="my-1 border-gray-100" />
-                  )}
-                  
-                  {/* Delete option (available for all content types) */}
+                  {/* Delete option */}
                   {onDelete && (
                     <button
-                      className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                      className="label-text w-full px-4 py-2 text-sm hover:bg-gray-50 text-red-600 flex items-center gap-2"
                       onClick={handleDeleteClick}
                     >
                       <Trash2 size={14} />
@@ -271,7 +266,7 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
         {/* Show appropriate description for attachments */}
         {contentInfo.isAttachment ? (
           <p className="text-sm text-gray-600 mb-3">
-            {contentInfo.content} • Uploaded {formatRelativeTime(content.uploaded_at || content.created_at || new Date())}
+             Uploaded {formatRelativeTime(content.uploaded_at || content.created_at || new Date())}
           </p>
         ) : (
           content.description && (
@@ -296,7 +291,6 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
                   className="text-green-500 hover:text-green-600 font-medium flex items-center gap-1 text-xs"
                 >
                   <Eye size={14} />
-                  Preview
                 </button>
               )}
               {/* Download button */}
@@ -308,7 +302,6 @@ const MaterialFile = ({ content, onDelete, onEdit, onDownload, onPreview, readOn
                 className="text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1 text-xs"
               >
                 <Download size={14} />
-                Download
               </button>
             </div>
           </div>

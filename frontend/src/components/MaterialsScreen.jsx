@@ -1,4 +1,4 @@
-import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, Upload, X } from 'lucide-react'
+import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, X } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
