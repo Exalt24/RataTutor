@@ -12,20 +12,20 @@ import RataAIScreen from '../components/RataAIScreen';
 import Sidebar from '../components/Sidebar';
 import TrashScreen from '../components/TrashScreen';
 import { getProfile, logout } from '../services/authService';
-import { getMaterials, getTrashedMaterials } from '../services/apiService'; // Add these imports
+import { getMaterials, getTrashedMaterials } from '../services/apiService';
 import '../styles/pages/dashboard.css';
 
 const Dashboard = () => {
   const [screen, setScreen] = useState('home');
   const [profileData, setProfileData] = useState(null);
-  const [materialsData, setMaterialsData] = useState(null); // Add materials state
-  const [trashedMaterialsData, setTrashedMaterialsData] = useState(null); // Add trashed materials
+  const [materialsData, setMaterialsData] = useState(null);
+  const [trashedMaterialsData, setTrashedMaterialsData] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const nav = useNavigate();
 
   const { showLoading, hideLoading } = useLoading();
 
- const fetchProfileData = async () => {
+  const fetchProfileData = async () => {
     try {
       const profile = await getProfile();
       setProfileData(profile);
@@ -76,7 +76,6 @@ const Dashboard = () => {
   useEffect(() => {
     localStorage.setItem('currentScreen', screen);
   }, [screen]);
-
 
   // Handle Logout
   const doLogout = () => {
@@ -183,7 +182,11 @@ const Dashboard = () => {
               selectedFile={selectedFile} 
               handleFileChange={handleFileChange} 
               uploadAndGenerate={uploadAndGenerate} 
-              generated={profileData} 
+              generated={profileData}
+              materialsData={materialsData}
+              onRefreshMaterials={fetchMaterialsData}
+              onAddMaterial={addMaterialToState}
+              onUpdateMaterial={updateMaterialInState}
             />
           )}
           {screen === 'materials' && (
@@ -205,9 +208,7 @@ const Dashboard = () => {
           )}
           {screen === 'exams' && <ExamsScreen />}
           {screen === 'explore' && <ExploreScreen onRefreshMaterials={fetchMaterialsData} />}
-          {screen === 'rata' && <RataAIScreen
-              materialsData={materialsData}
-           />}
+          {screen === 'rata' && <RataAIScreen materialsData={materialsData} />}
           {screen === 'profile' && (
             <ProfileScreen 
               onEditProfile={() => setScreen('edit-profile')} 
