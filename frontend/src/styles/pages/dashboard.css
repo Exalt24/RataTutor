@@ -135,7 +135,6 @@
   padding: 0.4rem;
   font-family: var(--font-pixel);
   font-size: 0.8rem;
-  transform: rotate(-3deg);
   transition: all 0.3s ease;
   opacity: 0;
   background: var(--button-primary);
@@ -145,13 +144,12 @@
 
 .exam-button-mini:hover {
   background: var(--button-primary);
-  transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .exam-button-mini:hover::before {
   top: 50%;
-  transform: translateY(-50%) rotate(-3deg);
+  transform: translateY(-50%);
   opacity: 1;
 }
 

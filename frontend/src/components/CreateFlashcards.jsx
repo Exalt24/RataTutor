@@ -623,6 +623,7 @@ const CreateFlashcards = ({
                       : (isEditMode ? `Update ${cardValidationStatus.validCardCount} Flashcard(s)` : `Create ${cardValidationStatus.validCardCount} Flashcard(s)`)
               }
               disabled={isDisabled}
+              data-hover="Create"
             >
               {submitting 
                 ? (isEditMode ? "Updating..." : "Creating...") 
