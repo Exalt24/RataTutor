@@ -25,8 +25,7 @@ const Dashboard = () => {
 
   const { showLoading, hideLoading } = useLoading();
 
-  // Fetch profile data
-  const fetchProfileData = async () => {
+ const fetchProfileData = async () => {
     try {
       const profile = await getProfile();
       setProfileData(profile);
@@ -35,7 +34,6 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch materials data
   const fetchMaterialsData = async () => {
     try {
       const [materials, trashedMaterials] = await Promise.all([
@@ -46,13 +44,11 @@ const Dashboard = () => {
       setTrashedMaterialsData(trashedMaterials.data);
     } catch (error) {
       console.error('Error fetching materials data:', error);
-      // Set empty arrays as fallback
       setMaterialsData([]);
       setTrashedMaterialsData([]);
     }
   };
 
-  // Combined initial data fetch
   const fetchInitialData = async () => {
     try {
       await Promise.all([
@@ -74,13 +70,13 @@ const Dashboard = () => {
       setScreen(savedScreen);
     }
     
-    // Fetch all initial data
     fetchInitialData();
   }, []);
 
   useEffect(() => {
     localStorage.setItem('currentScreen', screen);
   }, [screen]);
+
 
   // Handle Logout
   const doLogout = () => {
@@ -140,6 +136,36 @@ const Dashboard = () => {
     );
     setMaterialsData(prevMaterials => [material, ...prevMaterials]);
   };
+
+  const updateMaterialWithNewContent = async (materialId, newContent, contentType) => {
+  try {
+    setMaterialsData(prevMaterials => 
+      prevMaterials.map(material => {
+        if (material.id === materialId) {
+          const updatedMaterial = { ...material };
+          
+          switch (contentType) {
+            case 'flashcard_set':
+              updatedMaterial.flashcard_sets = [
+                ...(material.flashcard_sets || []), 
+                newContent
+              ];
+              break;
+            // ... other cases
+          }
+          
+          return updatedMaterial;
+        }
+        return material;
+      })
+    );
+    
+    console.log(`Added new ${contentType} to material ${materialId}:`, newContent);
+  } catch (error) {
+    console.error(`Error updating material with new ${contentType}:`, error);
+  }
+};
+
 
   const getBgColor = () => {
     switch (screen) {

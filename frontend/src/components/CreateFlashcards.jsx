@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowUpDown, Globe, GripVertical, Lock, Trash2, AlertCircle } from 'lucide-react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ValidatedInput from '../components/ValidatedInput';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
@@ -7,17 +7,21 @@ import { defaultValidators } from '../utils/validation';
 import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
 
 const CreateFlashcards = ({ 
-  mainMaterial, // Main material to associate with flashcard set
+  mainMaterial, 
   material, 
-  flashcardSet = null, // New prop for editing mode
+  flashcardSet = null, 
   onClose, 
-  onSuccess 
+  onSuccess, 
+  options = {} 
 }) => {
   const { showLoading, hideLoading } = useLoading();
   const { showToast } = useToast();
 
-  // Determine if we're in edit mode
-  const isEditMode = !!flashcardSet;
+  // Extract success callback from either direct prop or options
+  const successCallback = options.onSuccess || onSuccess;
+
+  // Derived state using useMemo
+  const isEditMode = useMemo(() => !!flashcardSet, [flashcardSet]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -29,11 +33,11 @@ const CreateFlashcards = ({
   const [bannerErrors, setBannerErrors] = useState([]);
   const [validities, setValidities] = useState({
     title: false,
-    description: true, // Optional field
+    description: true,
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Initialize form data based on mode (create vs edit)
+  // ✅ Initialize form data - legitimate useEffect for form initialization
   useEffect(() => {
     if (isEditMode && flashcardSet) {
       // Edit mode: populate with existing data
@@ -48,7 +52,7 @@ const CreateFlashcards = ({
         setItems(existingCards.map(card => ({
           front: card.question || card.front || '',
           back: card.answer || card.back || '',
-          id: card.id // Keep track of existing card IDs for updates
+          id: card.id
         })));
       } else {
         setItems([{ front: '', back: '' }]);
@@ -60,7 +64,7 @@ const CreateFlashcards = ({
         title: !!(flashcardSet.title && flashcardSet.title.trim()),
       }));
     } else if (material?.title) {
-      // Create mode: can auto-suggest title based on material
+      // Create mode: auto-suggest title based on material
       setFormData(prev => ({
         ...prev,
         title: `${material.title} - Flashcards`,
@@ -70,53 +74,97 @@ const CreateFlashcards = ({
         title: true,
       }));
     }
-  }, [flashcardSet, material, isEditMode]);
+  }, [flashcardSet, material?.title, isEditMode]);
 
-  const addNewItem = () => {
-    setItems([...items, { front: '', back: '' }]);
-  };
+  // Memoized card validation to avoid recalculating on every render
+  const cardValidationStatus = useMemo(() => {
+    let validCardCount = 0;
+    let invalidCardCount = 0;
+    let emptyCardCount = 0;
+    let partialCardCount = 0;
 
-  const updateItem = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index][field] = value;
-    setItems(newItems);
-  };
+    items.forEach((item) => {
+      const frontTrimmed = item.front.trim();
+      const backTrimmed = item.back.trim();
+      
+      const isEmpty = !frontTrimmed && !backTrimmed;
+      const isPartial = (frontTrimmed && !backTrimmed) || (!frontTrimmed && backTrimmed);
+      
+      if (isEmpty) {
+        emptyCardCount++;
+      } else if (isPartial) {
+        partialCardCount++;
+      } else {
+        const frontError = defaultValidators.flashcardQuestion(item.front);
+        const backError = defaultValidators.flashcardAnswer(item.back);
+        
+        if (!frontError && !backError) {
+          validCardCount++;
+        } else {
+          invalidCardCount++;
+        }
+      }
+    });
 
-  const removeItem = (index) => {
+    return {
+      validCardCount,
+      invalidCardCount,
+      emptyCardCount,
+      partialCardCount,
+      hasValidCards: validCardCount > 0,
+      hasProblems: invalidCardCount > 0 || partialCardCount > 0
+    };
+  }, [items]);
+
+  const addNewItem = useCallback(() => {
+    setItems(prev => [...prev, { front: '', back: '' }]);
+  }, []);
+
+  const updateItem = useCallback((index, field, value) => {
+    setItems(prev => {
+      const newItems = [...prev];
+      newItems[index][field] = value;
+      return newItems;
+    });
+  }, []);
+
+  const removeItem = useCallback((index) => {
     if (items.length > 1) {
-      const newItems = items.filter((_, i) => i !== index);
-      setItems(newItems);
+      setItems(prev => prev.filter((_, i) => i !== index));
     }
-  };
+  }, [items.length]);
 
-  const swapFields = (index) => {
-    const newItems = [...items];
-    const temp = newItems[index].front;
-    newItems[index].front = newItems[index].back;
-    newItems[index].back = temp;
-    setItems(newItems);
-  };
+  const swapFields = useCallback((index) => {
+    setItems(prev => {
+      const newItems = [...prev];
+      const temp = newItems[index].front;
+      newItems[index].front = newItems[index].back;
+      newItems[index].back = temp;
+      return newItems;
+    });
+  }, []);
 
-  const handleDragStart = (index) => {
+  const handleDragStart = useCallback((index) => {
     setDraggedIndex(index);
-  };
+  }, []);
 
-  const handleDragOver = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
-  };
+  }, []);
 
-  const handleDrop = (dropIndex) => {
+  const handleDrop = useCallback((dropIndex) => {
     if (draggedIndex === null || draggedIndex === dropIndex) return;
 
-    const newItems = [...items];
-    const draggedItem = newItems[draggedIndex];
-    newItems.splice(draggedIndex, 1);
-    newItems.splice(dropIndex, 0, draggedItem);
-    setItems(newItems);
+    setItems(prev => {
+      const newItems = [...prev];
+      const draggedItem = newItems[draggedIndex];
+      newItems.splice(draggedIndex, 1);
+      newItems.splice(dropIndex, 0, draggedItem);
+      return newItems;
+    });
     setDraggedIndex(null);
-  };
+  }, [draggedIndex]);
 
-  // Memoized handlers to prevent infinite re-renders
   const handleTitleChange = useCallback((e) => {
     setFormData(prev => ({
       ...prev,
@@ -145,10 +193,9 @@ const CreateFlashcards = ({
     }));
   }, []);
 
-  const validateFlashcards = () => {
+  const validateFlashcards = useCallback(() => {
     const errors = [];
     
-    // Check if we have at least one flashcard
     if (items.length === 0) {
       errors.push('At least one flashcard is required.');
       return errors;
@@ -157,20 +204,17 @@ const CreateFlashcards = ({
     let validCardCount = 0;
     let emptyCardCount = 0;
 
-    // Check each flashcard using our validators
     items.forEach((item, index) => {
       const frontTrimmed = item.front.trim();
       const backTrimmed = item.back.trim();
       
-      // Check if card is completely empty
       const isEmpty = !frontTrimmed && !backTrimmed;
       
       if (isEmpty) {
         emptyCardCount++;
-        return; // Skip validation for empty cards
+        return;
       }
 
-      // Card has some content, so validate both fields
       const frontError = defaultValidators.flashcardQuestion(item.front);
       const backError = defaultValidators.flashcardAnswer(item.back);
       
@@ -181,29 +225,26 @@ const CreateFlashcards = ({
         errors.push(`Card ${index + 1} - Definition: ${backError}`);
       }
 
-      // If both fields are valid, count as valid card
       if (!frontError && !backError) {
         validCardCount++;
       }
     });
 
-    // Check if we have at least one valid card (excluding empty ones)
     if (validCardCount === 0) {
       errors.push('At least one complete flashcard is required.');
     }
 
-    // Optional: warn about empty cards if there are many
     if (emptyCardCount > 0 && validCardCount > 0) {
       errors.push(`Note: ${emptyCardCount} empty card(s) will be ignored.`);
     }
 
     return errors;
-  };
+  }, [items]);
 
-  const handleSave = async () => {
+  // ✅ Updated handleSave - follows EditProfileScreen pattern exactly
+  const handleSave = useCallback(async () => {
     setBannerErrors([]);
     
-    // Validate flashcards
     const flashcardErrors = validateFlashcards();
     if (flashcardErrors.length > 0) {
       setBannerErrors(flashcardErrors);
@@ -211,21 +252,18 @@ const CreateFlashcards = ({
     }
 
     setSubmitting(true);
-    showLoading();
+    showLoading(); // ✅ Same as EditProfileScreen
 
     try {
-      // Prepare flashcard data - only include non-empty valid cards
       const validFlashcards = items
         .filter(item => {
           const frontTrimmed = item.front.trim();
           const backTrimmed = item.back.trim();
           
-          // Skip completely empty cards
           if (!frontTrimmed && !backTrimmed) {
             return false;
           }
           
-          // Only include cards that pass validation
           const frontError = defaultValidators.flashcardQuestion(item.front);
           const backError = defaultValidators.flashcardAnswer(item.back);
           return !frontError && !backError;
@@ -233,50 +271,56 @@ const CreateFlashcards = ({
         .map(item => ({
           question: item.front.trim(),
           answer: item.back.trim(),
-          ...(item.id && { id: item.id }) // Include ID for existing cards if editing
+          ...(item.id && { id: item.id })
         }));
 
-      // Double-check we have valid cards before submitting
       if (validFlashcards.length === 0) {
         setBannerErrors(['No valid flashcards to save. Please complete at least one flashcard.']);
         return;
       }
 
       const flashcardSetData = {
+        material: mainMaterial?.id,
         title: formData.title,
         description: formData.description,
         flashcards: validFlashcards
       };
 
-      console.log(`${isEditMode ? 'Updating' : 'Creating'} flashcard set data:`, flashcardSetData);
-
       let response;
       if (isEditMode) {
-        // Update existing flashcard set
         response = await updateFlashcardSet(flashcardSet.id, flashcardSetData);
       } else {
-        // Create new flashcard set
         response = await createFlashcardSet(flashcardSetData);
       }
 
+      // ✅ Show success toast (same as EditProfileScreen)
       showToast({
         variant: "success",
         title: `Flashcards ${isEditMode ? 'updated' : 'created'} successfully!`,
         subtitle: `${isEditMode ? 'Updated' : 'Created'} ${validFlashcards.length} flashcards in "${formData.title}" set.`,
       });
 
-      if (onSuccess) {
-        onSuccess(response.data);
-      }
-
+      // ✅ Close component immediately after API success (same as EditProfileScreen)
       onClose();
 
+      // ✅ Call success callback separately (like fetchProfileData in EditProfileScreen)
+      if (successCallback) {
+        try {
+          console.log('CreateFlashcards - calling success callback with:', response.data);
+          await successCallback(response.data); // This will call onRefreshMaterials()
+        } catch (callbackError) {
+          console.error('Error in success callback:', callbackError);
+          // Don't show this error to user since main operation succeeded
+        }
+      }
+
     } catch (err) {
-      // Enhanced error handling
+      // ✅ Only handle actual API failures (same as EditProfileScreen error handling)
+      console.error('API Error creating/updating flashcards:', err);
+      
       const data = err.response?.data || {};
       const msgs = [];
 
-      // Handle nested validation errors (for flashcards)
       if (data.cards && Array.isArray(data.cards)) {
         data.cards.forEach((cardErrors, index) => {
           if (typeof cardErrors === 'object' && cardErrors !== null) {
@@ -293,9 +337,8 @@ const CreateFlashcards = ({
         });
       }
 
-      // Handle other errors
       Object.entries(data).forEach(([key, val]) => {
-        if (key !== 'cards') { // Skip cards as we handled them above
+        if (key !== 'cards') {
           if (Array.isArray(val)) {
             val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
           } else if (typeof val === "string") {
@@ -309,68 +352,17 @@ const CreateFlashcards = ({
       }
 
       setBannerErrors(msgs);
-      
-      console.log('Full error object:', err);
-      console.log('Error response:', err.response);
-      console.log('Error data:', err.response?.data);
 
     } finally {
       setSubmitting(false);
-      hideLoading();
+      hideLoading(); // ✅ Same as EditProfileScreen
     }
-  };
+  }, [items, formData, isEditMode, flashcardSet?.id, mainMaterial?.id, onClose, validateFlashcards, showLoading, hideLoading, showToast, successCallback]);
 
-  // Enhanced validation for submit button
-  const getCardValidationStatus = () => {
-    let validCardCount = 0;
-    let invalidCardCount = 0;
-    let emptyCardCount = 0;
-    let partialCardCount = 0;
-
-    items.forEach((item) => {
-      const frontTrimmed = item.front.trim();
-      const backTrimmed = item.back.trim();
-      
-      // Check if card is completely empty
-      const isEmpty = !frontTrimmed && !backTrimmed;
-      // Check if card is partially filled
-      const isPartial = (frontTrimmed && !backTrimmed) || (!frontTrimmed && backTrimmed);
-      
-      if (isEmpty) {
-        emptyCardCount++;
-      } else if (isPartial) {
-        partialCardCount++;
-      } else {
-        // Card has both fields, check if they're valid
-        const frontError = defaultValidators.flashcardQuestion(item.front);
-        const backError = defaultValidators.flashcardAnswer(item.back);
-        
-        if (!frontError && !backError) {
-          validCardCount++;
-        } else {
-          invalidCardCount++;
-        }
-      }
-    });
-
-    return {
-      validCardCount,
-      invalidCardCount,
-      emptyCardCount,
-      partialCardCount,
-      hasValidCards: validCardCount > 0,
-      hasProblems: invalidCardCount > 0 || partialCardCount > 0
-    };
-  };
-
-  const cardStatus = getCardValidationStatus();
-  
-  // Button should be disabled if:
-  // 1. Title is invalid
-  // 2. No valid cards exist
-  // 3. There are partially filled or invalid cards
-  // 4. Currently submitting
-  const isDisabled = !validities.title || !cardStatus.hasValidCards || cardStatus.hasProblems || submitting;
+  // Memoized button state
+  const isDisabled = useMemo(() => {
+    return !validities.title || !cardValidationStatus.hasValidCards || cardValidationStatus.hasProblems || submitting;
+  }, [validities.title, cardValidationStatus.hasValidCards, cardValidationStatus.hasProblems, submitting]);
 
   return (
     <div className="letter-no-lines">
@@ -425,7 +417,6 @@ const CreateFlashcards = ({
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Title Field - Uses flashcardSetTitle validator */}
             <ValidatedInput
               label="Title"
               name="flashcardSetTitle"
@@ -439,7 +430,6 @@ const CreateFlashcards = ({
               placeholder="Enter a descriptive title for your flashcard set"
             />
 
-            {/* Description Field - Uses flashcardSetDescription validator */}
             <ValidatedInput
               label="Description (Optional)"
               name="flashcardSetDescription"
@@ -459,7 +449,6 @@ const CreateFlashcards = ({
         {/* Flashcards Section */}
         <div className="space-y-6">
           {items.map((item, index) => {
-            // Get validation status for this card
             const frontTrimmed = item.front.trim();
             const backTrimmed = item.back.trim();
             const isEmpty = !frontTrimmed && !backTrimmed;
@@ -468,8 +457,7 @@ const CreateFlashcards = ({
             const backError = defaultValidators.flashcardAnswer(item.back);
             const isValid = !isEmpty && !frontError && !backError;
             
-            // Determine card status for styling
-            let cardStatusColor = 'bg-gray-100 text-gray-600'; // empty
+            let cardStatusColor = 'bg-gray-100 text-gray-600';
             let cardStatusText = 'Empty';
             
             if (isPartial) {
@@ -485,7 +473,7 @@ const CreateFlashcards = ({
 
             return (
               <div
-                key={item.id || index} // Use ID if available, otherwise index
+                key={item.id || index}
                 draggable
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={handleDragOver}
@@ -535,7 +523,6 @@ const CreateFlashcards = ({
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Term Field - Uses flashcardQuestion validator */}
                   <ValidatedInput
                     label="Term"
                     name="flashcardQuestion"
@@ -543,14 +530,13 @@ const CreateFlashcards = ({
                     value={item.front}
                     onChange={(e) => updateItem(index, 'front', e.target.value)}
                     required={true}
-                    onValidityChange={() => {}} // No-op since we handle validation differently for cards
+                    onValidityChange={() => {}}
                     rows={4}
                     disabled={submitting}
                     variant="card"
                     placeholder="Enter the term or question for this flashcard"
                   />
 
-                  {/* Definition Field - Uses flashcardAnswer validator */}
                   <ValidatedInput
                     label="Definition"
                     name="flashcardAnswer"
@@ -558,7 +544,7 @@ const CreateFlashcards = ({
                     value={item.back}
                     onChange={(e) => updateItem(index, 'back', e.target.value)}
                     required={true}
-                    onValidityChange={() => {}} // No-op since we handle validation differently for cards
+                    onValidityChange={() => {}}
                     rows={4}
                     disabled={submitting}
                     variant="card"
@@ -576,29 +562,29 @@ const CreateFlashcards = ({
             <h3 className="text-lg font-medium label-text mb-3">Summary</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{cardStatus.validCardCount}</div>
+                <div className="text-2xl font-bold text-green-600">{cardValidationStatus.validCardCount}</div>
                 <div className="text-gray-600">Valid Cards</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{cardStatus.partialCardCount}</div>
+                <div className="text-2xl font-bold text-yellow-600">{cardValidationStatus.partialCardCount}</div>
                 <div className="text-gray-600">Incomplete Cards</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{cardStatus.invalidCardCount}</div>
+                <div className="text-2xl font-bold text-red-600">{cardValidationStatus.invalidCardCount}</div>
                 <div className="text-gray-600">Invalid Cards</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-500">{cardStatus.emptyCardCount}</div>
+                <div className="text-2xl font-bold text-gray-500">{cardValidationStatus.emptyCardCount}</div>
                 <div className="text-gray-600">Empty Cards</div>
               </div>
             </div>
-            {cardStatus.validCardCount > 0 && (
+            {cardValidationStatus.validCardCount > 0 && (
               <p className="text-sm text-blue-700 mt-4">
-                ✅ {cardStatus.validCardCount} card(s) will be saved.
-                {cardStatus.emptyCardCount > 0 && ` ${cardStatus.emptyCardCount} empty card(s) will be ignored.`}
+                ✅ {cardValidationStatus.validCardCount} card(s) will be saved.
+                {cardValidationStatus.emptyCardCount > 0 && ` ${cardValidationStatus.emptyCardCount} empty card(s) will be ignored.`}
               </p>
             )}
-            {cardStatus.hasProblems && (
+            {cardValidationStatus.hasProblems && (
               <p className="text-sm text-amber-700 mt-2">
                 ⚠️ Complete all incomplete or invalid cards before saving.
               </p>
@@ -630,11 +616,11 @@ const CreateFlashcards = ({
               data-hover={
                 submitting 
                   ? (isEditMode ? "Updating..." : "Creating...") 
-                  : cardStatus.hasProblems
+                  : cardValidationStatus.hasProblems
                     ? "Complete all cards to save"
-                    : !cardStatus.hasValidCards
+                    : !cardValidationStatus.hasValidCards
                       ? "Add at least one valid card"
-                      : (isEditMode ? `Update ${cardStatus.validCardCount} Flashcard(s)` : `Create ${cardStatus.validCardCount} Flashcard(s)`)
+                      : (isEditMode ? `Update ${cardValidationStatus.validCardCount} Flashcard(s)` : `Create ${cardValidationStatus.validCardCount} Flashcard(s)`)
               }
               disabled={isDisabled}
             >

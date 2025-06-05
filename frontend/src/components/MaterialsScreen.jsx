@@ -31,7 +31,7 @@ const MaterialsScreen = ({
   onRemoveMaterial,
   onMoveMaterialToTrash 
 }) => {
-  // Remove materials state - now comes from props
+  // Existing state
   const [showUpdatedDropdown, setShowUpdatedDropdown] = useState(false)
   const [showTypeDropdown, setShowTypeDropdown] = useState(false)
   const [selectedTimeFilter, setSelectedTimeFilter] = useState('all')
@@ -42,6 +42,8 @@ const MaterialsScreen = ({
   const [showQuiz, setShowQuiz] = useState(false)
   const [showMaterialContent, setShowMaterialContent] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState(null)
+  const [selectedFlashcardSet, setSelectedFlashcardSet] = useState(null)
+  const [flashcardOptions, setFlashcardOptions] = useState({})
   const [isFromExplore, setIsFromExplore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -52,8 +54,6 @@ const MaterialsScreen = ({
   const updatedDropdownRef = useRef(null)
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
-
-  // Remove the loadMaterials useEffect - Dashboard handles initial loading
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,6 +70,18 @@ const MaterialsScreen = ({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  useEffect(() => {
+    if (selectedMaterial && materialsData) {
+      // Find the updated version of the currently selected material
+      const updatedMaterial = materialsData.find(m => m.id === selectedMaterial.id);
+      if (updatedMaterial) {
+        // Update selectedMaterial with fresh data
+        setSelectedMaterial(updatedMaterial);
+        console.log('Updated selectedMaterial with fresh data:', updatedMaterial);
+      }
+    }
+  }, [materialsData, selectedMaterial?.id]);
 
   const getTagColor = (tag) => {
     if (tag.toLowerCase().includes('flashcard set')) {
@@ -248,20 +260,66 @@ const MaterialsScreen = ({
     onAddMaterial(newMaterial)
   }
 
-  const handleCreateFlashcards = (material) => {
-    setSelectedMaterial(material)
-    setShowFlashcards(true)
-  }
+  const handleCreateFlashcards = (material, flashcardSet = null, options = {}) => {
+    setSelectedMaterial(material);
+    setSelectedFlashcardSet(flashcardSet);
+    
+    const enhancedOptions = {
+      ...options,
+      onSuccess: async (newFlashcardSet) => {
+        console.log('MaterialsScreen - flashcard created:', newFlashcardSet);
+        
+        try {
+          // ✅ 1. Refetch all materials data
+          await onRefreshMaterials();
+          
+          // ✅ 2. The useEffect above will automatically update selectedMaterial
+          
+        } catch (error) {
+          console.error('Error refreshing materials:', error);
+          
+          // ✅ 3. Fallback: Manual update if refetch fails
+          const updatedMaterial = {
+            ...material,
+            flashcard_sets: [...(material.flashcard_sets || []), newFlashcardSet]
+          };
+          setSelectedMaterial(updatedMaterial);
+        }
+        
+        // Handle navigation logic
+        if (options.onSuccess) {
+          const result = options.onSuccess(newFlashcardSet);
+          if (result === false) {
+            setTimeout(() => {
+              setShowFlashcards(false);
+              setSelectedFlashcardSet(null);
+              setFlashcardOptions({});
+            }, 100);
+            return;
+          }
+        }
+        
+        setShowFlashcards(false);
+        setSelectedFlashcardSet(null);
+        setFlashcardOptions({});
+      }
+    };
+    
+    setFlashcardOptions(enhancedOptions);
+    setShowFlashcards(true);
+  };
 
+  // ✅ ENHANCED: handleCreateNotes with material refresh
   const handleCreateNotes = (material) => {
-    setSelectedMaterial(material)
-    setShowNotes(true)
-  }
+    setSelectedMaterial(material);
+    setShowNotes(true);
+  };
 
+  // ✅ ENHANCED: handleCreateQuiz with material refresh  
   const handleCreateQuiz = (material) => {
-    setSelectedMaterial(material)
-    setShowQuiz(true)
-  }
+    setSelectedMaterial(material);
+    setShowQuiz(true);
+  };
 
   const handleViewMaterial = (material, isFromExplore = false) => {
     setSelectedMaterial(material)
@@ -304,7 +362,7 @@ const MaterialsScreen = ({
     setSearchQuery('')
   }
 
-  // Use onRefreshMaterials from props instead of local loadMaterials
+  // Use onRefreshMaterials from props
   const handleRefresh = () => {
     onRefreshMaterials()
   }
@@ -312,35 +370,54 @@ const MaterialsScreen = ({
   return (
     <div>
       {showFlashcards ? (
-        <CreateFlashcards 
-          material={selectedMaterial} 
-          onClose={() => setShowFlashcards(false)}
-          onSuccess={(flashcardSet) => {
-            // Optionally refresh materials to get updated counts
-            onRefreshMaterials()
+        <CreateFlashcards
+          mainMaterial={selectedMaterial}
+          material={selectedMaterial}
+          flashcardSet={selectedFlashcardSet}
+          options={flashcardOptions}
+          onClose={() => {
+            setShowFlashcards(false)
+            setSelectedFlashcardSet(null)
+            setFlashcardOptions({})
+          }}
+          onSuccess={(newFlashcardSet) => {
+            const result = flashcardOptions.onSuccess?.(newFlashcardSet);
+            if (result !== false) {
+              setShowFlashcards(false);
+              setSelectedFlashcardSet(null);
+              setFlashcardOptions({});
+            }
           }}
         />
       ) : showNotes ? (
         <CreateNotes 
           material={selectedMaterial} 
           onClose={() => setShowNotes(false)}
-          onSuccess={(note) => {
-            // Optionally refresh materials to get updated counts
-            onRefreshMaterials()
+          onSuccess={async (note) => {
+            try {
+              await onRefreshMaterials();
+              // selectedMaterial will auto-update via useEffect
+            } catch (error) {
+              console.error('Error refreshing materials after note creation:', error);
+            }
           }}
         />
       ) : showQuiz ? (
         <CreateQuiz 
           material={selectedMaterial} 
           onClose={() => setShowQuiz(false)}
-          onSuccess={(quiz) => {
-            // Optionally refresh materials to get updated counts
-            onRefreshMaterials()
+          onSuccess={async (quiz) => {
+            try {
+              await onRefreshMaterials();
+              // selectedMaterial will auto-update via useEffect
+            } catch (error) {
+              console.error('Error refreshing materials after quiz creation:', error);
+            }
           }}
         />
       ) : showMaterialContent ? (
         <MaterialContent
-          material={selectedMaterial}
+          material={selectedMaterial} // ✅ This will now have fresh data automatically
           isPublic={selectedMaterial?.public}
           onVisibilityToggle={() => toggleVisibility(selectedMaterial)}
           onExport={() => handleExport(selectedMaterial)}

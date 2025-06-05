@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, BookOpen, Edit, Globe, Lock, Shuffle } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
 import '../styles/components/flashcards.css';
 import CreateFlashcards from './CreateFlashcards';
@@ -9,7 +9,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
   const [showAnswer, setShowAnswer] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
-  const [shuffledOrder, setShuffledOrder] = useState([]); // Store shuffled indices
+  const [shuffleSeed, setShuffleSeed] = useState(0); // Used to force re-shuffle
   const [showCreateFlashcards, setShowCreateFlashcards] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -18,6 +18,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     height: window.innerHeight,
   });
 
+  // ✅ Good useEffect - DOM event handling
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({
@@ -30,6 +31,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // ✅ Good useEffect - UI effects based on state
   useEffect(() => {
     if (isFinished) {
       setShowConfetti(true);
@@ -38,66 +40,66 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     }
   }, [isFinished]);
 
-  // Use material's cards (flashcard set object has cards array)
-  const flashcards = material?.flashcards || [];
+  // ✅ Derived state using useMemo instead of complex useEffect
+  const originalFlashcards = useMemo(() => {
+    const flashcards = material?.flashcards || [];
+    return flashcards.map(card => ({
+      front: card.question,
+      back: card.answer,
+      id: card.id
+    }));
+  }, [material?.flashcards]);
 
-  // Convert API format to component format
-  const originalFlashcards = flashcards.map(card => ({
-    front: card.question,
-    back: card.answer,
-    id: card.id
-  }));
+  // ✅ Derived state for shuffled cards using useMemo
+  const formattedFlashcards = useMemo(() => {
+    if (!isShuffled || originalFlashcards.length <= 1) {
+      return originalFlashcards;
+    }
 
-  // Use shuffled order if shuffled, otherwise original order
-  const formattedFlashcards = isShuffled && shuffledOrder.length > 0
-    ? shuffledOrder.map(index => originalFlashcards[index]).filter(Boolean)
-    : originalFlashcards;
+    // Create shuffled array using seed for consistency during same session
+    const indices = Array.from({ length: originalFlashcards.length }, (_, i) => i);
+    
+    // Use shuffleSeed to create consistent but different shuffles
+    const seededRandom = (seed) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    };
 
-  // Reset shuffle order when original cards change (after edit)
+    const shuffled = [...indices].sort((a, b) => {
+      return seededRandom(shuffleSeed + a + b) - 0.5;
+    });
+
+    return shuffled.map(index => originalFlashcards[index]).filter(Boolean);
+  }, [originalFlashcards, isShuffled, shuffleSeed]);
+
+  // ✅ Simple bounds checking when data changes
+  const safeCurrentIndex = useMemo(() => {
+    if (formattedFlashcards.length === 0) return 0;
+    return Math.min(currentIndex, formattedFlashcards.length - 1);
+  }, [currentIndex, formattedFlashcards.length]);
+
+  // ✅ Reset state when cards change significantly
   useEffect(() => {
-    if (originalFlashcards.length > 0) {
-      // If we were shuffled, create new shuffle order for the updated cards
-      if (isShuffled) {
-        const newIndices = Array.from({ length: originalFlashcards.length }, (_, i) => i);
-        const shuffled = [...newIndices].sort(() => Math.random() - 0.5);
-        setShuffledOrder(shuffled);
-      }
-      
-      // Handle index bounds
-      if (currentIndex >= originalFlashcards.length) {
-        setCurrentIndex(Math.max(0, originalFlashcards.length - 1));
-        setShowAnswer(false);
-        setIsFinished(false);
-      }
-    } else {
+    if (formattedFlashcards.length === 0) {
       setCurrentIndex(0);
       setShowAnswer(false);
       setIsFinished(false);
-      setIsShuffled(false);
-      setShuffledOrder([]);
-    }
-  }, [originalFlashcards.length]);
-
-  // Separate effect for currentIndex bounds checking
-  useEffect(() => {
-    if (formattedFlashcards.length > 0 && currentIndex >= formattedFlashcards.length) {
-      setCurrentIndex(Math.max(0, formattedFlashcards.length - 1));
+    } else if (safeCurrentIndex !== currentIndex) {
+      setCurrentIndex(safeCurrentIndex);
       setShowAnswer(false);
       setIsFinished(false);
     }
-  }, [formattedFlashcards.length, currentIndex]);
+  }, [safeCurrentIndex, currentIndex, formattedFlashcards.length]);
 
   const handleNext = () => {
     if (formattedFlashcards.length === 0) return;
     
     setShowAnswer(false);
+    
     if (currentIndex === formattedFlashcards.length - 1) {
       setIsFinished(true);
     } else {
-      setCurrentIndex((prev) => {
-        const next = (prev + 1) % formattedFlashcards.length;
-        return Math.min(next, formattedFlashcards.length - 1);
-      });
+      setCurrentIndex(prev => Math.min(prev + 1, formattedFlashcards.length - 1));
     }
   };
 
@@ -105,10 +107,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     if (formattedFlashcards.length === 0) return;
     
     setShowAnswer(false);
-    setCurrentIndex((prev) => {
-      const previous = (prev - 1 + formattedFlashcards.length) % formattedFlashcards.length;
-      return Math.max(0, previous);
-    });
+    setCurrentIndex(prev => Math.max(0, prev - 1));
     setIsFinished(false);
   };
 
@@ -118,16 +117,13 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     if (isShuffled) {
       // Unshuffle: return to original order
       setIsShuffled(false);
-      setShuffledOrder([]);
       setCurrentIndex(0);
       setShowAnswer(false);
       setIsFinished(false);
     } else {
-      // Shuffle: create new random order
-      const indices = Array.from({ length: originalFlashcards.length }, (_, i) => i);
-      const shuffled = [...indices].sort(() => Math.random() - 0.5);
-      setShuffledOrder(shuffled);
+      // Shuffle: create new random order by updating seed
       setIsShuffled(true);
+      setShuffleSeed(prev => prev + 1); // This will trigger new shuffle in useMemo
       setCurrentIndex(0);
       setShowAnswer(false);
       setIsFinished(false);
@@ -158,8 +154,22 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     setShowAnswer(false);
     setIsFinished(false);
     setIsShuffled(false);
-    setShuffledOrder([]);
+    setShuffleSeed(0);
     setShowCreateFlashcards(false);
+  };
+
+  const resetToStart = () => {
+    setCurrentIndex(0);
+    setIsFinished(false);
+    setShowAnswer(false);
+  };
+
+  const resetToOriginalOrder = () => {
+    setIsShuffled(false);
+    setShuffleSeed(0);
+    setCurrentIndex(0);
+    setIsFinished(false);
+    setShowAnswer(false);
   };
 
   if (showCreateFlashcards) {
@@ -236,7 +246,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
                     <BookOpen size={20} className="text-[#1b81d4]" />
                   </div>
                   <span className="text-sm font-medium text-gray-700 label-text">
-                    {isFinished ? "Finished" : `${currentIndex + 1} of ${formattedFlashcards.length}`}
+                    {isFinished ? "Finished" : `${safeCurrentIndex + 1} of ${formattedFlashcards.length}`}
                   </span>
                 </div>
                 <button
@@ -270,11 +280,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
                       </p>
                       <div className="flex gap-3 justify-center">
                         <button
-                          onClick={() => {
-                            setCurrentIndex(0);
-                            setIsFinished(false);
-                            setShowAnswer(false);
-                          }}
+                          onClick={resetToStart}
                           className="exam-button-mini"
                           data-hover="Review Again"
                         >
@@ -282,13 +288,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
                         </button>
                         {isShuffled && (
                           <button
-                            onClick={() => {
-                              setIsShuffled(false);
-                              setShuffledOrder([]);
-                              setCurrentIndex(0);
-                              setIsFinished(false);
-                              setShowAnswer(false);
-                            }}
+                            onClick={resetToOriginalOrder}
                             className="exam-button-mini bg-blue-600 hover:bg-blue-700"
                             data-hover="Review Original Order"
                           >
@@ -324,7 +324,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
                     >
                       <div className="text-center px-12">
                         <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                          {formattedFlashcards[currentIndex]?.front || 'Loading...'}
+                          {formattedFlashcards[safeCurrentIndex]?.front || 'Loading...'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-6 label-text">Click to show answer</p>
                       </div>
@@ -341,7 +341,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
                     >
                       <div className="text-center px-12">
                         <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
-                          {formattedFlashcards[currentIndex]?.back || 'Loading...'}
+                          {formattedFlashcards[safeCurrentIndex]?.back || 'Loading...'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-6 label-text">Click to show question</p>
                       </div>
@@ -366,7 +366,7 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
                     <span className="label-text">Previous</span>
                   </button>
                   <div className="text-sm text-gray-500 label-text">
-                    Card {Math.min(currentIndex + 1, formattedFlashcards.length)} of {formattedFlashcards.length}
+                    Card {Math.min(safeCurrentIndex + 1, formattedFlashcards.length)} of {formattedFlashcards.length}
                   </div>
                   <button
                     onClick={handleNext}
