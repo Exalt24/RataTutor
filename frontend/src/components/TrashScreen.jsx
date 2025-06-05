@@ -1,41 +1,26 @@
 import { RefreshCw, Search, Trash2, X } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
-import { getTrashedMaterials, permanentDeleteMaterial, restoreMaterial } from '../services/apiService'
+import React, { useState } from 'react'
+import { permanentDeleteMaterial, restoreMaterial } from '../services/apiService'
 import DeleteModal from './DeleteModal'
 import { useLoading } from './Loading/LoadingContext'
 import MaterialCard from './MaterialCard'
 import { useToast } from './Toast/ToastContext'
 
-const TrashScreen = () => {
+const TrashScreen = ({ 
+  trashedMaterialsData = [], 
+  onRefreshTrashedMaterials, 
+  onRestoreMaterial 
+}) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [selectedItems, setSelectedItems] = useState([])
-  const [trashItems, setTrashItems] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadTrashItems()
-  }, [])
-
-  const loadTrashItems = async () => {
-    try {
-      setIsLoading(true)
-      const response = await getTrashedMaterials()
-      setTrashItems(response.data)
-    } catch (error) {
-      showToast({
-        variant: "error",
-        title: "Error loading trash",
-        subtitle: "Failed to load trash items. Please try again.",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Use the data passed from Dashboard instead of local state
+  const trashItems = trashedMaterialsData || []
 
   const clearSearch = () => {
     setSearchQuery('')
@@ -87,9 +72,17 @@ const TrashScreen = () => {
   const confirmDeleteSelected = async () => {
     try {
       showLoading()
+      
+      // Delete all selected items
       await Promise.all(selectedItems.map(id => permanentDeleteMaterial(id)))
-      setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      
+      // Clear selections
       setSelectedItems([])
+      
+      // Refresh the data in Dashboard (this will update both materials and trash)
+      if (onRefreshTrashedMaterials) {
+        await onRefreshTrashedMaterials()
+      }
       
       showToast({
         variant: "success",
@@ -112,8 +105,16 @@ const TrashScreen = () => {
   const handleRestore = async (material) => {
     try {
       showLoading()
+      
+      // Restore the material
       const response = await restoreMaterial(material.id)
-      setTrashItems(prev => prev.filter(item => item.id !== material.id))
+      
+      // Update Dashboard state using the callback (same pattern as EditProfileScreen)
+      if (onRestoreMaterial) {
+        onRestoreMaterial(response.data || material)
+      }
+      
+      // Clear from selections if it was selected
       setSelectedItems(prev => prev.filter(id => id !== material.id))
       
       showToast({
@@ -138,8 +139,25 @@ const TrashScreen = () => {
     
     try {
       showLoading()
-      await Promise.all(selectedItems.map(id => restoreMaterial(id)))
-      setTrashItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+      
+      // Restore all selected materials
+      const restoredMaterials = await Promise.all(
+        selectedItems.map(async (id) => {
+          const response = await restoreMaterial(id)
+          return response.data || trashItems.find(item => item.id === id)
+        })
+      )
+      
+      // Update Dashboard state for each restored material
+      if (onRestoreMaterial) {
+        restoredMaterials.forEach(material => {
+          if (material) {
+            onRestoreMaterial(material)
+          }
+        })
+      }
+      
+      // Clear selections
       setSelectedItems([])
       
       showToast({
@@ -163,6 +181,9 @@ const TrashScreen = () => {
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.description?.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  // Show loading state if data hasn't been loaded yet
+  const isLoading = trashedMaterialsData === null
 
   return (
     <div className="space-y-6 p-4">
@@ -289,4 +310,4 @@ const TrashScreen = () => {
   )
 }
 
-export default TrashScreen 
+export default TrashScreen
