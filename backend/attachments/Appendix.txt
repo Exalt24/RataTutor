@@ -1,0 +1,234 @@
+APPENDIX A
+Informed Consent Form
+INTRODUCTION
+You are invited to participate in the study "AI-Driven Adaptive Learning with Gender-Sensitive Social-Emotional Learning (SEL) in the Metaverse." This research focuses on developing an adaptive learning system that personalizes learning based on user engagement, sentiment analysis, and procedural environment adaptation. For any questions, contact dcruz@up.edu.ph.
+PURPOSE OF RESEARCH
+The study aims to evaluate how AI-driven personalization, chatbot interactions, and procedural generation can enhance learning effectiveness, engagement, and inclusivity in a virtual educational environment.
+DURATION
+Participation will take approximately 30-60 minutes, including system interaction, a survey, and an optional focus group discussion.
+BENEFITS
+Your participation will contribute to the advancement of adaptive learning technologies and help refine inclusive, emotionally responsive virtual education systems.
+CONFIDENTIALITY
+All collected data will be kept anonymous and confidential. Responses will be used exclusively for research purposes and stored securely. No personally identifiable information will be shared.
+RIGHT TO REFUSE/WITHDRAW
+Participation is entirely voluntary. You may decline to answer any question or withdraw from the study at any time without any consequences.
+CONSENT AGREEMENT
+By signing below, I confirm that I:
+Have read and understood the purpose, procedures, and voluntary nature of this study.
+Agree to participate and allow my responses to be used for research.
+_____________________________________	_________________________        ______
+ Name of Participant				            Signature 				Date
+APPENDIX B
+Survey Questionnaire
+INTRODUCTION
+Thank you for your participation in this study titled "AI-Driven Adaptive Learning with Gender-Sensitive Social-Emotional Learning (SEL) in the Metaverse." This survey aims to evaluate your experience with the adaptive learning system, including usability, engagement, learning effectiveness, and socio-emotional support.
+By completing this form, you consent and authorize the processing of the information you provide. All data collected will be strictly confidential and used solely for research purposes. Your responses will remain anonymous, and no personally identifiable information will be shared.
+Participation is voluntary, and you may withdraw at any time without any consequences. You may only participate in this survey if you are 18 years old or above.
+If you agree to proceed, please continue to the survey.
+DEMOGRAPHIC INFORMATION
+(Responding to these questions is optional but will help in data analysis.)
+Age Group:
+18 - 24 years old
+25 - 34 years old
+35 - 44 years old
+45 - 54 years old
+55 years old and above
+Gender:
+Male
+Female
+Prefer not to say
+Educational Background:
+Highschool
+Undergraduate
+Postgraduate
+Familiarity with Virtual Learning Tools
+Beginner
+Immediate
+Advanced
+USABILITY AND ENGAGEMENT SURVEY
+Instructions: Record your responses on the provided answer sheet by placing a checkmark (✓) in the box that best reflects your level of agreement with each statement.
+ITEMS
+Strongly Disagree
+Disagree
+Neutral
+Agree
+Strongly Agree
+Usability
+The virtual learning environment was easy to navigate.
+
+
+
+
+
+
+
+
+
+
+The AI chatbot provided meaningful interactions.
+
+
+
+
+
+
+
+
+
+
+The system adapted well to my learning needs.
+
+
+
+
+
+
+
+
+
+
+Learning Effectiveness
+The content helped me understand concepts better.
+
+
+
+
+
+
+
+
+
+
+Adaptive quizzes matched my learning progress.
+
+
+
+
+
+
+
+
+
+
+The system adjusted difficulty levels effectively.
+
+
+
+
+
+
+
+
+
+
+Socio-Emotional Support
+The system helped reduce my stress while learning.
+
+
+
+
+
+
+
+
+
+
+I felt supported in my learning process.
+
+
+
+
+
+
+
+
+
+
+The AI chatbot responded appropriately to my emotions.
+
+
+
+
+
+
+
+
+
+
+Engagement and Inclusivity
+I enjoyed interacting with the system.
+
+
+
+
+
+
+
+
+
+
+The learning environment felt inclusive.
+
+
+
+
+
+
+
+
+
+
+I would use this system for future learning.
+
+
+
+
+
+
+
+
+
+
+
+OPEN-ENDED QUESTIONS
+What aspects of the system did you find most engaging?
+
+
+
+What areas need improvement?
+
+
+
+How well did the system respond to your learning pace and emotions?
+
+
+
+
+
+
+APPENDIX C
+Focus Group Discussion Guide
+INTRODUCTION
+Thank you for participating in this focus group discussion for the study "AI-Driven Adaptive Learning with Gender-Sensitive Social-Emotional Learning (SEL) in the Metaverse." Your insights will help us evaluate the system’s usability, adaptability, engagement, and inclusivity.
+The discussion will cover system adaptability, AI chatbot effectiveness, procedural environment changes, and user experience. Your responses will remain confidential, and participation is voluntary. You may choose not to answer any question or withdraw at any time.
+DISCUSSION TOPICS
+1. System Adaptability
+How well did the system respond to your learning pace and emotional engagement?
+Did the adaptive quizzes and virtual environment adjustments enhance your experience?
+Were the procedural terrain changes meaningful, or did they feel random?
+2. AI Chatbot & Emotional Engagement
+Did the chatbot’s sentiment analysis feel accurate in responding to your emotional state?
+How natural and effective were the AI chatbot interactions?
+Did the chatbot help reduce learning stress or improve engagement?
+3. Procedural Environment & Immersion
+How did the dynamic environment changes affect your learning experience?
+Were the environmental adaptations helpful, distracting, or unnecessary?
+Did the visual and interactive elements make the learning experience more immersive?
+4. Inclusivity & Gender Sensitivity
+Did the system feel inclusive and accommodating to diverse learners?
+Were there any gender-specific challenges in engagement or interaction?
+How could the system be improved for broader accessibility and inclusivity?
+5. Overall User Experience & Recommendations
+What features did you find most effective in supporting learning and engagement?
+What frustrations or difficulties did you experience?
+What specific improvements would you suggest for future iterations?

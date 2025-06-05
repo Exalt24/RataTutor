@@ -32,6 +32,14 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = ["id", "material", "file", "uploaded_at"]
         read_only_fields = ["id", "uploaded_at"]
 
+    def validate(self, data):
+        request = self.context.get("request")
+        material = data.get("material")
+        if request and hasattr(request, "user") and material:
+            if material.owner != request.user:
+                raise serializers.ValidationError("You don't have permission to add attachments to this material.")
+        return data
+
 
 class NoteSerializer(serializers.ModelSerializer):
     material = serializers.PrimaryKeyRelatedField(

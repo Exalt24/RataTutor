@@ -1,8 +1,8 @@
-import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, X } from 'lucide-react'
+import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, Upload, X } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
-import { deleteMaterial, toggleMaterialPin, toggleMaterialVisibility, updateMaterial } from '../services/apiService'
+import { deleteMaterial, toggleMaterialPin, toggleMaterialVisibility, updateMaterial, uploadAttachment } from '../services/apiService'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
@@ -44,9 +44,7 @@ const MaterialsScreen = ({
   const [selectedMaterial, setSelectedMaterial] = useState(null)
   const [selectedFlashcardSet, setSelectedFlashcardSet] = useState(null)
   const [flashcardOptions, setFlashcardOptions] = useState({})
-  // ✅ NEW: Add notes options state to follow flashcard pattern
   const [notesOptions, setNotesOptions] = useState({})
-  // ✅ NEW: Add quiz options state to follow flashcard pattern
   const [quizOptions, setQuizOptions] = useState({})
   const [isFromExplore, setIsFromExplore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -56,6 +54,8 @@ const MaterialsScreen = ({
 
   const typeDropdownRef = useRef(null)
   const updatedDropdownRef = useRef(null)
+  // ✅ NEW: Add file input ref for upload functionality
+  const fileInputRef = useRef(null)
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
 
@@ -88,15 +88,17 @@ const MaterialsScreen = ({
   }, [materialsData, selectedMaterial?.id]);
 
   const getTagColor = (tag) => {
-    if (tag.toLowerCase().includes('flashcard set')) {
-      return 'bg-[#FFB3BA] text-[#7D1F1F]' // Soft red
-    } else if (tag.toLowerCase().includes('note')) {
-      return 'bg-[#BAFFC9] text-[#1F7D2F]' // Soft green
-    } else if (tag.toLowerCase().includes('quiz')) {
-      return 'bg-[#BAE1FF] text-[#1F4B7D]' // Soft blue
-    }
-    return 'bg-[#F0F0F0] text-[#4A4A4A]' // Soft gray
+  if (tag.toLowerCase().includes('flashcard set')) {
+    return 'bg-[#FFB3BA] text-[#7D1F1F]' // Soft red
+  } else if (tag.toLowerCase().includes('note')) {
+    return 'bg-[#BAFFC9] text-[#1F7D2F]' // Soft green
+  } else if (tag.toLowerCase().includes('quiz')) {
+    return 'bg-[#BAE1FF] text-[#1F4B7D]' // Soft blue
+  } else if (tag.toLowerCase().includes('files') || tag.toLowerCase().includes('attachment')) {
+    return 'bg-[#FFE4B3] text-[#7D4F1F]' // ✅ NEW: Soft orange for attachments
   }
+  return 'bg-[#F0F0F0] text-[#4A4A4A]' // Soft gray
+}
 
   const togglePin = async (material) => {
     try {
@@ -218,14 +220,68 @@ const MaterialsScreen = ({
     }
   }
 
-  const handleExport = (material) => {
-    // TODO: Implement export functionality
-    console.log('Exporting:', material.title)
-    showToast({
-      variant: "info",
-      title: "Export feature coming soon",
-      subtitle: "This feature will be available in a future update.",
-    })
+  // ✅ NEW: Replace handleExport with handleUploadAttachment
+  const handleUploadAttachment = (material) => {
+    // Store the material for upload
+    setSelectedMaterial(material)
+    // Trigger file input
+    fileInputRef.current?.click()
+  }
+
+  // ✅ NEW: Handle file selection and upload
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0]
+    if (!file || !selectedMaterial) return
+
+    // Validate file type (same as backend validation)
+    const validExtensions = ['.docx', '.pptx', '.txt', '.pdf']
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
+    
+    if (!validExtensions.includes(fileExtension)) {
+      showToast({
+        variant: "error",
+        title: "Invalid file type",
+        subtitle: "Please select a DOCX, PPTX, TXT, or PDF file.",
+      })
+      return
+    }
+
+    // Validate file size (optional - add your own limit)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      showToast({
+        variant: "error",
+        title: "File too large",
+        subtitle: "Please select a file smaller than 10MB.",
+      })
+      return
+    }
+
+    try {
+      showLoading()
+      
+      const response = await uploadAttachment(selectedMaterial.id, file)
+      
+      // Refresh materials data to get updated attachments
+      await onRefreshMaterials()
+
+      showToast({
+        variant: "success",
+        title: "File uploaded successfully",
+        subtitle: `"${file.name}" has been attached to "${selectedMaterial.title}".`,
+      })
+    } catch (err) {
+      console.error('Error uploading file:', err)
+      showToast({
+        variant: "error",
+        title: "Upload failed",
+        subtitle: err.response?.data?.error || "Failed to upload file. Please try again.",
+      })
+    } finally {
+      hideLoading()
+      // Clear the file input
+      event.target.value = ''
+    }
   }
 
   const handleDelete = async (material) => {
@@ -274,15 +330,10 @@ const MaterialsScreen = ({
         console.log('MaterialsScreen - flashcard created:', newFlashcardSet);
         
         try {
-          // ✅ 1. Refetch all materials data
           await onRefreshMaterials();
-          
-          // ✅ 2. The useEffect above will automatically update selectedMaterial
-          
         } catch (error) {
           console.error('Error refreshing materials:', error);
           
-          // ✅ 3. Fallback: Manual update if refetch fails
           const updatedMaterial = {
             ...material,
             flashcard_sets: [...(material.flashcard_sets || []), newFlashcardSet]
@@ -290,7 +341,6 @@ const MaterialsScreen = ({
           setSelectedMaterial(updatedMaterial);
         }
         
-        // Handle navigation logic
         if (options.onSuccess) {
           const result = options.onSuccess(newFlashcardSet);
           if (result === false) {
@@ -313,7 +363,6 @@ const MaterialsScreen = ({
     setShowFlashcards(true);
   };
 
-  // ✅ ENHANCED: Follow flashcard pattern for notes
   const handleCreateNotes = (material, options = {}) => {
     setSelectedMaterial(material);
     
@@ -323,15 +372,10 @@ const MaterialsScreen = ({
         console.log('MaterialsScreen - note created:', newNote);
         
         try {
-          // ✅ 1. Refetch all materials data
           await onRefreshMaterials();
-          
-          // ✅ 2. The useEffect above will automatically update selectedMaterial
-          
         } catch (error) {
           console.error('Error refreshing materials:', error);
           
-          // ✅ 3. Fallback: Manual update if refetch fails
           const updatedMaterial = {
             ...material,
             notes: [...(material.notes || []), newNote]
@@ -339,7 +383,6 @@ const MaterialsScreen = ({
           setSelectedMaterial(updatedMaterial);
         }
         
-        // Handle navigation logic
         if (options.onSuccess) {
           const result = options.onSuccess(newNote);
           if (result === false) {
@@ -360,7 +403,6 @@ const MaterialsScreen = ({
     setShowNotes(true);
   };
 
-  // ✅ ENHANCED: Follow flashcard pattern for quiz
   const handleCreateQuiz = (material, options = {}) => {
     setSelectedMaterial(material);
     
@@ -370,15 +412,10 @@ const MaterialsScreen = ({
         console.log('MaterialsScreen - quiz created:', newQuiz);
         
         try {
-          // ✅ 1. Refetch all materials data
           await onRefreshMaterials();
-          
-          // ✅ 2. The useEffect above will automatically update selectedMaterial
-          
         } catch (error) {
           console.error('Error refreshing materials:', error);
           
-          // ✅ 3. Fallback: Manual update if refetch fails
           const updatedMaterial = {
             ...material,
             quizzes: [...(material.quizzes || []), newQuiz]
@@ -386,7 +423,6 @@ const MaterialsScreen = ({
           setSelectedMaterial(updatedMaterial);
         }
         
-        // Handle navigation logic
         if (options.onSuccess) {
           const result = options.onSuccess(newQuiz);
           if (result === false) {
@@ -455,6 +491,15 @@ const MaterialsScreen = ({
 
   return (
     <div>
+      {/* ✅ NEW: Hidden file input for upload functionality */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept=".docx,.pptx,.txt,.pdf"
+        style={{ display: 'none' }}
+      />
+
       {showFlashcards ? (
         <CreateFlashcards
           mainMaterial={selectedMaterial}
@@ -509,10 +554,10 @@ const MaterialsScreen = ({
         />
       ) : showMaterialContent ? (
         <MaterialContent
-          material={selectedMaterial} // ✅ This will now have fresh data automatically
+          material={selectedMaterial}
           isPublic={selectedMaterial?.public}
           onVisibilityToggle={() => toggleVisibility(selectedMaterial)}
-          onExport={() => handleExport(selectedMaterial)}
+          onUploadAttachment={() => handleUploadAttachment(selectedMaterial)} // ✅ Changed from onExport
           onCreateFlashcards={handleCreateFlashcards}
           onCreateNotes={handleCreateNotes}
           onCreateQuiz={handleCreateQuiz}

@@ -179,6 +179,12 @@ OPENROUTER_API_KEY = env('OPENROUTER_API_KEY')
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 60 * 60
 
+CORS_ALLOW_CREDENTIALS = True
+
+# Media files settings
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Cloudinary settings
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
