@@ -1,19 +1,19 @@
 import {
-    BookOpen,
-    CheckSquare,
-    File,
-    FileAudio,
-    FileImage,
-    FileText,
-    FileType,
-    FileVideo,
-    Folder as FolderIcon,
-    Grid,
-    HelpCircle,
-    List,
-    RefreshCw, Search,
-    Trash2,
-    X
+  BookOpen,
+  CheckSquare,
+  File,
+  FileAudio,
+  FileImage,
+  FileText,
+  FileType,
+  FileVideo,
+  Folder as FolderIcon,
+  Grid,
+  HelpCircle,
+  List,
+  RefreshCw, Search,
+  Trash2,
+  X
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -23,6 +23,7 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, file: null });
+  const [textContent, setTextContent] = useState('');
   const contextMenuRef = useRef(null);
 
   useEffect(() => {
@@ -37,6 +38,16 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (selectedFile && selectedFile.type.toLowerCase() === 'txt') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setTextContent(e.target.result);
+      };
+      reader.readAsText(selectedFile.file);
+    }
+  }, [selectedFile]);
 
   if (!isOpen) return null;
 
@@ -100,6 +111,7 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
 
   const handleCloseFileView = () => {
     setSelectedFile(null);
+    setTextContent('');
   };
 
   const handleContextMenu = (e, file) => {
@@ -213,6 +225,12 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
                 title={file.name}
                 onContextMenu={(e) => handleContextMenu(e, file)}
               />
+            ) : fileType === 'txt' ? (
+              <div className="w-full h-full bg-white p-4 rounded-lg">
+                <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800">
+                  {textContent || 'Loading...'}
+                </pre>
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-500">Preview not available for this file type</p>
@@ -361,4 +379,4 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
   );
 };
 
-export default FolderDialog; 
+export default FolderDialog;
