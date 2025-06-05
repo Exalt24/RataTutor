@@ -10,7 +10,6 @@ import MaterialsScreen from '../components/MaterialsScreen';
 import ProfileScreen from '../components/ProfileScreen';
 import RataAIScreen from '../components/RataAIScreen';
 import Sidebar from '../components/Sidebar';
-import StreakScreen from '../components/StreakScreen';
 import TrashScreen from '../components/TrashScreen';
 import { getProfile, logout } from '../services/authService';
 import { getMaterials, getTrashedMaterials } from '../services/apiService'; // Add these imports
@@ -224,7 +223,6 @@ const Dashboard = () => {
               fetchProfileData={fetchProfileData} 
             />
           )}
-          {screen === 'streak' && <StreakScreen profileData={profileData} />}
         </main>
       </div>
     </div>
