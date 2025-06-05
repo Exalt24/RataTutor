@@ -11,6 +11,7 @@ import r5 from "../assets/tablet.png";
 import "../styles/components/hero.css";
 import DevelopersSlideCard from "./DevelopersSlideCard";
 import FeaturesSlideCard from "./FeaturesSlideCard";
+import { isLoggedIn } from "../services/authService";
 
 const developers = [
   { name: "Daniel Alexis Cruz", img: r1 },
@@ -62,6 +63,21 @@ export default function Hero() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [prevImageIndex, setPrevImageIndex] = useState(null);
   const [activeCard, setActiveCard] = useState(1);
+  const [userLoggedIn, setUserLoggedIn] = useState(false); // Track login status
+
+  // Check login status on component mount and whenever localStorage changes
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      setUserLoggedIn(isLoggedIn());
+    };
+    
+    checkLoginStatus();
+    
+    // Listen for storage changes (in case user logs in/out in another tab)
+    window.addEventListener('storage', checkLoginStatus);
+    
+    return () => window.removeEventListener('storage', checkLoginStatus);
+  }, []);
 
   const handleCardClick = (cardId) => {
     setActiveCard(cardId);
@@ -142,9 +158,35 @@ export default function Hero() {
                             with experienced tutors for personalized, on-demand
                             learning.
                           </p>
+
+                          {/* Conditional rendering based on login status */}
                           <div className="hero-actions flex justify-start gap-4">
-                            <Link to="/login" data-hover="Login" className="exam-button-mini">Login</Link>
-                            <Link to="/register" data-hover="Signup" className="exam-button-mini">Sign up</Link>
+                            {userLoggedIn ? (
+                              // Show these buttons/links for logged-in users
+                              <>
+                                <Link to="/dashboard" data-hover="Dashboard" className="exam-button-mini">
+                                  Go to Dashboard
+                                </Link>
+                                <Link 
+                                  to="/dashboard" 
+                                  data-hover="Profile" 
+                                  className="exam-button-mini"
+                                  onClick={() => localStorage.setItem('currentScreen', 'profile')}
+                                >
+                                  My Profile
+                                </Link>
+                              </>
+                            ) : (
+                              // Show these buttons for non-logged-in users
+                              <>
+                                <Link to="/login" data-hover="Login" className="exam-button-mini">
+                                  Login
+                                </Link>
+                                <Link to="/register" data-hover="Signup" className="exam-button-mini">
+                                  Sign up
+                                </Link>
+                              </>
+                            )}
                           </div>
 
                           {bottomImages.map((img, index) => (
