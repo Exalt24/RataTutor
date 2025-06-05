@@ -23,13 +23,36 @@ const HomeScreen = ({ selectedFile, handleFileChange, uploadAndGenerate, generat
   };
 
   const handleFileUpload = (files) => {
-    const newFiles = files.map(file => ({
-      name: file.name,
-      type: file.type.split('/')[1] || 'file',
-      size: formatFileSize(file.size),
-      date: new Date().toISOString().split('T')[0],
-      file: file // Store the actual file object
-    }));
+    const newFiles = files.map(file => {
+      // Get the file extension
+      const extension = file.name.split('.').pop().toLowerCase();
+      
+      // Map common extensions to their types
+      let type = extension;
+      if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+        type = 'image';
+      } else if (['mp4', 'mov', 'avi'].includes(extension)) {
+        type = 'video';
+      } else if (['mp3', 'wav'].includes(extension)) {
+        type = 'audio';
+      } else if (['doc', 'docx'].includes(extension)) {
+        type = 'doc';
+      } else if (['ppt', 'pptx'].includes(extension)) {
+        type = 'ppt';
+      } else if (extension === 'pdf') {
+        type = 'pdf';
+      } else if (extension === 'txt') {
+        type = 'txt';
+      }
+
+      return {
+        name: file.name,
+        type: type,
+        size: formatFileSize(file.size),
+        date: new Date().toISOString().split('T')[0],
+        file: file // Store the actual file object
+      };
+    });
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
