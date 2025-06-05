@@ -172,7 +172,7 @@ export default function Login({ isActive, onGoRegister }) {
       </div>
 
       <a href="/" className="fixed bottom-5 left-5 z-50">
-        <button className="exam-button-mini">Back to Home</button>
+        <button data-hover="Back to Home" className="exam-button-mini">Back to Home</button>
       </a>
     </div>
   );

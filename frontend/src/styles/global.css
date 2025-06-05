@@ -259,7 +259,6 @@
   padding: 0.5rem;
   font-family: var(--font-pixel);
   font-size: 1rem;
-  transform: rotate(-3deg);
   transition: all 0.3s ease;
   opacity: 0;
   background: var(--button-primary);
@@ -269,13 +268,12 @@
 
 .exam-button:not(:disabled):hover {
   background: var(--button-primary);
-  transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .exam-button:not(:disabled):hover::before{
   top: 50%;
-  transform: translateY(-50%) rotate(-3deg);
+  transform: translateY(-50%);
   opacity: 1;
 }
 
