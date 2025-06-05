@@ -1,4 +1,4 @@
-import { Copy, Globe, Lock, MoreVertical, Pencil, Pin, RefreshCw, Trash } from 'lucide-react'
+import { Copy, Globe, Lock, MoreVertical, Pencil, Pin, RefreshCw, Trash, User } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 
 const MaterialCard = ({ 
@@ -10,6 +10,7 @@ const MaterialCard = ({
   onCopy,
   variant = 'materials',
   isPublic = false,
+  showOwner = false, // New prop for showing owner name
   onCreateFlashcards,
   onCreateNotes,
   onCreateQuiz,
@@ -354,6 +355,14 @@ const MaterialCard = ({
         
         {file.description && (
           <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
+        )}
+        
+        {/* Owner information - only show in explore variant when showOwner is true */}
+        {showOwner && file.owner && (
+          <div className="flex items-center gap-1 mt-2 mb-1">
+            <User size={12} className="text-gray-400" />
+            <p className="text-xs text-gray-500">by {file.owner}</p>
+          </div>
         )}
         
         {/* Updated time display */}

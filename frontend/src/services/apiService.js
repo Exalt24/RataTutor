@@ -7,6 +7,10 @@ export const createMaterial = (data) => api.post('/materials/', data);
 export const updateMaterial = (id, data) => api.patch(`/materials/${id}/`, data);
 export const deleteMaterial = (id) => api.delete(`/materials/${id}/`);
 
+export const getPublicMaterials = () => {
+  return api.get('/materials/public/')
+}
+
 // Material specific endpoints
 export const getPinnedMaterials = () => api.get('/materials/pinned/');
 export const getTrashedMaterials = () => api.get('/materials/trash/');
@@ -21,6 +25,8 @@ export const uploadAttachment = (materialId, file) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
+
+export const deleteAttachment = (id) => api.delete(`/attachments/${id}/`);
 
 // Notes
 export const getNotes = (params = {}) => api.get('/notes/', { params });
@@ -82,5 +88,3 @@ export const createConversation = (data) => api.post('/conversations/create/', d
 export const chatConversation = (conversationId, prompt) =>
   api.post(`/conversations/${conversationId}/chat/`, { prompt });
 export const getConversation = (conversationId) => api.get(`/conversations/${conversationId}/`);
-
-export const deleteAttachment = (id) => api.delete(`/attachments/${id}/`);
