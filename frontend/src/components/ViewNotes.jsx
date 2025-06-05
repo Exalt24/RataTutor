@@ -1,7 +1,5 @@
 import { ArrowLeft, Edit, FileText, Search } from 'lucide-react';
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import CreateNotes from './CreateNotes';
 
 const ViewNotes = ({ mainMaterial, material, onClose, readOnly = false, onSuccess, onEdit }) => {
@@ -37,111 +35,12 @@ const ViewNotes = ({ mainMaterial, material, onClose, readOnly = false, onSucces
   const noteTitle = material?.title || 'Untitled Note';
   const noteDescription = material?.description || 'View and review your notes';
 
-  // Recursive function to highlight matched text inside ReactMarkdown content
-  function highlightReactNodes(children, query) {
-    if (!query) return children;
-
-    if (typeof children === 'string') {
-      const parts = children.split(new RegExp(`(${query})`, 'gi'));
-      return parts.map((part, i) =>
-        part.toLowerCase() === query.toLowerCase() ? (
-          <span key={i} className="bg-yellow-200">{part}</span>
-        ) : (
-          part
-        )
-      );
-    }
-
-    if (Array.isArray(children)) {
-      return children.map((child, i) => (
-        <React.Fragment key={i}>{highlightReactNodes(child, query)}</React.Fragment>
-      ));
-    }
-
-    if (React.isValidElement(children)) {
-      return React.cloneElement(children, {
-        children: highlightReactNodes(children.props.children, query),
-      });
-    }
-
-    return children;
-  }
-
-  // Override ReactMarkdown's rendering for components with highlight and proper styles
-  const components = {
-    // Apply highlight recursively on text nodes inside paragraphs, headings, lists, etc.
-    p({ node, children }) {
-      return <p className="label-text mb-4">{highlightReactNodes(children, searchQuery)}</p>;
-    },
-    h1({ node, children }) {
-      return <h1 className="text-4xl font-semibold my-6 label-text">{highlightReactNodes(children, searchQuery)}</h1>;
-    },
-    h2({ node, children }) {
-      return <h2 className="text-3xl font-semibold my-5 label-text">{highlightReactNodes(children, searchQuery)}</h2>;
-    },
-    h3({ node, children }) {
-      return <h3 className="text-2xl font-semibold my-4 label-text">{highlightReactNodes(children, searchQuery)}</h3>;
-    },
-    h4({ node, children }) {
-      return <h4 className="text-xl font-semibold my-3 label-text">{highlightReactNodes(children, searchQuery)}</h4>;
-    },
-    h5({ node, children }) {
-      return <h5 className="text-lg font-semibold my-2 label-text">{highlightReactNodes(children, searchQuery)}</h5>;
-    },
-    h6({ node, children }) {
-      return <h6 className="text-base font-semibold my-2 label-text">{highlightReactNodes(children, searchQuery)}</h6>;
-    },
-    li({ node, children }) {
-      return <li className="label-text mb-1">{highlightReactNodes(children, searchQuery)}</li>;
-    },
-    blockquote({ node, children }) {
-      return (
-        <blockquote className="border-l-4 border-purple-400 pl-4 italic text-gray-600 my-6 bg-purple-50 py-4 rounded-r-lg label-text">
-          {highlightReactNodes(children, searchQuery)}
-        </blockquote>
-      );
-    },
-    code({ node, inline, className, children, ...props }) {
-      return inline ? (
-        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-purple-600 label-text" {...props}>
-          {children}
-        </code>
-      ) : (
-        <pre className="bg-gray-900 text-gray-100 p-6 rounded-lg overflow-x-auto my-6 shadow-lg" {...props}>
-          <code className={`${className} label-text text-sm`}>{children}</code>
-        </pre>
-      );
-    },
-    ul({ node, children }) {
-      return <ul className="list-disc pl-6 mb-6 space-y-1 label-text">{children}</ul>;
-    },
-    ol({ node, children }) {
-      return <ol className="list-decimal pl-6 mb-6 space-y-1 label-text">{children}</ol>;
-    },
-    hr() {
-      return <hr className="border-gray-300 my-8" />;
-    },
-    table({ node, children }) {
-      return (
-        <div className="overflow-x-auto my-6">
-          <table className="min-w-full border border-gray-200 rounded-lg">{children}</table>
-        </div>
-      );
-    },
-    th({ node, children }) {
-      return (
-        <th className="border border-gray-200 px-4 py-2 bg-gray-50 font-semibold label-text">
-          {children}
-        </th>
-      );
-    },
-    td({ node, children }) {
-      return (
-        <td className="border border-gray-200 px-4 py-2 label-text">
-          {children}
-        </td>
-      );
-    },
+  // Function to highlight text in HTML content
+  const highlightText = (html, query) => {
+    if (!query) return html;
+    
+    const regex = new RegExp(`(${query})`, 'gi');
+    return html.replace(regex, '<span class="bg-yellow-200">$1</span>');
   };
 
   // ✅ Enhanced: Follow ViewFlashcards pattern for CreateNotes integration
@@ -238,14 +137,12 @@ const ViewNotes = ({ mainMaterial, material, onClose, readOnly = false, onSucces
 
               {/* ✅ Enhanced: Note content with proper scrolling */}
               <div className="overflow-y-auto h-[calc(100%-6rem)] pr-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-400/50">
-                <div className="prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-600">
-                  <ReactMarkdown
-                    components={components}
-                    remarkPlugins={[remarkGfm]}
-                  >
-                    {noteContent}
-                  </ReactMarkdown>
-                </div>
+                <div 
+                  className="prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-600"
+                  dangerouslySetInnerHTML={{ 
+                    __html: highlightText(noteContent, searchQuery)
+                  }}
+                />
               </div>
             </div>
           ) : (
