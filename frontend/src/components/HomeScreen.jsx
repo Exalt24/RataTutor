@@ -127,7 +127,6 @@ const HomeScreen = ({
         
         if (!material) {
           console.error('Material not found with ID:', materialId);
-          console.log('Available materials:', materialsData.map(m => ({ id: m.id, title: m.title })));
           throw new Error('Selected material not found');
         }
       }

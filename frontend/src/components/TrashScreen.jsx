@@ -8,8 +8,10 @@ import { useToast } from './Toast/ToastContext'
 
 const TrashScreen = ({ 
   trashedMaterialsData = [], 
-  onRefreshTrashedMaterials, 
-  onRestoreMaterial 
+  onRefreshMaterials, 
+  onRestoreMaterial,
+  onRemoveMaterial,
+  onRemoveMaterials
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -76,13 +78,13 @@ const TrashScreen = ({
       // Delete all selected items
       await Promise.all(selectedItems.map(id => permanentDeleteMaterial(id)))
       
+      // Update Dashboard state immediately - remove from trash
+      if (onRemoveMaterials) {
+        onRemoveMaterials(selectedItems)
+      }
+      
       // Clear selections
       setSelectedItems([])
-      
-      // Refresh the data in Dashboard (this will update both materials and trash)
-      if (onRefreshTrashedMaterials) {
-        await onRefreshTrashedMaterials()
-      }
       
       showToast({
         variant: "success",

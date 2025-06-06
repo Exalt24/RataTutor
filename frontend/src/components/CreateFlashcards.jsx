@@ -315,7 +315,6 @@ const CreateFlashcards = ({
       // ✅ Call success callback separately (like fetchProfileData in EditProfileScreen)
       if (successCallback) {
         try {
-          console.log('CreateFlashcards - calling success callback with:', response.data);
           await successCallback(response.data); // This will call onRefreshMaterials()
         } catch (callbackError) {
           console.error('Error in success callback:', callbackError);

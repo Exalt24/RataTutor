@@ -221,7 +221,6 @@ const CreateNotes = ({
     // ✅ Call success callback separately
     if (successCallback) {
       try {
-        console.log('CreateNotes - calling success callback with:', response.data);
         await successCallback(response.data);
       } catch (callbackError) {
         console.error('Error in success callback:', callbackError);

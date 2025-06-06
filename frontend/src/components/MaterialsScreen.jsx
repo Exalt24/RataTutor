@@ -78,12 +78,9 @@ const MaterialsScreen = ({
 
   useEffect(() => {
     if (selectedMaterial && materialsData) {
-      // Find the updated version of the currently selected material
       const updatedMaterial = materialsData.find(m => m.id === selectedMaterial.id);
       if (updatedMaterial) {
-        // Update selectedMaterial with fresh data
         setSelectedMaterial(updatedMaterial);
-        console.log('Updated selectedMaterial with fresh data:', updatedMaterial);
       }
     }
   }, [materialsData, selectedMaterial?.id]);
@@ -337,7 +334,6 @@ const MaterialsScreen = ({
     const enhancedOptions = {
       ...options,
       onSuccess: async (newFlashcardSet) => {
-        console.log('MaterialsScreen - flashcard created:', newFlashcardSet);
         
         try {
           await onRefreshMaterials();
@@ -379,7 +375,6 @@ const MaterialsScreen = ({
     const enhancedOptions = {
       ...options,
       onSuccess: async (newNote) => {
-        console.log('MaterialsScreen - note created:', newNote);
         
         try {
           await onRefreshMaterials();
@@ -419,7 +414,6 @@ const MaterialsScreen = ({
     const enhancedOptions = {
       ...options,
       onSuccess: async (newQuiz) => {
-        console.log('MaterialsScreen - quiz created:', newQuiz);
         
         try {
           await onRefreshMaterials();
