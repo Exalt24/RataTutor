@@ -9,14 +9,18 @@ from .views import (
     QuizViewSet,
     QuizQuestionViewSet,
     AttachmentUploadView,
+    CopyMaterialView,
+    AttachmentViewSet,
     CreateConversationView,
     ConversationChatView,
     RetrieveConversationView,
+    ConversationListView,
+    GetOrCreateConversationView,
+    ConversationDeleteView,
+    ConversationSummaryView,
     NoteGenerationView,
     FlashcardGenerationView,
     QuizGenerationView,
-    CopyMaterialView,
-    AttachmentViewSet,
 )
 
 app_name = "api"
@@ -38,24 +42,39 @@ urlpatterns = [
         name="attachment-upload"
     ),
 
-    # 2) AIConversation endpoints
+    # ✅ 2) SIMPLIFIED: Conversation Management endpoints (one per material)
+    path(
+        "conversations/",
+        ConversationListView.as_view(),
+        name="conversation-list"
+    ),
     path(
         "conversations/create/",
         CreateConversationView.as_view(),
-        name="conv-create"
-    ),
-    path(
-        "conversations/<int:pk>/chat/",
-        ConversationChatView.as_view(),
-        name="conv-chat"
+        name="conversation-create"
     ),
     path(
         "conversations/<int:pk>/",
         RetrieveConversationView.as_view(),
-        name="conv-detail"
+        name="conversation-detail"
+    ),
+    path(
+        "conversations/<int:pk>/chat/",
+        ConversationChatView.as_view(),
+        name="conversation-chat"
+    ),
+    path(
+        "conversations/<int:pk>/regenerate-summary/",
+        ConversationSummaryView.as_view(),
+        name="conversation-regenerate-summary"
+    ),
+    path(
+        "conversations/<int:pk>/delete/",
+        ConversationDeleteView.as_view(),
+        name="conversation-delete"
     ),
 
-    # 3) AI-powered generation endpoints:
+    # 3) AI-powered generation endpoints (now with smart context)
     path(
         "materials/<int:material_id>/generate-notes/",
         NoteGenerationView.as_view(),
@@ -77,6 +96,13 @@ urlpatterns = [
         "materials/<int:material_id>/copy/",
         CopyMaterialView.as_view(),
         name="material-copy"
+    ),
+
+    # ✅ SIMPLIFIED: Get the one conversation for a material
+    path(
+        "materials/<int:material_id>/conversation/",
+        GetOrCreateConversationView.as_view(),
+        name="material-conversation"
     ),
 
     # 5) CRUD routes from router

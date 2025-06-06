@@ -1,4 +1,4 @@
-// Dashboard.jsx - Pass profile refresh function to ExploreScreen
+// Dashboard.jsx - Updated RataAIScreenWrapper
 
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
@@ -189,10 +189,10 @@ const Dashboard = () => {
                 element={<ExploreScreen onRefreshProfile={refreshProfileAfterAction} />} 
               />
               
-              {/* Rata AI Screen */}
+              {/* Rata AI Screen - ✅ UPDATED: Remove materialsData prop */}
               <Route 
                 path="/rata" 
-                element={<RataAIScreenWrapper />} 
+                element={<RataAIScreen />} 
               />
               
               {/* Profile Screen */}
@@ -300,15 +300,6 @@ const TrashScreenWrapper = ({ onRefreshMaterials }) => {
   );
 };
 
-const RataAIScreenWrapper = () => {
-  const { 
-    materials, 
-    fetchMaterials, 
-    isInitialized, 
-    isFetching 
-  } = useMaterials();
-
-  return <RataAIScreen materialsData={materials} />;
-};
+// ✅ REMOVED: RataAIScreenWrapper - no longer needed since RataAIScreen uses materials context directly
 
 export default Dashboard;

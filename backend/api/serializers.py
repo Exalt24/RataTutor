@@ -322,6 +322,22 @@ class AIConversationSerializer(serializers.ModelSerializer):
         help_text="Accumulated user message history as plain text."
     )
 
+    # ✅ NEW: Add smart context fields to serializer
+    summary_context = serializers.CharField(
+        read_only=True,
+        help_text="AI-generated summary of conversation context"
+    )
+
+    messages_since_summary = serializers.IntegerField(
+        read_only=True,
+        help_text="Number of messages added since last summary generation"
+    )
+
+    last_summary_at = serializers.DateTimeField(
+        read_only=True,
+        help_text="When the summary was last generated"
+    )
+
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
@@ -332,11 +348,24 @@ class AIConversationSerializer(serializers.ModelSerializer):
             "material",
             "messages",
             "last_user_message",
-            "context",               # ✅ Include it here
+            "context",
+            # ✅ NEW: Include smart context fields
+            "summary_context",
+            "messages_since_summary", 
+            "last_summary_at",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "messages", "context", "created_at", "updated_at"]
+        read_only_fields = [
+            "id", 
+            "messages", 
+            "context", 
+            "summary_context",
+            "messages_since_summary",
+            "last_summary_at",
+            "created_at", 
+            "updated_at"
+        ]
 
     def validate_last_user_message(self, value):
         clean = value.strip()
@@ -355,6 +384,7 @@ class AIConversationSerializer(serializers.ModelSerializer):
         if not data.get("last_user_message"):
             raise serializers.ValidationError("You must supply 'last_user_message'.")
         return data
+
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
     quiz = serializers.PrimaryKeyRelatedField(
@@ -619,3 +649,28 @@ class MaterialSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context.get("request")
         return data
+
+
+# ===== GENERATION SERIALIZERS =====
+
+class FlashcardGenerationSerializer(serializers.Serializer):
+    num_cards = serializers.IntegerField(
+        min_value=1,
+        max_value=20,
+        default=5,
+        help_text="How many flashcards to generate (1–20)."
+    )
+
+
+class NoteGenerationSerializer(serializers.Serializer):
+    """No extra params currently, but keeping for future extensibility"""
+    pass
+
+
+class QuizGenerationSerializer(serializers.Serializer):
+    num_questions = serializers.IntegerField(
+        min_value=1,
+        max_value=20,
+        default=5,
+        help_text="How many multiple-choice questions to generate (1–20)."
+    )
