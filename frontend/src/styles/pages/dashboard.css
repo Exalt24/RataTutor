@@ -176,6 +176,19 @@
   display: none;
 }
 
+@media screen and (max-width: 480px) {
+  .exam-button-mini {
+    font-size: 0.6rem;
+    padding: 0.4rem 1rem;
+    border-width: 1px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+  
+  .exam-button-mini::before {
+    font-size: 0.7rem;
+    padding: 0.3rem;
+  }
+}
 
 .exam-card.exam-card--alt:hover {
   background: rgba(255, 255, 255, 0.9);

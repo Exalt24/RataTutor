@@ -175,7 +175,6 @@
   text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
   letter-spacing: 0.5px;
   line-height: 1.3;
-  text-transform: uppercase;
 }
 
 .exam-msg {
@@ -299,34 +298,14 @@
   display: none;
 }
 
-.exam-card h2 {
-  font-family: var(--font-pixel);
-  font-size: 2rem;
-  letter-spacing: 2px;
-  line-height: 1.6;
-  margin-bottom: 1.2rem;
-  text-transform: uppercase;
-  font-weight: normal;
-  image-rendering: pixelated;
-  -webkit-font-smoothing: none;
-  position: relative;
-}
 
-.exam-card h2::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-}
 
 .exam-card h3 {
   font-family: var(--font-pixel);
-  font-size: 1.2rem;
-  line-height: 1.3;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: start;
 }
 
 

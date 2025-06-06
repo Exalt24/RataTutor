@@ -194,7 +194,7 @@ const TrashScreen = ({
           <div className={`
             relative flex items-center
             transition-all duration-200
-            ${isSearchFocused ? 'ring-2 ring-blue-400' : ''}
+            ${isSearchFocused ? 'ring-1 ring-[#1b81d4]' : ''}
             rounded-full border border-gray-200
             bg-white
           `}>
@@ -202,7 +202,7 @@ const TrashScreen = ({
               className={`
                 absolute left-4
                 transition-colors duration-200
-                ${isSearchFocused ? 'text-blue-500' : 'text-gray-400'}
+                ${isSearchFocused ? 'text-[#1b81d4]' : 'text-gray-400'}
               `} 
               size={20} 
             />
@@ -213,7 +213,7 @@ const TrashScreen = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setIsSearchFocused(false)}
-              className="label-text w-full pl-12 pr-12 py-3 rounded-full focus:outline-none text-sm"
+              className="label-text w-full pl-12 pr-12 py-2 border border-[#7BA7CC] rounded-full focus:outline-none text-sm"
             />
             {searchQuery && (
               <button
@@ -249,7 +249,6 @@ const TrashScreen = ({
             onClick={handleRestoreAll}
             disabled={selectedItems.length === 0 || isLoading}
           >
-            <RefreshCw size={16} />
             Restore Selected
           </button>
           <button 

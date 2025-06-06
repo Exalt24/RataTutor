@@ -564,11 +564,11 @@ const MaterialContent = ({
                           onChange={(e) => setEditedTitle(e.target.value)}
                           onBlur={handleTitleSave}
                           onKeyDown={handleTitleKeyDown}
-                          className="text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
+                          className="text-xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
                           autoFocus
                         />
                       ) : (
-                        <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                        <h1 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
                           {material?.title || "Material"}
                         </h1>
                       )}

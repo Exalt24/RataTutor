@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EditProfileScreen from '../components/EditProfileScreen';
-import ExamsScreen from '../components/ExamsScreen';
 import ExploreScreen from '../components/ExploreScreen';
 import Header from '../components/Header';
 import HomeScreen from '../components/HomeScreen';
@@ -11,8 +10,8 @@ import ProfileScreen from '../components/ProfileScreen';
 import RataAIScreen from '../components/RataAIScreen';
 import Sidebar from '../components/Sidebar';
 import TrashScreen from '../components/TrashScreen';
-import { getProfile, logout,  getStreakStatus  } from '../services/authService';
 import { getMaterials, getTrashedMaterials } from '../services/apiService';
+import { getProfile, logout } from '../services/authService';
 import '../styles/pages/dashboard.css';
 
 const Dashboard = () => {
@@ -236,7 +235,6 @@ const removeMaterialsFromTrash = (materialIds) => {
               onRemoveMaterials={removeMaterialsFromTrash}
             />
           )}
-          {screen === 'exams' && <ExamsScreen />}
           {screen === 'explore' && <ExploreScreen onRefreshMaterials={fetchMaterialsData} />}
           {screen === 'rata' && <RataAIScreen materialsData={materialsData} />}
           {screen === 'profile' && (
