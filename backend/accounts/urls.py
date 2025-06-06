@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, LogoutView, PasswordResetRequestView, PasswordResetConfirmView, UpdateProfileView, GetProfileView
+from .views import RegisterView, LogoutView, PasswordResetRequestView, PasswordResetConfirmView, UpdateProfileView, GetProfileView, RecordActivityView, GetStreakStatusView
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 
 app_name = 'accounts'
@@ -17,5 +17,9 @@ urlpatterns = [
     
     # Profile endpoints  
     path('profile-update/', UpdateProfileView.as_view(), name='profile-update'),
-    path('profile/', GetProfileView.as_view(), name='get-profile')
+    path('profile/', GetProfileView.as_view(), name='get-profile'),
+
+    # Streak endpoints
+    path('record-activity/', RecordActivityView.as_view(), name='record-activity'),
+    path('streak-status/', GetStreakStatusView.as_view(), name='streak-status'),
 ]

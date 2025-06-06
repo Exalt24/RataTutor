@@ -70,14 +70,28 @@ def create_user_profile(sender, instance, created, **kwargs):
     Now with unique themed names that prevent duplicates!
     """
     if created:
-        # Create the UserProfile instance with unique themed name
-        user_profile = UserProfile.objects.create(
-            user=instance,
-            full_name=generate_guaranteed_unique_name(),
-        )
+        try:
+            # Create the UserProfile instance with unique themed name
+            user_profile = UserProfile.objects.create(
+                user=instance,
+                full_name=generate_guaranteed_unique_name(),
+            )
 
-        # Create Streak instance for the newly created UserProfile
-        streak = Streak.objects.create(profile=user_profile)
-
-        # Initialize the streak
-        streak.update_streak()
+            # Create Streak instance for the newly created UserProfile
+            Streak.objects.create(profile=user_profile)
+            
+            print(f"✅ Created profile and streak for user: {instance.username}")
+            
+        except Exception as e:
+            print(f"❌ Error creating profile/streak for {instance.username}: {e}")
+            
+            # Fallback: create minimal profile without custom name
+            try:
+                user_profile = UserProfile.objects.create(
+                    user=instance,
+                    full_name=f"User {instance.id}",  # Simple fallback
+                )
+                Streak.objects.create(profile=user_profile)
+                print(f"✅ Created fallback profile for user: {instance.username}")
+            except Exception as fallback_error:
+                print(f"❌ Critical error creating profile: {fallback_error}")

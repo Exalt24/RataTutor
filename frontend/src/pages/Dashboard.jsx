@@ -11,7 +11,7 @@ import ProfileScreen from '../components/ProfileScreen';
 import RataAIScreen from '../components/RataAIScreen';
 import Sidebar from '../components/Sidebar';
 import TrashScreen from '../components/TrashScreen';
-import { getProfile, logout } from '../services/authService';
+import { getProfile, logout,  getStreakStatus  } from '../services/authService';
 import { getMaterials, getTrashedMaterials } from '../services/apiService';
 import '../styles/pages/dashboard.css';
 
@@ -25,14 +25,15 @@ const Dashboard = () => {
 
   const { showLoading, hideLoading } = useLoading();
 
-  const fetchProfileData = async () => {
-    try {
-      const profile = await getProfile();
-      setProfileData(profile);
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-    }
-  };
+const fetchProfileData = async () => {
+  try {
+    const profile = await getProfile();
+    
+    setProfileData(profile);
+  } catch (error) {
+    console.error('❌ Error fetching profile data:', error);
+  }
+};
 
   const fetchMaterialsData = async () => {
     try {
@@ -48,6 +49,22 @@ const Dashboard = () => {
       setTrashedMaterialsData([]);
     }
   };
+
+  const fetchAllData = async () => {
+  try {
+    console.log('🔄 fetchAllData called - refreshing both materials and profile');
+    console.trace('🔍 Call stack for fetchAllData:');
+    
+    await Promise.all([
+      fetchMaterialsData(), // Refresh materials 
+      fetchProfileData()    // Refresh profile
+    ]);
+    
+    console.log('✅ Both materials, profile, and streak refreshed successfully');
+  } catch (error) {
+    console.error('❌ Error refreshing data:', error);
+  }
+};
 
   const fetchInitialData = async () => {
     try {
@@ -162,7 +179,7 @@ const Dashboard = () => {
   };
 
   // Show loading until all essential data is available
-  const isLoading = profileData === null || materialsData === null;
+  const isLoading = profileData === null && materialsData === null;
 
   return isLoading ? (
     <div className="flex justify-center items-center h-screen"></div>
@@ -184,7 +201,7 @@ const Dashboard = () => {
               uploadAndGenerate={uploadAndGenerate} 
               generated={profileData}
               materialsData={materialsData}
-              onRefreshMaterials={fetchMaterialsData}
+              onRefreshMaterials={fetchAllData} 
               onAddMaterial={addMaterialToState}
               onUpdateMaterial={updateMaterialInState}
             />
@@ -192,7 +209,7 @@ const Dashboard = () => {
           {screen === 'materials' && (
             <MaterialsScreen 
               materialsData={materialsData}
-              onRefreshMaterials={fetchMaterialsData}
+              onRefreshMaterials={fetchAllData}
               onUpdateMaterial={updateMaterialInState}
               onAddMaterial={addMaterialToState}
               onRemoveMaterial={removeMaterialFromState}
@@ -202,7 +219,7 @@ const Dashboard = () => {
           {screen === 'trash' && (
             <TrashScreen 
               trashedMaterialsData={trashedMaterialsData}
-              onRefreshTrashedMaterials={fetchMaterialsData}
+              onRefreshMaterials={fetchAllData}
               onRestoreMaterial={restoreMaterialFromTrash}
             />
           )}

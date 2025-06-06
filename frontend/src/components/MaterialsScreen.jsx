@@ -10,6 +10,7 @@ import CreateQuiz from './CreateQuiz'
 import DeleteModal from './DeleteModal'
 import MaterialCard from './MaterialCard'
 import MaterialContent from './MaterialContent'
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
@@ -228,61 +229,70 @@ const MaterialsScreen = ({
     fileInputRef.current?.click()
   }
 
-  // ✅ NEW: Handle file selection and upload
   const handleFileSelect = async (event) => {
-    const file = event.target.files[0]
-    if (!file || !selectedMaterial) return
+  const file = event.target.files[0]
+  if (!file || !selectedMaterial) return
 
-    // Validate file type (same as backend validation)
-    const validExtensions = ['.docx', '.pptx', '.txt', '.pdf']
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
-    
-    if (!validExtensions.includes(fileExtension)) {
-      showToast({
-        variant: "error",
-        title: "Invalid file type",
-        subtitle: "Please select a DOCX, PPTX, TXT, or PDF file.",
-      })
-      return
-    }
-
-    // Validate file size (optional - add your own limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if (file.size > maxSize) {
-      showToast({
-        variant: "error",
-        title: "File too large",
-        subtitle: "Please select a file smaller than 10MB.",
-      })
-      return
-    }
-
-    try {
-      showLoading()
-      
-      const response = await uploadAttachment(selectedMaterial.id, file)
-      
-      // Refresh materials data to get updated attachments
-      await onRefreshMaterials()
-
-      showToast({
-        variant: "success",
-        title: "File uploaded successfully",
-        subtitle: `"${file.name}" has been attached to "${selectedMaterial.title}".`,
-      })
-    } catch (err) {
-      console.error('Error uploading file:', err)
-      showToast({
-        variant: "error",
-        title: "Upload failed",
-        subtitle: err.response?.data?.error || "Failed to upload file. Please try again.",
-      })
-    } finally {
-      hideLoading()
-      // Clear the file input
-      event.target.value = ''
-    }
+  // Validate file type (same as backend validation)
+  const validExtensions = ['.docx', '.pptx', '.txt', '.pdf']
+  const fileExtension = '.' + file.name.split('.').pop().toLowerCase()
+  
+  if (!validExtensions.includes(fileExtension)) {
+    showToast({
+      variant: "error",
+      title: "Invalid file type",
+      subtitle: "Please select a DOCX, PPTX, TXT, or PDF file.",
+    })
+    return
   }
+
+  // Validate file size (optional - add your own limit)
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (file.size > maxSize) {
+    showToast({
+      variant: "error",
+      title: "File too large",
+      subtitle: "Please select a file smaller than 10MB.",
+    })
+    return
+  }
+
+  try {
+    showLoading()
+    
+    const response = await uploadAttachment(selectedMaterial.id, file)
+    
+    // 🔥 Track activity but suppress immediate notification (same as other components)
+    const streakResult = await trackActivityAndNotify(showToast, true)
+    
+    // Refresh materials data to get updated attachments
+    await onRefreshMaterials()
+
+    // 🔥 Create combined message using helper function (same as other components)
+    const baseTitle = "File uploaded successfully!";
+    const baseSubtitle = `"${file.name}" has been attached to "${selectedMaterial.title}".`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // 🔥 Show single combined toast (same as other components)
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    })
+  } catch (err) {
+    console.error('Error uploading file:', err)
+    showToast({
+      variant: "error",
+      title: "Upload failed",
+      subtitle: err.response?.data?.error || "Failed to upload file. Please try again.",
+    })
+  } finally {
+    hideLoading()
+    // Clear the file input
+    event.target.value = ''
+  }
+}
 
   const handleDelete = async (material) => {
     setMaterialToDelete(material);
@@ -802,6 +812,7 @@ const MaterialsScreen = ({
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
             onCreated={handleCreateMaterial}
+            onRefreshMaterials={onRefreshMaterials} 
           />
 
           <DeleteModal

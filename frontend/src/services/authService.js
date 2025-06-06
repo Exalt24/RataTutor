@@ -163,7 +163,7 @@ export async function getProfile() {
 }
 
 /**
- * Update current user profile (PATCH /profile-update/).
+ * Update current user profile (POST /profile-update/).
  * Sends Authorization: Bearer <access> in headers.
  * Payload: { username, email, full_name, bio, avatar }
  */
@@ -194,4 +194,69 @@ export async function updateProfile({
   );
 
   return res.data;
+}
+
+/**
+ * Record study activity for streak tracking (POST /record-activity/).
+ * Call this when user completes meaningful study activities.
+ * Sends Authorization: Bearer <access> in headers.
+ */
+export async function recordActivity() {
+  const access = localStorage.getItem("access_token");
+
+  const res = await axios.post(
+    `${AUTH_URL}record-activity/`,
+    {}, // Empty body
+    {
+      headers: {
+        Authorization: `Bearer ${access}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return res.data;
+}
+
+/**
+ * Get current streak status (GET /streak-status/).
+ * Sends Authorization: Bearer <access> in headers.
+ */
+export async function getStreakStatus() {
+  const access = localStorage.getItem("access_token");
+
+  const res = await axios.get(`${AUTH_URL}streak-status/`, {
+    headers: {
+      Authorization: `Bearer ${access}`,
+    },
+  });
+
+  return res.data;
+}
+
+/**
+ * Helper function to automatically track study activities.
+ * Call this after meaningful user actions like completing quizzes,
+ * generating flashcards, creating materials, etc.
+ * Returns the updated streak data or null if tracking failed.
+ */
+export async function trackStudyActivity() {
+  try {
+    if (!isLoggedIn()) {
+      console.log("User not logged in, skipping streak tracking");
+      return null;
+    }
+
+    const result = await recordActivity();
+    
+    if (result.streak_updated) {
+      console.log("Streak updated:", result.streak);
+      // You could show a notification here if the streak was updated
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Failed to track study activity:", error);
+    return null;
+  }
 }

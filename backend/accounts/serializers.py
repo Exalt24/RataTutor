@@ -218,10 +218,22 @@ class UpdateProfileSerializer(serializers.Serializer):
     )
 
 class StreakSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    
     class Meta:
         model = Streak
-        fields = ['count', 'longest_streak', 'total_days', 'last_updated']
+        fields = [
+            'count', 
+            'longest_streak', 
+            'total_days', 
+            'last_activity_date',
+            'status'
+        ]
         read_only_fields = fields
+    
+    def get_status(self, obj):
+        """Include streak status information."""
+        return obj.get_streak_status()
 
 class UserProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(

@@ -2,6 +2,8 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Edit, HelpCircle, XCircle } from '
 import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
 import CreateQuiz from './CreateQuiz';
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
+import { useToast } from '../components/Toast/ToastContext'; // If not already imported
 
 const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess, onEdit }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -13,6 +15,8 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     width: window.innerWidth,
     height: window.innerHeight,
   });
+
+  const { showToast } = useToast();
 
   // ✅ Enhanced: Handle window resize for confetti (like ViewFlashcards)
   useEffect(() => {
@@ -97,9 +101,29 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     }));
   };
 
-  const handleSubmit = () => {
-    setQuizSubmitted(true);
-  };
+const handleSubmit = async () => {
+  setQuizSubmitted(true);
+  
+  // Calculate score for the message
+  const score = calculateScore();
+  const questionsCorrect = Math.round((score / 100) * quizData.questions.length);
+  
+  // 🔥 Track activity but suppress immediate notification (same as other components)
+  const streakResult = await trackActivityAndNotify(showToast, true);
+  
+  // 🔥 Create combined message using helper function (same as other components)
+  const baseTitle = "Quiz completed!";
+  const baseSubtitle = `You scored ${score}% (${questionsCorrect}/${quizData.questions.length}) on "${quizData.title}".`;
+  
+  const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+  
+  // 🔥 Show single combined toast (same as other components)
+  showToast({
+    variant: "success",
+    title: combinedMessage.title,
+    subtitle: combinedMessage.subtitle,
+  });
+};
 
   const handleNextQuestion = () => {
     if (quizData?.questions && currentQuestionIndex < quizData.questions.length - 1) {

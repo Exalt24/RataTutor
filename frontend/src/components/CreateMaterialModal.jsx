@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, FileText, Info, Globe, Pin, AlertCircle } from 'lucide-react';
 import { createMaterial } from '../services/apiService';
+import { trackActivityAndNotify, createCombinedSuccessMessage} from '../utils/streakNotifications';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import ValidatedInput from '../components/ValidatedInput';
 
-const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
+const CreateMaterialModal = ({ isOpen, onClose, onCreated, onRefreshMaterials}) => {
   const { showLoading, hideLoading } = useLoading();
   const { showToast } = useToast();
   
@@ -88,17 +89,33 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated }) => {
     showLoading();
 
     try {
+      // Create the material
       const res = await createMaterial(formData);
       
-      // Show success toast
+      // 🔥 Track activity but suppress immediate notification (same as CreateFlashcards)
+      const streakResult = await trackActivityAndNotify(showToast, true);
+      
+      // 🔥 Create combined message using helper function (same as CreateFlashcards)
+      const baseTitle = "Material created successfully!";
+      const baseSubtitle = `"${formData.title}" is ready for content.`;
+      
+      const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+      
+      // 🔥 Show single combined toast (same as CreateFlashcards)
       showToast({
         variant: "success",
-        title: "Material created successfully!",
-        subtitle: `"${formData.title}" is ready for content.`,
+        title: combinedMessage.title,
+        subtitle: combinedMessage.subtitle,
       });
 
-      // Notify parent and close modal
       onCreated(res.data);
+
+      // 🔥 ALSO refresh all data to get updated streak
+      if (onRefreshMaterials) {
+        console.log('🔥 Material created, calling fetchAllData to refresh streak...');
+        await onRefreshMaterials();
+      }
+
       onClose();
       
     } catch (err) {
