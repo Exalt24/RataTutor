@@ -1,14 +1,14 @@
 import { Edit2, FilePlus, FileText, HelpCircle, Sparkles } from 'lucide-react';
-import React, { useState, useRef } from 'react';
-import { useLoading } from './Loading/LoadingContext';
-import { useToast } from './Toast/ToastContext';
+import React, { useRef, useState } from 'react';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 import ChooseModal from './ChooseModal';
 import CreateFlashcards from './CreateFlashcards';
 import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
+import { useLoading } from './Loading/LoadingContext';
+import { useToast } from './Toast/ToastContext';
 import UploadFile from './UploadFile'; // This now uses the enhanced version
 import UploadPurposeModal from './UploadPurposeModal';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const HomeScreen = ({ 
   selectedFile, 

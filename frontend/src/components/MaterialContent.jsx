@@ -654,6 +654,7 @@ const MaterialContent = ({
                             return false;
                           }
                         })}
+                        data-hover="Create Flashcards"
                       >
                         <BookOpen size={16} />
                         Create Flashcards
@@ -667,6 +668,7 @@ const MaterialContent = ({
                             return false;
                           }
                         })}
+                        data-hover="Create Notes"
                       >
                         <FileText size={16} />
                         Create Notes
@@ -680,6 +682,7 @@ const MaterialContent = ({
                             return false;
                           }
                         })}
+                        data-hover="Create Quiz"
                       >
                         <HelpCircle size={16} />
                         Create Quiz
