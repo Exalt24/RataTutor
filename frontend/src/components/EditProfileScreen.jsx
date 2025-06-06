@@ -319,16 +319,16 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
   return (
     <>
       <div className="space-y-6 text-xs sm:text-sm max-w-6xl mx-auto px-4">
-        <div className="exam-card exam-card--alt p-8 space-y-8">
+        <div className="exam-card exam-card--alt">
           <div className="flex items-center justify-between border-b border-gray-200 pb-6">
             <div className="flex space-x-3">
               <button 
                 onClick={onBack}
                 className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition"
               >
-                <ArrowLeft size={28} className="text-gray-600" />
+                <ArrowLeft size={25} className="text-gray-600" />
               </button>
-              <h2 className="text-xl">Edit Profile</h2>
+              <h3>Edit Profile</h3>
             </div>
             <button 
               onClick={handleSubmit}
