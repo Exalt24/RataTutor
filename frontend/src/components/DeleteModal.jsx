@@ -30,10 +30,10 @@ const DeleteModal = ({
         </button>
 
         {/* Content */}
-        <div className="px-6 py-8">
+        <div className="px-4 pt-8 pb-4">
           {/* Icon */}
           <div className="flex justify-center mb-6">
-            <ExclamationTriangleIcon className="w-16 h-16 text-red-500" />
+            <ExclamationTriangleIcon className="w-18 h-18 text-red-500" />
           </div>
 
           {/* Title */}

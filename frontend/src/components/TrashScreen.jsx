@@ -17,6 +17,7 @@ const TrashScreen = ({
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [selectedItems, setSelectedItems] = useState([])
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteAllModalOpen, setDeleteAllModalOpen] = useState(false)
 
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
@@ -178,6 +179,44 @@ const TrashScreen = ({
     }
   }
 
+  const handleDeleteAll = () => {
+    if (trashItems.length === 0) return;
+    setDeleteAllModalOpen(true);
+  }
+
+  const confirmDeleteAll = async () => {
+    try {
+      showLoading()
+      
+      // Delete all items
+      await Promise.all(trashItems.map(item => permanentDeleteMaterial(item.id)))
+      
+      // Update Dashboard state immediately - remove all from trash
+      if (onRemoveMaterials) {
+        onRemoveMaterials(trashItems.map(item => item.id))
+      }
+      
+      // Clear selections
+      setSelectedItems([])
+      
+      showToast({
+        variant: "success",
+        title: "All items deleted",
+        subtitle: `${trashItems.length} item(s) have been permanently deleted.`,
+      })
+    } catch (error) {
+      console.error('Error deleting all items:', error)
+      showToast({
+        variant: "error",
+        title: "Error deleting items",
+        subtitle: "Failed to delete some items. Please try again.",
+      })
+    } finally {
+      hideLoading()
+      setDeleteAllModalOpen(false);
+    }
+  }
+
   // Filter items based on search query
   const filteredItems = trashItems.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -263,6 +302,18 @@ const TrashScreen = ({
           >
             Delete Selected
           </button>
+          <button 
+            data-hover="Delete All"
+            className={`exam-button-mini py-1 px-2 flex items-center gap-1 ${
+              trashItems.length > 0 
+                ? 'text-red-500 hover:text-red-600' 
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
+            onClick={handleDeleteAll}
+            disabled={trashItems.length === 0 || isLoading}
+          >
+            Delete All
+          </button>
         </div>
       </div>
 
@@ -306,6 +357,15 @@ const TrashScreen = ({
         title="Delete Selected Items"
         message={`Are you sure you want to permanently delete ${selectedItems.length} item${selectedItems.length !== 1 ? 's' : ''}? This action cannot be undone.`}
         confirmText="Delete Permanently"
+      />
+
+      <DeleteModal
+        isOpen={deleteAllModalOpen}
+        onClose={() => setDeleteAllModalOpen(false)}
+        onConfirm={confirmDeleteAll}
+        title="Delete All Items"
+        message={`Are you sure you want to permanently delete all ${trashItems.length} item${trashItems.length !== 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete All Permanently"
       />
     </div>
   )
