@@ -126,7 +126,7 @@ export default function PasswordReset() {
           <div className="envelope-content">
             <div className="paper-peek" onClick={handlePaperClick}>
               <div className="paper-content">
-                <span className="handwriting-accent">Click to open</span>
+                <span className="pixel-accent">Click to open</span>
                 <div className="pull-arrow">↑</div>
               </div>
             </div>

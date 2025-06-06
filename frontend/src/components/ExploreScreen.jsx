@@ -355,8 +355,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
           <p className="text-gray-600 text-center max-w-md leading-relaxed mb-6">
             {materialsData.length === 0 ? (
               <>
-                No public materials from other users are available yet. To see materials here, other users need to create materials and mark them as public.
-                <br /><br />
                 <strong>Tip:</strong> You can make your own materials public from the Materials tab to share them with the community!
               </>
             ) : searchQuery ? (
@@ -378,15 +376,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
                   data-hover="Clear Search"
                 >
                   Clear Search
-                </button>
-              )}
-              {selectedFilter !== 'all' && (
-                <button
-                  onClick={() => setSelectedFilter('all')}
-                  className="exam-button-mini"
-                  data-hover="Show All"
-                >
-                  Show All Categories
                 </button>
               )}
             </div>
