@@ -1,11 +1,11 @@
-import { ArrowLeft, ArrowUpDown, Globe, GripVertical, Lock, Trash2, AlertCircle } from 'lucide-react';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import ValidatedInput from '../components/ValidatedInput';
+import { AlertCircle, ArrowLeft, ArrowUpDown, GripVertical, Trash2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
-import { defaultValidators } from '../utils/validation';
+import ValidatedInput from '../components/ValidatedInput';
 import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
+import { defaultValidators } from '../utils/validation';
 
 const CreateFlashcards = ({ 
   mainMaterial, 

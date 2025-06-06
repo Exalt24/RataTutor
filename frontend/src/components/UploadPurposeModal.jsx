@@ -27,10 +27,10 @@ const UploadPurposeModal = ({ isOpen, onClose, onChoosePurpose, uploadedFiles = 
         <div className="px-4 pb-4">
           {/* Show uploaded files summary */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">Files Ready to Upload:</h3>
+            <h3 className="text-sm font-medium text-blue-800 mb-2 label-text">Files Ready to Upload:</h3>
             <div className="space-y-1">
               {uploadedFiles.map((file, index) => (
-                <div key={index} className="text-sm text-blue-700 flex items-center gap-2">
+                <div key={index} className="text-sm text-blue-700 flex items-center gap-2 label-text">
                   <FileText size={16} />
                   <span>{file.name}</span>
                   <span className="text-blue-500">({file.size})</span>
@@ -58,11 +58,11 @@ const UploadPurposeModal = ({ isOpen, onClose, onChoosePurpose, uploadedFiles = 
                 <div className="p-3 rounded-full bg-white shadow-sm mb-4">
                   <Bot size={32} className="text-purple-500" />
                 </div>
-                <h3 className="font-semibold text-gray-800 mb-2">AI Generate Content</h3>
+                <h3 className="font-semibold text-gray-800 mb-2 label-text">AI Generate Content</h3>
                 <p className="text-gray-600 text-sm mb-3">
                   Use AI to automatically create flashcards, notes, or quiz questions from your uploaded files.
                 </p>
-                <div className="flex items-center gap-1 text-purple-600 text-xs">
+                <div className="flex items-center gap-1 text-purple-600 text-xs label-text">
                   <Sparkles size={14} />
                   <span>Powered by AI</span>
                 </div>
@@ -86,11 +86,11 @@ const UploadPurposeModal = ({ isOpen, onClose, onChoosePurpose, uploadedFiles = 
                 <div className="p-3 rounded-full bg-white shadow-sm mb-4">
                   <Upload size={32} className="text-green-500" />
                 </div>
-                <h3 className="font-semibold text-gray-800 mb-2">Attach Files Only</h3>
+                <h3 className="font-semibold text-gray-800 mb-2 label-text">Attach Files Only</h3>
                 <p className="text-gray-600 text-sm mb-3">
                   Simply attach your files to an existing material or create a new material for organization.
                 </p>
-                <div className="flex items-center gap-1 text-green-600 text-xs">
+                <div className="flex items-center gap-1 text-green-600 text-xs label-text">
                   <FileText size={14} />
                   <span>Simple Upload</span>
                 </div>
@@ -102,8 +102,9 @@ const UploadPurposeModal = ({ isOpen, onClose, onChoosePurpose, uploadedFiles = 
           <div className="flex justify-center">
             <button
               onClick={onClose}
-              className="text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-6 py-2 rounded-full transition-colors"
+              className="exam-button-mini "
               aria-label="Back to file selection"
+              data-hover="Back to File Selection"
             >
               Back to File Selection
             </button>

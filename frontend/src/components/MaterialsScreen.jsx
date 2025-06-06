@@ -1,8 +1,9 @@
-import { ChevronDown, FileQuestion, Folder, Pin, RefreshCw, Search, X } from 'lucide-react'
+import { ChevronDown, FileQuestion, Folder, Pin, Search, X } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
 import { softDeleteMaterial, toggleMaterialPin, toggleMaterialVisibility, updateMaterial, uploadAttachment } from '../services/apiService'
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications'
 import CreateFlashcards from './CreateFlashcards'
 import CreateMaterialModal from './CreateMaterialModal'
 import CreateNotes from './CreateNotes'
@@ -10,7 +11,6 @@ import CreateQuiz from './CreateQuiz'
 import DeleteModal from './DeleteModal'
 import MaterialCard from './MaterialCard'
 import MaterialContent from './MaterialContent'
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
