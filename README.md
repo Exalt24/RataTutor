@@ -119,6 +119,8 @@ cd ..
 
 ## 🏃 Development
 
+### Quick Start
+
 Start everything with one command from the project root:
 
 ```bash
@@ -138,33 +140,38 @@ This will:
 
 All server logs appear in the same terminal window for easy monitoring.
 
-## 🔧 Additional Commands
+### Development Commands
 
-### Reset Database and Start Fresh
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start both backend and frontend servers with test user creation |
+| `npm run backend` | Start only the Django backend server |
+| `npm run frontend` | Start only the React frontend development server |
+| `npm run create-test-user` | Create the test user manually |
+| `npm run reset` | **Complete reset:** Delete database and user files, then start fresh |
+| `npm run reset:unix` | Reset command for macOS/Linux systems |
 
-If you encounter database issues or want to start with a clean database:
+### Reset Database and Files
 
+If you encounter issues or want a completely fresh start:
+
+**Windows:**
 ```bash
 npm run reset
 ```
 
-This command will:
-- Delete the existing SQLite database
-- Run migrations to create a fresh database
-- Start the development servers
-
-### Manual Commands
-
+**macOS/Linux:**
 ```bash
-# Start only the backend server
-npm run backend
-
-# Start only the frontend server
-npm run frontend
-
-# Create test user manually
-npm run create-test-user
+npm run reset:unix
 ```
+
+These commands will:
+- **Delete SQLite database** (`db.sqlite3`)
+- **Remove user-uploaded files** (`media/` and `attachments/` directories)
+- **Apply fresh migrations** to create a clean database
+- **Start the development servers** automatically
+
+**⚠️ Warning:** The reset command permanently deletes all user data, uploaded files, and database content. Use only in development!
 
 ## ✅ Quick Verification Test
 
@@ -204,6 +211,8 @@ RataTutor/
 │  ├─ api/                    # Core API functionality and endpoints
 │  ├─ venv/                   # Python virtual environment (gitignored)
 │  ├─ RataTutor/              # Django project settings & configuration
+│  ├─ media/                  # User-uploaded files in development (gitignored)
+│  ├─ attachments/            # Alternative attachment storage (gitignored)
 │  ├─ .env                    # Environment variables (gitignored)
 │  ├─ db.sqlite3              # Database file (gitignored)
 │  ├─ manage.py               # Django management script
@@ -239,16 +248,58 @@ RataTutor/
 
 ## 🚀 Features
 
-- **Note Upload & Processing**: Upload study materials in various formats (PDF, DOCX, TXT, PPTX)
+- **File Upload & Processing**: Upload study materials in various formats (PDF, DOCX, TXT, PPTX)
 - **AI-Powered Content Generation**:
   - Generate flashcards with question/answer pairs
   - Create concise summaries of key concepts
   - Produce practice quiz questions to test knowledge
 - **User Management**: Secure account creation and authentication system
-- **Material Organization**: Save, categorize, and manage study materials
+- **Material Organization**: Save, categorize, and manage study materials with attachments
 - **Progress Tracking**: Monitor learning progress and quiz performance
 - **Responsive Design**: Study seamlessly across desktop and mobile devices
-- **Offline Access**: Download generated study materials for offline use
+- **File Management**: Upload and attach documents to study materials
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+**Database connection errors:**
+```bash
+npm run reset
+```
+
+**Permission errors on file uploads:**
+- Check that `backend/media/` and `backend/attachments/` directories are writable
+- On Unix systems: `chmod 755 backend/media backend/attachments`
+
+**Port conflicts:**
+- Backend (Django): Change port in `npm run backend` if 8000 is busy
+- Frontend (React): Change port in `npm run frontend` if 3000 is busy
+
+**Missing dependencies:**
+```bash
+# Reinstall all dependencies
+npm install
+cd backend && pip install -r requirements.txt && cd ..
+cd frontend && npm install && cd ..
+```
+
+### Clean Installation
+
+For a completely fresh setup:
+
+```bash
+# Remove all generated files
+npm run reset
+
+# Reinstall dependencies
+npm install
+cd backend && pip install -r requirements.txt && cd ..
+cd frontend && npm install && cd ..
+
+# Start fresh
+npm run dev
+```
 
 ## 🖼️ Screenshots & Showcase
 
