@@ -242,7 +242,7 @@ const ChooseModal = ({
           </select>
           {existingMaterials.filter(m => m.status === 'active').length === 0 && (
             <p className="text-sm text-gray-500 mt-2">
-              No existing materials found. Create a new one below.
+              No existing materials found. Choose the other option to create a new material.
             </p>
           )}
         </div>
