@@ -5,6 +5,7 @@ import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import { defaultValidators } from '../utils/validation';
 import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const CreateFlashcards = ({ 
   mainMaterial, 
@@ -293,12 +294,20 @@ const CreateFlashcards = ({
         response = await createFlashcardSet(flashcardSetData);
       }
 
+      // 🔥 Track activity but suppress immediate notification
+      const streakResult = await trackActivityAndNotify(showToast, true);
+      
+      // 🔥 Create combined message using helper function
+      const baseTitle = `Flashcards ${isEditMode ? 'updated' : 'created'} successfully!`;
+      const baseSubtitle = `${isEditMode ? 'Updated' : 'Created'} ${validFlashcards.length} flashcards in "${formData.title}" set.`;
+      
+      const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
       // ✅ Show success toast (same as EditProfileScreen)
       showToast({
-        variant: "success",
-        title: `Flashcards ${isEditMode ? 'updated' : 'created'} successfully!`,
-        subtitle: `${isEditMode ? 'Updated' : 'Created'} ${validFlashcards.length} flashcards in "${formData.title}" set.`,
-      });
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
 
       // ✅ Close component immediately after API success (same as EditProfileScreen)
       onClose();

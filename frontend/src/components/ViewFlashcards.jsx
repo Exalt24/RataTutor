@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
 import '../styles/components/flashcards.css';
 import CreateFlashcards from './CreateFlashcards';
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
+import { useToast } from '../components/Toast/ToastContext';
 
 const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onSuccess }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,6 +19,8 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     width: window.innerWidth,
     height: window.innerHeight,
   });
+
+  const { showToast } = useToast();
 
   // ✅ Good useEffect - DOM event handling
   useEffect(() => {
@@ -91,17 +95,35 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     }
   }, [safeCurrentIndex, currentIndex, formattedFlashcards.length]);
 
-  const handleNext = () => {
-    if (formattedFlashcards.length === 0) return;
+  // Update the handleNext function (around line 90-110):
+const handleNext = async () => {
+  if (formattedFlashcards.length === 0) return;
+  
+  setShowAnswer(false);
+  
+  if (currentIndex === formattedFlashcards.length - 1) {
+    setIsFinished(true);
     
-    setShowAnswer(false);
+    // 🔥 Track activity but suppress immediate notification (same as other components)
+    const streakResult = await trackActivityAndNotify(showToast, true);
     
-    if (currentIndex === formattedFlashcards.length - 1) {
-      setIsFinished(true);
-    } else {
-      setCurrentIndex(prev => Math.min(prev + 1, formattedFlashcards.length - 1));
-    }
-  };
+    // 🔥 Create combined message using helper function (same as other components)
+    const baseTitle = "Flashcard review completed!";
+    const baseSubtitle = `You've reviewed all ${formattedFlashcards.length} flashcards${isShuffled ? ' in shuffled order' : ''}.`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // 🔥 Show single combined toast (same as other components)
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+  } else {
+    setCurrentIndex(prev => Math.min(prev + 1, formattedFlashcards.length - 1));
+  }
+};
+
 
   const handlePrevious = () => {
     if (formattedFlashcards.length === 0) return;

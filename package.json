@@ -3,13 +3,11 @@
     "backend": "cd backend && python manage.py runserver",
     "create-test-user": "cd backend && python manage.py create_test_user",
     "frontend": "cd frontend && npm run dev",
-    "dev": "concurrently --kill-others \"npm run create-test-user && npm run backend\" \"npm run frontend\""
+    "dev": "concurrently --kill-others \"npm run create-test-user && npm run backend\" \"npm run frontend\"",
+    "reset": "cd backend && (if exist db.sqlite3 del db.sqlite3) && python manage.py migrate && cd .. && npm run dev"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "connect-history-api-fallback": "^2.0.0"
-  },
-  "dependencies": {
-    "react-markdown": "^10.1.0"
   }
 }

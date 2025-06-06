@@ -14,7 +14,10 @@ const Header = ({
   const [showStreakModal, setShowStreakModal] = useState(false);
 
   const currentAvatar = getCurrentAvatarOrDefault(profileData);
+  
+  const streakCount = profileData?.streak?.count || 0;
 
+  console.log('🔄 Header component rendered with profileData:', profileData);
   return (
     <>
       <header className="relative flex items-center justify-between bg-white px-4 py-4 shadow text-xs sm:text-sm">
@@ -25,13 +28,15 @@ const Header = ({
 
         {/* Actions & Stats + Profile */}
         <div className="flex items-center space-x-3">
-          {/* Streak */}
+          {/* 🔥 FIX: Safe streak display with loading state */}
           <button
             onClick={() => setShowStreakModal(true)}
             className="flex items-center space-x-1 hover:opacity-75 transition-opacity"
           >
             <span className="text-lg">🔥</span>
-            <span className="font-medium label-text">{profileData.streak.count} Days</span>
+            <span className="font-medium label-text">
+              {profileData ? `${streakCount} Days` : 'Loading...'}
+            </span>
           </button>
 
           {/* Profile Menu */}

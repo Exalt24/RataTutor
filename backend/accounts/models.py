@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -16,45 +17,89 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
-    
-
-User = get_user_model()
 
 class Streak(models.Model):
     profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='streak')
-
+    
     count = models.PositiveIntegerField(default=0)  # Current streak count
     longest_streak = models.PositiveIntegerField(default=0)  # Longest streak
     total_days = models.PositiveIntegerField(default=0)  # Total days active
-    last_updated = models.DateField(default=now)  # Date the streak was last updated
+    last_activity_date = models.DateField(null=True, blank=True)  # Last day with meaningful activity
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    def update_streak(self):
+    def record_activity(self):
+        """Record a meaningful study activity and update streak if needed."""
         today = now().date()
-
-        # Use User.last_login for streak calculation (last activity)
-        user = self.profile.user
-
-        # Ensure that last_login is not None
-        if user.last_login is None:
-            return  # No streak update if the user hasn't logged in yet
-
-        last_login_date = user.last_login.date()  # This will give the last login date of the user
-        delta = (today - last_login_date).days  # Calculate the number of days since last login
-
-        if delta == 0:
-            return  # Already updated today
-
-        if delta == 1:
-            # If the user was active the previous day, increment the streak
-            self.count += 1
+        
+        # If already recorded activity today, no need to update
+        if self.last_activity_date == today:
+            return False  # No streak change
+        
+        # Calculate days since last activity
+        if self.last_activity_date is None:
+            # First time activity
+            self.count = 1
+            self.total_days = 1
         else:
-            # There was a gap, reset the streak
-            self.count = 1  # Reset streak, they were inactive for more than 1 day
-
-        self.last_updated = today
-        self.total_days += 1  # Increment total days active
-        self.longest_streak = max(self.longest_streak, self.count)  # Track the longest streak
+            days_since_last = (today - self.last_activity_date).days
+            
+            if days_since_last == 1:
+                # Consecutive day - increment streak
+                self.count += 1
+                self.total_days += 1
+            elif days_since_last > 1:
+                # Streak broken - reset to 1
+                self.count = 1
+                self.total_days += 1
+            # days_since_last == 0 shouldn't happen due to check above
+        
+        # Update longest streak if current is longer
+        self.longest_streak = max(self.longest_streak, self.count)
+        
+        # Update last activity date
+        self.last_activity_date = today
         self.save()
+        
+        return True  # Streak was updated
+
+    def get_streak_status(self):
+        """Get current streak status and whether it's at risk."""
+        if self.last_activity_date is None:
+            return {
+                'current_streak': 0,
+                'is_active': False,
+                'is_at_risk': False,
+                'days_since_activity': None
+            }
+        
+        today = now().date()
+        days_since = (today - self.last_activity_date).days
+        
+        if days_since == 0:
+            # Active today
+            return {
+                'current_streak': self.count,
+                'is_active': True,
+                'is_at_risk': False,
+                'days_since_activity': 0
+            }
+        elif days_since == 1:
+            # At risk - haven't done anything today but streak not broken yet
+            return {
+                'current_streak': self.count,
+                'is_active': True,
+                'is_at_risk': True,
+                'days_since_activity': 1
+            }
+        else:
+            # Streak broken
+            return {
+                'current_streak': 0,
+                'is_active': False,
+                'is_at_risk': False,
+                'days_since_activity': days_since
+            }
 
     def __str__(self):
         return f"{self.profile.user.username} - Current: {self.count} | Longest: {self.longest_streak} | Days Active: {self.total_days}"

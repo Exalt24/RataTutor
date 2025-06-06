@@ -15,6 +15,7 @@ import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import { defaultValidators } from '../utils/validation';
 import { createNote, updateNote } from '../services/apiService';
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const CreateNotes = ({ 
   material, 
@@ -171,80 +172,88 @@ const CreateNotes = ({
 
   // ✅ Enhanced: Save handler following CreateFlashcards pattern exactly
   const handleSave = useCallback(async () => {
-    setBannerErrors([]);
+  setBannerErrors([]);
+  
+  const contentErrors = validateContent();
+  if (contentErrors.length > 0) {
+    setBannerErrors(contentErrors);
+    return;
+  }
+
+  setSubmitting(true);
+  showLoading();
+
+  try {
+    const noteData = {
+      material: material?.id,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      content: contentValidation.content,
+      public: false // Default to private
+    };
+
+    let response;
+    if (isEditMode) {
+      response = await updateNote(editContent.id, noteData);
+    } else {
+      response = await createNote(noteData);
+    }
+
+    // 🔥 Track activity but suppress immediate notification (same as CreateFlashcards)
+    const streakResult = await trackActivityAndNotify(showToast, true);
     
-    const contentErrors = validateContent();
-    if (contentErrors.length > 0) {
-      setBannerErrors(contentErrors);
-      return;
+    // 🔥 Create combined message using helper function (same as CreateFlashcards)
+    const baseTitle = `Note ${isEditMode ? 'updated' : 'created'} successfully!`;
+    const baseSubtitle = `${isEditMode ? 'Updated' : 'Created'} "${formData.title}" note.`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // 🔥 Show single combined toast (same as CreateFlashcards)
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+
+    // ✅ Close component immediately after API success
+    onClose();
+
+    // ✅ Call success callback separately
+    if (successCallback) {
+      try {
+        console.log('CreateNotes - calling success callback with:', response.data);
+        await successCallback(response.data);
+      } catch (callbackError) {
+        console.error('Error in success callback:', callbackError);
+      }
     }
 
-    setSubmitting(true);
-    showLoading(); // ✅ Same as CreateFlashcards
+  } catch (err) {
+    // ✅ Only handle actual API failures
+    console.error('API Error creating/updating note:', err);
+    
+    const data = err.response?.data || {};
+    const msgs = [];
 
-    try {
-      const noteData = {
-        material: material?.id,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        content: contentValidation.content,
-        public: false // Default to private
-      };
-
-      let response;
-      if (isEditMode) {
-        response = await updateNote(editContent.id, noteData);
-      } else {
-        response = await createNote(noteData);
+    Object.entries(data).forEach(([key, val]) => {
+      if (Array.isArray(val)) {
+        val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
+      } else if (typeof val === "string") {
+        msgs.push(val);
       }
+    });
 
-      // ✅ Show success toast (same as CreateFlashcards)
-      showToast({
-        variant: "success",
-        title: `Note ${isEditMode ? 'updated' : 'created'} successfully!`,
-        subtitle: `${isEditMode ? 'Updated' : 'Created'} "${formData.title}" note.`,
-      });
-
-      // ✅ Close component immediately after API success (same as CreateFlashcards)
-      onClose();
-
-      // ✅ Call success callback separately (like CreateFlashcards)
-      if (successCallback) {
-        try {
-          console.log('CreateNotes - calling success callback with:', response.data);
-          await successCallback(response.data); // This will call onRefreshMaterials()
-        } catch (callbackError) {
-          console.error('Error in success callback:', callbackError);
-          // Don't show this error to user since main operation succeeded
-        }
-      }
-
-    } catch (err) {
-      // ✅ Only handle actual API failures (same as CreateFlashcards error handling)
-      console.error('API Error creating/updating note:', err);
-      
-      const data = err.response?.data || {};
-      const msgs = [];
-
-      Object.entries(data).forEach(([key, val]) => {
-        if (Array.isArray(val)) {
-          val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
-        } else if (typeof val === "string") {
-          msgs.push(val);
-        }
-      });
-
-      if (msgs.length === 0) {
-        msgs.push(`Failed to ${isEditMode ? 'update' : 'create'} note. Please try again.`);
-      }
-
-      setBannerErrors(msgs);
-
-    } finally {
-      setSubmitting(false);
-      hideLoading(); // ✅ Same as CreateFlashcards
+    if (msgs.length === 0) {
+      msgs.push(`Failed to ${isEditMode ? 'update' : 'create'} note. Please try again.`);
     }
-  }, [formData, contentValidation, isEditMode, editContent?.id, material?.id, onClose, validateContent, showLoading, hideLoading, showToast, successCallback]);
+
+    setBannerErrors(msgs);
+
+  } finally {
+    setSubmitting(false);
+    hideLoading();
+  }
+}, [formData, contentValidation, isEditMode, editContent?.id, material?.id, onClose, validateContent, showLoading, hideLoading, showToast, successCallback]);
 
   // ✅ Enhanced: Memoized button state
   const isDisabled = useMemo(() => {

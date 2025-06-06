@@ -8,6 +8,7 @@ import CreateNotes from './CreateNotes';
 import CreateQuiz from './CreateQuiz';
 import UploadFile from './UploadFile'; // This now uses the enhanced version
 import UploadPurposeModal from './UploadPurposeModal';
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const HomeScreen = ({ 
   selectedFile, 
@@ -165,49 +166,59 @@ const HomeScreen = ({
     }
   };
 
-  // Handle attachment upload to selected material
-  const handleAttachmentUpload = async (material) => {
-    if (uploadedFiles.length === 0) return;
+  /// Update the handleAttachmentUpload function (around line 150-190):
+const handleAttachmentUpload = async (material) => {
+  if (uploadedFiles.length === 0) return;
 
-    try {
-      showLoading();
-      
-      // Import uploadAttachment function
-      const { uploadAttachment } = await import('../services/apiService');
-      
-      // Upload all files (validation already done in handleFileUpload)
-      const uploadPromises = uploadedFiles.map(fileData => {
-        return uploadAttachment(material.id, fileData.file);
-      });
+  try {
+    showLoading();
+    
+    // Import uploadAttachment function
+    const { uploadAttachment } = await import('../services/apiService');
+    
+    // Upload all files (validation already done in handleFileUpload)
+    const uploadPromises = uploadedFiles.map(fileData => {
+      return uploadAttachment(material.id, fileData.file);
+    });
 
-      await Promise.all(uploadPromises);
-      
-      // Refresh materials data to get updated attachments
-      await onRefreshMaterials();
-      
-      // Close modal and reset state
-      setIsChooseModalOpen(false);
-      setUploadedFiles([]);
-      setSelectedMaterial(null);
-      setModalMode('upload');
+    await Promise.all(uploadPromises);
+    
+    // 🔥 Track activity but suppress immediate notification (same as other components)
+    const streakResult = await trackActivityAndNotify(showToast, true);
 
-      showToast({
-        variant: "success",
-        title: "Files uploaded successfully",
-        subtitle: `${uploadedFiles.length} file(s) have been attached to "${material.title}".`,
-      });
+    // Refresh materials data to get updated attachments
+    await onRefreshMaterials();
+    
+    // Close modal and reset state
+    setIsChooseModalOpen(false);
+    setUploadedFiles([]);
+    setSelectedMaterial(null);
+    setModalMode('upload');
 
-    } catch (error) {
-      console.error('Error uploading attachments:', error);
-      showToast({
-        variant: "error",
-        title: "Upload failed",
-        subtitle: error.response?.data?.error || error.message || "Failed to upload files. Please try again.",
-      });
-    } finally {
-      hideLoading();
-    }
-  };
+    // 🔥 Create combined message using helper function (same as other components)
+    const baseTitle = "Files uploaded successfully!";
+    const baseSubtitle = `${uploadedFiles.length} file(s) have been attached to "${material.title}".`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // 🔥 Show single combined toast (same as other components)
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+
+  } catch (error) {
+    console.error('Error uploading attachments:', error);
+    showToast({
+      variant: "error",
+      title: "Upload failed",
+      subtitle: error.response?.data?.error || error.message || "Failed to upload files. Please try again.",
+    });
+  } finally {
+    hideLoading();
+  }
+};
 
   const handleCreationSuccess = async (newContent) => {
     // Refresh materials to get updated data

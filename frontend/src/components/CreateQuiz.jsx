@@ -5,6 +5,7 @@ import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import { defaultValidators } from '../utils/validation';
 import { createQuiz, updateQuiz } from '../services/apiService';
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 
 const CreateQuiz = ({ 
   material, 
@@ -281,125 +282,133 @@ const CreateQuiz = ({
 
   // ✅ Enhanced: Save handler following CreateFlashcards pattern exactly
   const handleSave = useCallback(async () => {
-    setBannerErrors([]);
-    
-    const questionErrors = validateQuestions();
-    if (questionErrors.length > 0) {
-      setBannerErrors(questionErrors);
+  setBannerErrors([]);
+  
+  const questionErrors = validateQuestions();
+  if (questionErrors.length > 0) {
+    setBannerErrors(questionErrors);
+    return;
+  }
+
+  setSubmitting(true);
+  showLoading();
+
+  try {
+    const validQuestions = items
+      .filter(item => {
+        const questionTrimmed = item.question.trim();
+        const validChoices = item.choices.filter(choice => choice.trim().length > 0);
+        
+        if (!questionTrimmed && validChoices.length === 0) {
+          return false;
+        }
+        
+        const questionError = defaultValidators.quizQuestion(item.question);
+        const hasValidChoices = validChoices.length >= 2;
+        const hasValidCorrectAnswer = item.choices[item.correctAnswer]?.trim();
+        
+        return !questionError && hasValidChoices && hasValidCorrectAnswer;
+      })
+      .map(item => ({
+        question_text: item.question.trim(),
+        choices: item.choices.filter(choice => choice.trim().length > 0),
+        correct_answer: item.choices[item.correctAnswer].trim(),
+        ...(item.id && { id: item.id })
+      }));
+
+    if (validQuestions.length === 0) {
+      setBannerErrors(['No valid questions to save. Please complete at least one question.']);
       return;
     }
 
-    setSubmitting(true);
-    showLoading(); // ✅ Same as CreateFlashcards
+    const quizData = {
+      material: material?.id,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      questions: validQuestions,
+      public: false // Default to private
+    };
 
-    try {
-      const validQuestions = items
-        .filter(item => {
-          const questionTrimmed = item.question.trim();
-          const validChoices = item.choices.filter(choice => choice.trim().length > 0);
-          
-          if (!questionTrimmed && validChoices.length === 0) {
-            return false;
-          }
-          
-          const questionError = defaultValidators.quizQuestion(item.question);
-          const hasValidChoices = validChoices.length >= 2;
-          const hasValidCorrectAnswer = item.choices[item.correctAnswer]?.trim();
-          
-          return !questionError && hasValidChoices && hasValidCorrectAnswer;
-        })
-        .map(item => ({
-          question_text: item.question.trim(),
-          choices: item.choices.filter(choice => choice.trim().length > 0),
-          correct_answer: item.choices[item.correctAnswer].trim(),
-          ...(item.id && { id: item.id })
-        }));
-
-      if (validQuestions.length === 0) {
-        setBannerErrors(['No valid questions to save. Please complete at least one question.']);
-        return;
-      }
-
-      const quizData = {
-        material: material?.id,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        questions: validQuestions,
-        public: false // Default to private
-      };
-
-      let response;
-      if (isEditMode) {
-        response = await updateQuiz(editContent.id, quizData);
-      } else {
-        response = await createQuiz(quizData);
-      }
-
-      // ✅ Show success toast (same as CreateFlashcards)
-      showToast({
-        variant: "success",
-        title: `Quiz ${isEditMode ? 'updated' : 'created'} successfully!`,
-        subtitle: `${isEditMode ? 'Updated' : 'Created'} ${validQuestions.length} questions in "${formData.title}" quiz.`,
-      });
-
-      // ✅ Close component immediately after API success (same as CreateFlashcards)
-      onClose();
-
-      // ✅ Call success callback separately (like CreateFlashcards)
-      if (successCallback) {
-        try {
-          console.log('CreateQuiz - calling success callback with:', response.data);
-          await successCallback(response.data); // This will call onRefreshMaterials()
-        } catch (callbackError) {
-          console.error('Error in success callback:', callbackError);
-          // Don't show this error to user since main operation succeeded
-        }
-      }
-
-    } catch (err) {
-      // ✅ Only handle actual API failures (same as CreateFlashcards error handling)
-      console.error('API Error creating/updating quiz:', err);
-      
-      const data = err.response?.data || {};
-      const msgs = [];
-
-      if (data.questions && Array.isArray(data.questions)) {
-        data.questions.forEach((questionErrors, index) => {
-          if (typeof questionErrors === 'object' && questionErrors !== null) {
-            Object.entries(questionErrors).forEach(([field, errors]) => {
-              if (Array.isArray(errors)) {
-                errors.forEach(error => {
-                  msgs.push(`Question ${index + 1} - ${field}: ${error}`);
-                });
-              } else if (typeof errors === 'string') {
-                msgs.push(`Question ${index + 1} - ${field}: ${errors}`);
-              }
-            });
-          }
-        });
-      }
-
-      Object.entries(data).forEach(([key, val]) => {
-        if (key !== 'questions') {
-          if (Array.isArray(val)) {
-            val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
-          } else if (typeof val === "string") {
-            msgs.push(val);
-          }
-        }
-      });
-
-      if (msgs.length === 0) {
-        msgs.push(`Failed to ${isEditMode ? 'update' : 'create'} quiz. Please try again.`);
-      }
-
-      setBannerErrors(msgs);
-
-    } finally {
-      setSubmitting(false);
-      hideLoading(); // ✅ Same as CreateFlashcards
+    let response;
+    if (isEditMode) {
+      response = await updateQuiz(editContent.id, quizData);
+    } else {
+      response = await createQuiz(quizData);
     }
-  }, [items, formData, isEditMode, editContent?.id, material?.id, onClose, validateQuestions, showLoading, hideLoading, showToast, successCallback]);
+
+    // 🔥 Track activity but suppress immediate notification (same as CreateFlashcards)
+    const streakResult = await trackActivityAndNotify(showToast, true);
+    
+    // 🔥 Create combined message using helper function (same as CreateFlashcards)
+    const baseTitle = `Quiz ${isEditMode ? 'updated' : 'created'} successfully!`;
+    const baseSubtitle = `${isEditMode ? 'Updated' : 'Created'} ${validQuestions.length} questions in "${formData.title}" quiz.`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // 🔥 Show single combined toast (same as CreateFlashcards)
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+
+    // ✅ Close component immediately after API success
+    onClose();
+
+    // ✅ Call success callback separately
+    if (successCallback) {
+      try {
+        console.log('CreateQuiz - calling success callback with:', response.data);
+        await successCallback(response.data);
+      } catch (callbackError) {
+        console.error('Error in success callback:', callbackError);
+      }
+    }
+
+  } catch (err) {
+    // ✅ Only handle actual API failures
+    console.error('API Error creating/updating quiz:', err);
+    
+    const data = err.response?.data || {};
+    const msgs = [];
+
+    if (data.questions && Array.isArray(data.questions)) {
+      data.questions.forEach((questionErrors, index) => {
+        if (typeof questionErrors === 'object' && questionErrors !== null) {
+          Object.entries(questionErrors).forEach(([field, errors]) => {
+            if (Array.isArray(errors)) {
+              errors.forEach(error => {
+                msgs.push(`Question ${index + 1} - ${field}: ${error}`);
+              });
+            } else if (typeof errors === 'string') {
+              msgs.push(`Question ${index + 1} - ${field}: ${errors}`);
+            }
+          });
+        }
+      });
+    }
+
+    Object.entries(data).forEach(([key, val]) => {
+      if (key !== 'questions') {
+        if (Array.isArray(val)) {
+          val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
+        } else if (typeof val === "string") {
+          msgs.push(val);
+        }
+      }
+    });
+
+    if (msgs.length === 0) {
+      msgs.push(`Failed to ${isEditMode ? 'update' : 'create'} quiz. Please try again.`);
+    }
+
+    setBannerErrors(msgs);
+
+  } finally {
+    setSubmitting(false);
+    hideLoading();
+  }
+}, [items, formData, isEditMode, editContent?.id, material?.id, onClose, validateQuestions, showLoading, hideLoading, showToast, successCallback]);
 
   // ✅ Enhanced: Memoized button state
   const isDisabled = useMemo(() => {
