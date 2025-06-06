@@ -52,7 +52,9 @@ const Header = ({
           >
             <Flame size={18} className="text-pink-500 group-hover:scale-110 transition-transform" />
             <span className="font-medium label-text text-pink-600">
-              {profileData ? `${streakCount} Days` : 'Loading...'}
+              {profileData && profileData.streak 
+                ? `${streakCount} Day${streakCount !== 1 ? 's' : ''} Streak`
+                : "No Streak Yet"}
             </span>
           </button>
 

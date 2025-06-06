@@ -1,8 +1,172 @@
-import { Copy, Globe, Lock, MoreVertical, Pencil, Pin, RefreshCw, Trash, User } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import { Copy, Globe, Lock, MoreVertical, Pencil, Pin, RefreshCw, Trash, User } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const MaterialCard = ({ 
-  file, // This is actually a material object from API
+// Content tags configuration
+const CONTENT_TAG_CONFIG = {
+  flashcard_sets: {
+    label: 'Flashcard Sets',
+    color: 'bg-[#FFB3BA] text-[#7D1F1F]'
+  },
+  notes: {
+    label: 'Notes', 
+    color: 'bg-[#BAFFC9] text-[#1F7D2F]'
+  },
+  quizzes: {
+    label: 'Quizzes',
+    color: 'bg-[#BAE1FF] text-[#1F4B7D]'
+  },
+  attachments: {
+    label: 'Files',
+    color: 'bg-[#FFE4B3] text-[#7D4F1F]'
+  }
+};
+
+const DEFAULT_TAG_COLOR = 'bg-[#F0F0F0] text-[#4A4A4A]';
+
+// ✅ Custom hook for menu management
+const useDropdownMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const toggleMenu = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  return { isOpen, toggleMenu, closeMenu, menuRef };
+};
+
+// ✅ Memoized content tags calculation
+const useContentTags = (material) => {
+  return useMemo(() => {
+    const tags = [];
+    
+    Object.entries(CONTENT_TAG_CONFIG).forEach(([key, config]) => {
+      const count = material[key]?.length || 0;
+      if (count > 0) {
+        tags.push({
+          key,
+          label: `${config.label} (${count})`,
+          color: config.color
+        });
+      }
+    });
+    
+    return tags;
+  }, [material]);
+};
+
+// ✅ Dropdown menu component
+const DropdownMenu = React.memo(({ 
+  isOpen, 
+  onClose, 
+  isPublic, 
+  onVisibilityToggle, 
+  onCreateFlashcards,
+  onCreateNotes, 
+  onCreateQuiz,
+  onViewMaterial,
+  onDelete,
+  material
+}) => {
+  if (!isOpen) return null;
+
+  const handleAction = (action) => (e) => {
+    e.stopPropagation();
+    action();
+    onClose();
+  };
+
+  return (
+    <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+      <button
+        className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+        onClick={handleAction(onVisibilityToggle)}
+      >
+        {isPublic ? (
+          <>
+            <Lock size={14} />
+            Make Private
+          </>
+        ) : (
+          <>
+            <Globe size={14} />
+            Make Public
+          </>
+        )}
+      </button>
+      
+      <div className="h-px bg-gray-200 my-1"></div>
+      
+      <button
+        className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+        onClick={handleAction(onCreateFlashcards)}
+      >
+        <span className="w-3 h-3 bg-[#FFB3BA] rounded-full"></span>
+        Create Flashcards
+      </button>
+      
+      <button
+        className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+        onClick={handleAction(onCreateNotes)}
+      >
+        <span className="w-3 h-3 bg-[#BAFFC9] rounded-full"></span>
+        Create Notes
+      </button>
+      
+      <button
+        className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+        onClick={handleAction(onCreateQuiz)}
+      >
+        <span className="w-3 h-3 bg-[#BAE1FF] rounded-full"></span>
+        Create Quiz
+      </button>
+      
+      <div className="h-px bg-gray-200 my-1"></div>
+      
+      <button
+        className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+        onClick={handleAction(onViewMaterial)}
+      >
+        <Pencil size={14} />
+        Edit
+      </button>
+      
+      <button
+        className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+        onClick={handleAction(onDelete)}
+      >
+        <Trash size={14} />
+        Delete
+      </button>
+    </div>
+  );
+});
+
+DropdownMenu.displayName = 'DropdownMenu';
+
+// ✅ Main MaterialCard component with performance optimizations
+const MaterialCard = React.memo(({ 
+  file: material, // Renamed for clarity
   isPinned, 
   onPinToggle, 
   onVisibilityToggle, 
@@ -10,157 +174,120 @@ const MaterialCard = ({
   onCopy,
   variant = 'materials',
   isPublic = false,
-  showOwner = false, // New prop for showing owner name
+  showOwner = false,
   onCreateFlashcards,
   onCreateNotes,
   onCreateQuiz,
   onViewMaterial,
-  getTagColor, // Function passed from parent
-  getUpdatedLabel, // Function passed from parent  
-  timeAgo, // Formatted time string passed from parent
-  isSelected, // New prop for trash variant
-  onSelect, // New prop for trash variant
-  onRestore // New prop for restore functionality
+  timeAgo,
+  isSelected,
+  onSelect,
+  onRestore
 }) => {
-  const [showMenu, setShowMenu] = useState(false)
-  const menuRef = useRef(null)
-  const cardRef = useRef(null)
+  const { isOpen: showMenu, toggleMenu, closeMenu, menuRef } = useDropdownMenu();
+  const contentTags = useContentTags(material);
+  const cardRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  const handleCardClick = (e) => {
+  // ✅ Memoized handlers to prevent unnecessary re-renders
+  const handleCardClick = useCallback((e) => {
     if (variant === 'trash') {
-      // Don't trigger selection if clicking on the checkbox or restore button
       if (e.target.tagName === 'INPUT' || e.target.closest('button')) {
-        return
+        return;
       }
-      onSelect && onSelect(file.id)
+      onSelect?.(material.id);
     } else {
-      onViewMaterial(file)
+      onViewMaterial(material);
     }
-  }
+  }, [variant, material, onSelect, onViewMaterial]);
 
-  // Calculate tags based on API data structure
-  const getContentTags = () => {
-    const tags = [];
-    
-    // Check for flashcard sets
-    if (file.flashcard_sets && file.flashcard_sets.length > 0) {
-      tags.push(`Flashcard Sets (${file.flashcard_sets.length})`);
-    }
-    
-    // Check for notes
-    if (file.notes && file.notes.length > 0) {
-      tags.push(`Notes (${file.notes.length})`);
-    }
-    
-    // Check for quizzes
-    if (file.quizzes && file.quizzes.length > 0) {
-      tags.push(`Quizzes (${file.quizzes.length})`);
-    }
-    
-    // Check for attachments
-    if (file.attachments && file.attachments.length > 0) {
-      tags.push(`Files (${file.attachments.length})`);
-    }
-    
-    return tags;
-  };
+  const handleMenuToggle = useCallback((e) => {
+    e.stopPropagation();
+    toggleMenu();
+  }, [toggleMenu]);
 
-  // ✅ ENHANCED: Create content handlers following the enhanced pattern
-  const handleCreateFlashcards = (e) => {
-    e.stopPropagation()
-    onCreateFlashcards(file, null, {
-      onSuccess: (newFlashcardSet) => {
-        return false; // Tell parent to delay modal closing for navigation
-      }
-    })
-    setShowMenu(false)
-  };
+  const handlePinToggle = useCallback((e) => {
+    e.stopPropagation();
+    onPinToggle();
+  }, [onPinToggle]);
 
-  const handleCreateNotes = (e) => {
-    e.stopPropagation()
-    onCreateNotes(file, {
-      onSuccess: (newNote) => {
-        return false; // Tell parent to delay modal closing for navigation
-      }
-    })
-    setShowMenu(false)
-  };
+  const handleSelect = useCallback((e) => {
+    e.stopPropagation();
+    onSelect?.(material.id);
+  }, [onSelect, material.id]);
 
-  const handleCreateQuiz = (e) => {
-    e.stopPropagation()
-    onCreateQuiz(file, {
-      onSuccess: (newQuiz) => {
-        return false; // Tell parent to delay modal closing for navigation
-      }
-    })
-    setShowMenu(false)
-  };
+  const handleRestore = useCallback((e) => {
+    e.stopPropagation();
+    onRestore?.(material);
+  }, [onRestore, material]);
 
+  const handleCopy = useCallback((e) => {
+    e.stopPropagation();
+    onCopy?.(material.id);
+  }, [onCopy, material.id]);
+
+  // ✅ Enhanced create handlers with better naming
+  const createHandlers = useMemo(() => ({
+    flashcards: () => onCreateFlashcards(material),
+    notes: () => onCreateNotes(material), 
+    quiz: () => onCreateQuiz(material),
+    view: () => onViewMaterial(material),
+    delete: () => onDelete(material)
+  }), [material, onCreateFlashcards, onCreateNotes, onCreateQuiz, onViewMaterial, onDelete]);
+
+  // ✅ Render trash variant
   if (variant === 'trash') {
     return (
       <div className="relative" ref={cardRef}>
         <div 
-          className={`exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer ${
+          className={`exam-card p-4 hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-[1.02] ${
             isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
           }`}
           onClick={handleCardClick}
         >
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <input
                 type="checkbox"
                 checked={isSelected}
-                onChange={(e) => {
-                  e.stopPropagation()
-                  onSelect && onSelect(file.id)
-                }}
-                className="mt-1"
+                onChange={handleSelect}
+                className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 onClick={(e) => e.stopPropagation()}
+                aria-label={`Select ${material.title}`}
               />
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold truncate max-w-[200px]">{file.title}</h3>
+              <div>
+                <h3 className="font-semibold text-gray-900 truncate max-w-[200px]">
+                  {material.title}
+                </h3>
+                {material.description && (
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    {material.description}
+                  </p>
+                )}
               </div>
             </div>
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onRestore && onRestore(file)
-              }}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC]"
-              title="Restore"
+              onClick={handleRestore}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC] hover:text-[#1b81d4]"
+              title="Restore material"
+              aria-label={`Restore ${material.title}`}
             >
               <RefreshCw size={16} />
             </button>
           </div>
           
-          {file.description && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
-          )}
-          
-          {/* Updated time display */}
-          <p className="text-sm text-gray-600 mb-3">{timeAgo}</p>
-          
-          <div className="flex items-center justify-between">
+          <div className="mt-3">
+            <p className="text-xs text-gray-500 mb-2">{timeAgo}</p>
             <div className="flex flex-wrap gap-2">
-              {getContentTags().map((tag, index) => (
-                <span key={index} className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor ? getTagColor(tag) : 'bg-[#F0F0F0] text-[#4A4A4A]'}`}>
-                  {tag}
-                </span>
-              ))}
-              {getContentTags().length === 0 && (
+              {contentTags.length > 0 ? (
+                contentTags.map((tag) => (
+                  <span 
+                    key={tag.key} 
+                    className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${tag.color}`}
+                  >
+                    {tag.label}
+                  </span>
+                ))
+              ) : (
                 <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">
                   No content yet
                 </span>
@@ -169,142 +296,89 @@ const MaterialCard = ({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
+  // ✅ Render materials variant
   if (variant === 'materials') {
     return (
       <div className="relative" ref={cardRef}>
         <div 
-          className="exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer"
+          className="exam-card p-4 hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-[1.02]"
           onClick={handleCardClick}
         >
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold">{file.title}</h3>
-                <div className="flex items-center bottom-1">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-gray-900 truncate">
+                    {material.title}
+                  </h3>
                   {isPublic ? (
-                    <Globe size={16} className="text-[#7BA7CC]" />
+                    <Globe size={16} className="text-[#7BA7CC] flex-shrink-0" />
                   ) : (
-                    <Lock size={16} className="text-[#7BA7CC]" />
+                    <Lock size={16} className="text-[#7BA7CC] flex-shrink-0" />
                   )}
                 </div>
+                {material.description && (
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {material.description}
+                  </p>
+                )}
               </div>
             </div>
-            <div className="relative" ref={menuRef}>
+            
+            <div className="relative flex-shrink-0" ref={menuRef}>
               <button 
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowMenu(!showMenu)
-                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+                onClick={handleMenuToggle}
+                aria-label="More options"
+                aria-expanded={showMenu}
               >
                 <MoreVertical size={16} />
               </button>
-              {showMenu && (
-                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onVisibilityToggle() // Pass the material object, not title
-                      setShowMenu(false)
-                    }}
-                  >
-                    {isPublic ? (
-                      <>
-                        <Lock size={14} />
-                        Make Private
-                      </>
-                    ) : (
-                      <>
-                        <Globe size={14} />
-                        Make Public
-                      </>
-                    )}
-                  </button>
-                  
-                  {/* ✅ ENHANCED: Updated create content buttons with enhanced options */}
-                  <div className="h-px bg-gray-200 my-1"></div>
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={handleCreateFlashcards}
-                  >
-                    <span className="w-3 h-3 bg-[#FFB3BA] rounded-full"></span>
-                    Create Flashcards
-                  </button>
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={handleCreateNotes}
-                  >
-                    <span className="w-3 h-3 bg-[#BAFFC9] rounded-full"></span>
-                    Create Notes
-                  </button>
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={handleCreateQuiz}
-                  >
-                    <span className="w-3 h-3 bg-[#BAE1FF] rounded-full"></span>
-                    Create Quiz
-                  </button>
-                  
-                  <div className="h-px bg-gray-200 my-1"></div>
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onViewMaterial(file)
-                      setShowMenu(false)
-                    }}
-                  >
-                    <Pencil size={14} />
-                    Edit
-                  </button>
-                  <button
-                    className="label-text w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDelete(file)
-                      setShowMenu(false)
-                    }}
-                  >
-                    <Trash size={14} />
-                    Delete
-                  </button>
-                </div>
-              )}
+              
+              <DropdownMenu
+                isOpen={showMenu}
+                onClose={closeMenu}
+                isPublic={isPublic}
+                onVisibilityToggle={onVisibilityToggle}
+                onCreateFlashcards={createHandlers.flashcards}
+                onCreateNotes={createHandlers.notes}
+                onCreateQuiz={createHandlers.quiz}
+                onViewMaterial={createHandlers.view}
+                onDelete={createHandlers.delete}
+                material={material}
+              />
             </div>
           </div>
           
-          {file.description && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
-          )}
-          
-          {/* Updated time display */}
-          <p className="text-sm text-gray-600 mb-3">{timeAgo}</p>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex flex-wrap gap-2">
-              {getContentTags().map((tag, index) => (
-                <span key={index} className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor ? getTagColor(tag) : 'bg-[#F0F0F0] text-[#4A4A4A]'}`}>
-                  {tag}
-                </span>
-              ))}
-              {getContentTags().length === 0 && (
-                <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">
-                  No content yet
-                </span>
-              )}
-            </div>
-            <div className="flex space-x-2">
+          <div className="mt-3">
+            <p className="text-xs text-gray-500 mb-3">{timeAgo}</p>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex flex-wrap gap-2 flex-1">
+                {contentTags.length > 0 ? (
+                  contentTags.map((tag) => (
+                    <span 
+                      key={tag.key} 
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${tag.color}`}
+                    >
+                      {tag.label}
+                    </span>
+                  ))
+                ) : (
+                  <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">
+                    No content yet
+                  </span>
+                )}
+              </div>
+              
               <button 
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC]"
-                title={isPinned ? 'Unpin' : 'Pin'}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onPinToggle() // Pass the material object, not title
-                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC] hover:text-[#1b81d4] flex-shrink-0"
+                title={isPinned ? 'Unpin material' : 'Pin material'}
+                onClick={handlePinToggle}
+                aria-label={isPinned ? `Unpin ${material.title}` : `Pin ${material.title}`}
               >
                 <Pin size={16} className={isPinned ? 'fill-current' : ''} />
               </button>
@@ -312,60 +386,63 @@ const MaterialCard = ({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  // Explore/Public materials variant
+  // ✅ Render explore/public variant
   return (
     <div className="relative" ref={cardRef}>
       <div 
-        className="exam-card p-4 hover:shadow-lg transition-shadow cursor-pointer"
+        className="exam-card p-4 hover:shadow-lg transition-all duration-200 cursor-pointer transform hover:scale-[1.02]"
         onClick={handleCardClick}
       >
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold">{file.title}</h3>
-              <div className="flex items-center bottom-1">
-                <Globe size={16} className="text-[#7BA7CC]" />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-gray-900 truncate">
+                  {material.title}
+                </h3>
+                <Globe size={16} className="text-[#7BA7CC] flex-shrink-0" />
               </div>
+              {material.description && (
+                <p className="text-sm text-gray-600 line-clamp-2">
+                  {material.description}
+                </p>
+              )}
+              {showOwner && material.owner && (
+                <div className="flex items-center gap-1 mt-2">
+                  <User size={12} className="text-gray-400" />
+                  <p className="text-xs text-gray-500">by {material.owner}</p>
+                </div>
+              )}
             </div>
           </div>
+          
           <button 
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC]"
-            onClick={(e) => {
-              e.stopPropagation()
-              onCopy && onCopy(file.id)
-            }}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-[#7BA7CC] hover:text-[#1b81d4] flex-shrink-0"
+            onClick={handleCopy}
             title="Make a copy"
+            aria-label={`Make a copy of ${material.title}`}
           >
             <Copy size={16} />
           </button>
         </div>
         
-        {file.description && (
-          <p className="text-sm text-gray-600 mt-2 line-clamp-1 truncate">{file.description}</p>
-        )}
-        
-        {/* Owner information - only show in explore variant when showOwner is true */}
-        {showOwner && file.owner && (
-          <div className="flex items-center gap-1 mt-2 mb-1">
-            <User size={12} className="text-gray-400" />
-            <p className="text-xs text-gray-500">by {file.owner}</p>
-          </div>
-        )}
-        
-        {/* Updated time display */}
-        <p className="text-sm text-gray-600 mb-3">{timeAgo}</p>
-        
-        <div className="flex items-center justify-between">
+        <div className="mt-3">
+          <p className="text-xs text-gray-500 mb-3">{timeAgo}</p>
+          
           <div className="flex flex-wrap gap-2">
-            {getContentTags().map((tag, index) => (
-              <span key={index} className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${getTagColor ? getTagColor(tag) : 'bg-[#F0F0F0] text-[#4A4A4A]'}`}>
-                {tag}
-              </span>
-            ))}
-            {getContentTags().length === 0 && (
+            {contentTags.length > 0 ? (
+              contentTags.map((tag) => (
+                <span 
+                  key={tag.key} 
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${tag.color}`}
+                >
+                  {tag.label}
+                </span>
+              ))
+            ) : (
               <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">
                 No content yet
               </span>
@@ -374,7 +451,9 @@ const MaterialCard = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+});
 
-export default MaterialCard
+MaterialCard.displayName = 'MaterialCard';
+
+export default MaterialCard;

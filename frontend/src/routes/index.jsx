@@ -12,7 +12,8 @@ export const routes = [
   { path: '/forgot-password', element: <ForgotPassword /> },
   { path: '/password-reset-confirm/:uid/:token', element: <PasswordReset /> },
   {
-    path: '/dashboard',
+    // ✅ UPDATED: Support nested routes with /*
+    path: '/dashboard/*',
     element: (
       <PrivateRoute>
         <Dashboard />

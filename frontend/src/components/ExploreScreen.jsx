@@ -1,21 +1,24 @@
 import { FileQuestion, RefreshCw, Search, X } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
+import { useMaterials } from '../utils/materialsContext'
 import { copyMaterial, getPublicMaterials } from '../services/apiService'
+import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications'
 import MaterialCard from './MaterialCard'
-import MaterialContent from './MaterialContent'
 
-const ExploreScreen = ({ onRefreshMaterials }) => {
+// ✅ ADDED: Accept onRefreshProfile prop from Dashboard
+const ExploreScreen = ({ onRefreshProfile }) => {
+  const navigate = useNavigate()
   const { showLoading, hideLoading } = useLoading()
   const { showToast } = useToast()
+  const { addMaterial, fetchMaterials } = useMaterials()
 
   // State management
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [isSearchFocused, setIsSearchFocused] = useState(false)
-  const [showMaterialContent, setShowMaterialContent] = useState(false)
-  const [selectedMaterial, setSelectedMaterial] = useState(null)
   const [materialsData, setMaterialsData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -26,7 +29,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
       setLoading(true)
       setError(null)
       
-      // Backend handles filtering for public materials from other users
       const response = await getPublicMaterials()
       setMaterialsData(response.data)
       
@@ -44,68 +46,88 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
     }
   }, [showToast])
 
-  // Load materials on component mount
   useEffect(() => {
     fetchPublicMaterials()
   }, [fetchPublicMaterials])
 
-  // Refresh functionality
   const handleRefresh = useCallback(() => {
     fetchPublicMaterials()
   }, [fetchPublicMaterials])
 
-  // Copy material functionality
   const handleCopyMaterial = useCallback(async (materialId) => {
-    try {
-      showLoading()
-      
-      const response = await copyMaterial(materialId)
-      
-      showToast({
-        variant: "success",
-        title: "Material copied successfully!",
-        subtitle: `"${response.data.title}" has been added to your materials.`,
-      })
-      
-      
-      // Refresh materials data in Dashboard after successful copy
-      if (onRefreshMaterials) {
-        await onRefreshMaterials()
-      }
-      
-    } catch (err) {
-      console.error('Error copying material:', err)
-      
-      const errorMessage = err.response?.data?.message || 'Failed to copy material. Please try again.'
-      
-      showToast({
-        variant: "error",
-        title: "Failed to copy material",
-        subtitle: errorMessage,
-      })
-    } finally {
-      hideLoading()
+  try {
+    showLoading()
+    
+    console.log('🔄 Starting copy material...') // Debug log
+    
+    const response = await copyMaterial(materialId)
+    const copiedMaterial = response.data
+    
+    console.log('✅ Material copied successfully:', copiedMaterial) // Debug log
+    
+    // ✅ NEW: Track streak activity
+    const streakResult = await trackActivityAndNotify(showToast, true);
+    
+    // Step 1: Add to materials context
+    addMaterial(copiedMaterial)
+    
+    // Step 2: Explicit profile refresh
+    if (onRefreshProfile) {
+      console.log('🔄 Triggering explicit profile refresh...') // Debug log
+      await onRefreshProfile()
     }
-  }, [showLoading, hideLoading, showToast, onRefreshMaterials])
+    
+    // Step 3: Refresh materials for consistency
+    setTimeout(async () => {
+      await fetchMaterials()
+      console.log('✅ Materials refreshed') // Debug log
+    }, 200)
+    
+    // ✅ UPDATED: Use combined message that includes streak info
+    const baseTitle = "Material copied successfully!";
+    const baseSubtitle = `"${copiedMaterial.title}" has been added to your materials.`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    })
+    
+    // Step 4: Navigate to the copied material
+    setTimeout(() => {
+      navigate(`/dashboard/materials/${copiedMaterial.id}`)
+    }, 100)
+    
+  } catch (err) {
+    console.error('❌ Error copying material:', err)
+    
+    const errorMessage = err.response?.data?.message || 'Failed to copy material. Please try again.'
+    
+    showToast({
+      variant: "error",
+      title: "Failed to copy material",
+      subtitle: errorMessage,
+    })
+  } finally {
+    hideLoading()
+  }
+}, [showLoading, hideLoading, showToast, addMaterial, fetchMaterials, navigate, onRefreshProfile])
 
-  // View material handler
   const handleViewMaterial = useCallback((material) => {
-    setSelectedMaterial(material)
-    setShowMaterialContent(true)
-  }, [])
+    navigate(`/dashboard/materials/${material.id}`)
+  }, [navigate])
 
-  // Memoized filtered content
   const filteredMaterials = useMemo(() => {
     if (!materialsData || materialsData.length === 0) return []
 
     return materialsData.filter(material => {
-      // Search filter
       const matchesSearch = searchQuery === '' || 
         material.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         material.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         material.owner?.toLowerCase().includes(searchQuery.toLowerCase())
 
-      // Content type filter
       const matchesFilter = selectedFilter === 'all' || 
         (selectedFilter === 'notes' && material.notes && material.notes.length > 0) ||
         (selectedFilter === 'flashcards' && material.flashcard_sets && material.flashcard_sets.length > 0) ||
@@ -115,7 +137,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
     })
   }, [materialsData, searchQuery, selectedFilter])
 
-  // Tag color function
   const getTagColor = useCallback((tag) => {
     if (tag.toLowerCase().includes('flashcard')) return 'bg-[#FFB3BA] text-[#7D1F1F]'
     if (tag.toLowerCase().includes('note')) return 'bg-[#BAFFC9] text-[#1F7D2F]'
@@ -124,7 +145,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
     return 'bg-[#F0F0F0] text-[#4A4A4A]'
   }, [])
 
-  // Format time ago
   const formatTimeAgo = useCallback((dateString) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -139,7 +159,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
     }
   }, [])
 
-  // Get updated label
   const getUpdatedLabel = useCallback((dateString) => {
     const timeAgo = formatTimeAgo(dateString)
     
@@ -167,7 +186,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
     { id: 'quizzes', name: 'Quizzes' }
   ]
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
@@ -182,7 +200,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
     )
   }
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
@@ -207,143 +224,117 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
 
   return (
     <div className="space-y-6 p-4">
-      {/* Search and Filter Section */}
-      {!showMaterialContent && (
-        <div className="flex flex-col justify-between sm:flex-row gap-4 items-start sm:items-center">
-          <div className="relative w-full max-w-md mx-auto sm:mx-0">
-            <div className={`
-              relative flex items-center
-              transition-all duration-200
-              ${isSearchFocused ? 'ring-1 ring-[#1b81d4]' : ''}
-              rounded-full border border-gray-200
-              bg-white
-            `}>
-              <Search 
-                className={`
-                  absolute left-4
-                  transition-colors duration-200
-                  ${isSearchFocused ? 'text-[#1b81d4]' : 'text-gray-400'}
-                `} 
-                size={20} 
-              />
-              <input
-                type="text"
-                placeholder="Search public materials..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className="label-text w-full pl-12 pr-12 py-2 border border-[#7BA7CC] rounded-full focus:outline-none text-sm"
-              />
-              {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X size={16} className="text-gray-400" />
-                </button>
-              )}
-            </div>
+      <div className="flex flex-col justify-between sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative w-full max-w-md mx-auto sm:mx-0">
+          <div className={`
+            relative flex items-center
+            transition-all duration-200
+            ${isSearchFocused ? 'ring-1 ring-[#1b81d4]' : ''}
+            rounded-full border border-gray-200
+            bg-white
+          `}>
+            <Search 
+              className={`
+                absolute left-4
+                transition-colors duration-200
+                ${isSearchFocused ? 'text-[#1b81d4]' : 'text-gray-400'}
+              `} 
+              size={20} 
+            />
+            <input
+              type="text"
+              placeholder="Search public materials..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              className="label-text w-full pl-12 pr-12 py-2 border border-[#7BA7CC] rounded-full focus:outline-none text-sm"
+            />
             {searchQuery && (
-              <p className="mt-1 text-xs text-gray-500 text-center sm:text-left">
-                Found {filteredMaterials.length} results
-              </p>
+              <button
+                onClick={clearSearch}
+                className="absolute right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={16} className="text-gray-400" />
+              </button>
             )}
           </div>
+          {searchQuery && (
+            <p className="mt-1 text-xs text-gray-500 text-center sm:text-left">
+              Found {filteredMaterials.length} results
+            </p>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            className="exam-button-mini py-2 px-3 flex items-center gap-2"
+            data-hover="Refresh"
+          >
+            Refresh
+          </button>
           
-          <div className="flex items-center gap-2">
-            {/* Refresh button */}
-            <button
-              onClick={handleRefresh}
-              className="exam-button-mini py-2 px-3 flex items-center gap-2"
-              data-hover="Refresh"
-            >
-              Refresh
-            </button>
-            
-            {/* Filter categories */}
-            <div className="flex gap-2">
-              {categories.map(category => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedFilter(category.id)}
-                  data-hover={category.name}
-                  className={`exam-button-mini ${
-                    selectedFilter === category.id
-                      ? 'text-white'
-                      : 'text-gray-700'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))}
+          <div className="flex gap-2">
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedFilter(category.id)}
+                data-hover={category.name}
+                className={`exam-button-mini ${
+                  selectedFilter === category.id
+                    ? 'text-white'
+                    : 'text-gray-700'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {materialsData.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 label-text">
+                Community Materials
+              </h2>
+              <p className="text-sm text-gray-600 label-text">
+                Discover {materialsData.length} public materials shared by the community
+                {searchQuery && ` • ${filteredMaterials.length} match your search`}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-600">
+                {filteredMaterials.length}
+              </div>
+              <div className="text-xs text-gray-500">
+                {searchQuery ? 'Results' : 'Available'}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Material Content or Grid */}
-      {showMaterialContent ? (
-        <MaterialContent
-          material={selectedMaterial}
-          isPublic={true}
-          onVisibilityToggle={() => {}} // Disabled for public materials
-          onExport={() => handleCopyMaterial(selectedMaterial?.id)} // Copy functionality
-          onCreateFlashcards={() => {}} // Disabled for public materials
-          onCreateNotes={() => {}} // Disabled for public materials
-          onCreateQuiz={() => {}} // Disabled for public materials
-          onBack={() => setShowMaterialContent(false)}
-          onTitleChange={() => {}} // Disabled for public materials
-          readOnly={true}
-        />
-      ) : (
-        <>
-          {/* Statistics header */}
-          {materialsData.length > 0 && (
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 label-text">
-                    Community Materials
-                  </h2>
-                  <p className="text-sm text-gray-600 label-text">
-                    Discover {materialsData.length} public materials shared by the community
-                    {searchQuery && ` • ${filteredMaterials.length} match your search`}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {filteredMaterials.length}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {searchQuery ? 'Results' : 'Available'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredMaterials.map(material => (
+          <MaterialCard
+            key={material.id}
+            file={material}
+            variant="explore"
+            isPublic={true}
+            showOwner={true}
+            onViewMaterial={handleViewMaterial}
+            onCopy={handleCopyMaterial}
+            timeAgo={formatTimeAgo(material.updated_at)}
+            getTagColor={getTagColor}
+            getUpdatedLabel={getUpdatedLabel}
+          />
+        ))}
+      </div>
 
-          {/* Materials Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredMaterials.map(material => (
-              <MaterialCard
-                key={material.id}
-                file={material}
-                variant="explore"
-                isPublic={true}
-                showOwner={true}
-                onViewMaterial={handleViewMaterial}
-                onCopy={handleCopyMaterial}
-                timeAgo={formatTimeAgo(material.updated_at)}
-                getTagColor={getTagColor}
-                getUpdatedLabel={getUpdatedLabel}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Empty State */}
       {!loading && filteredMaterials.length === 0 && (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
           <FileQuestion size={64} className="text-[#1b81d4] mb-6" />

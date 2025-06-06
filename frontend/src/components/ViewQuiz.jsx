@@ -1,15 +1,21 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Edit, HelpCircle, XCircle } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
-import CreateQuiz from './CreateQuiz';
 import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
-import { useToast } from '../components/Toast/ToastContext'; // If not already imported
+import { useToast } from '../components/Toast/ToastContext';
 
-const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess, onEdit }) => {
+const ViewQuiz = ({ 
+  mainMaterial, 
+  material, 
+  onClose, 
+  readOnly = false, 
+  onSuccess,
+  onEdit // ✅ NEW: Navigation handler for editing
+}) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const [showCreateQuiz, setShowCreateQuiz] = useState(false);
+  // ✅ REMOVED: showCreateQuiz state (no longer needed)
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
@@ -18,7 +24,7 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
 
   const { showToast } = useToast();
 
-  // ✅ Enhanced: Handle window resize for confetti (like ViewFlashcards)
+  // ✅ Good useEffect - DOM event handling
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({
@@ -31,7 +37,7 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ✅ Enhanced: Show confetti on quiz completion
+  // ✅ Good useEffect - UI effects based on state
   useEffect(() => {
     if (quizSubmitted) {
       setShowConfetti(true);
@@ -40,7 +46,7 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     }
   }, [quizSubmitted]);
 
-  // ✅ Enhanced: Use actual material data instead of hardcoded data
+  // ✅ Derived state using useMemo instead of complex useEffect
   const quizData = useMemo(() => {
     if (!material) return null;
     
@@ -51,13 +57,13 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     };
   }, [material]);
 
-  // ✅ Enhanced: Safe bounds checking for current question
+  // ✅ Derived state for safe bounds checking
   const safeCurrentIndex = useMemo(() => {
     if (!quizData?.questions || quizData.questions.length === 0) return 0;
     return Math.min(currentQuestionIndex, quizData.questions.length - 1);
   }, [currentQuestionIndex, quizData?.questions?.length]);
 
-  // ✅ Enhanced: Reset state when quiz data changes
+  // ✅ Simple bounds checking when data changes
   useEffect(() => {
     if (!quizData?.questions || quizData.questions.length === 0) {
       setCurrentQuestionIndex(0);
@@ -68,31 +74,15 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     }
   }, [safeCurrentIndex, currentQuestionIndex, quizData?.questions?.length]);
 
-  // ✅ Enhanced: Handle edit functionality following ViewFlashcards pattern
+  // ✅ UPDATED: Use navigation instead of local state
   const handleEdit = () => {
-    if (!readOnly) {
-      if (onEdit) {
-        // Use the parent's onEdit handler (like ViewFlashcards)
-        onEdit(material);
-      } else {
-        // Fallback to local edit mode
-        setShowCreateQuiz(true);
-      }
+    if (!readOnly && onEdit) {
+      onEdit(material); // Navigate to edit route
     }
   };
 
-  // ✅ Enhanced: Handle edit success following ViewFlashcards pattern
-  const handleEditSuccess = (updatedQuiz) => {
-    if (onSuccess) {
-      onSuccess(updatedQuiz);
-    }
-    
-    // Reset viewing state to provide clean UX after editing
-    setCurrentQuestionIndex(0);
-    setSelectedAnswers({});
-    setQuizSubmitted(false);
-    setShowCreateQuiz(false);
-  };
+  // ✅ REMOVED: handleEditSuccess (no longer needed with routing)
+  // ✅ REMOVED: showCreateQuiz logic (no longer needed with routing)
 
   const handleAnswerSelect = (questionId, answer) => {
     setSelectedAnswers(prev => ({
@@ -101,29 +91,29 @@ const ViewQuiz = ({ mainMaterial, material, onClose, readOnly = false, onSuccess
     }));
   };
 
-const handleSubmit = async () => {
-  setQuizSubmitted(true);
-  
-  // Calculate score for the message
-  const score = calculateScore();
-  const questionsCorrect = Math.round((score / 100) * quizData.questions.length);
-  
-  // 🔥 Track activity but suppress immediate notification (same as other components)
-  const streakResult = await trackActivityAndNotify(showToast, true);
-  
-  // 🔥 Create combined message using helper function (same as other components)
-  const baseTitle = "Quiz completed!";
-  const baseSubtitle = `You scored ${score}% (${questionsCorrect}/${quizData.questions.length}) on "${quizData.title}".`;
-  
-  const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
-  
-  // 🔥 Show single combined toast (same as other components)
-  showToast({
-    variant: "success",
-    title: combinedMessage.title,
-    subtitle: combinedMessage.subtitle,
-  });
-};
+  const handleSubmit = async () => {
+    setQuizSubmitted(true);
+    
+    // Calculate score for the message
+    const score = calculateScore();
+    const questionsCorrect = Math.round((score / 100) * quizData.questions.length);
+    
+    // Track activity but suppress immediate notification
+    const streakResult = await trackActivityAndNotify(showToast, true);
+    
+    // Create combined message using helper function
+    const baseTitle = "Quiz completed!";
+    const baseSubtitle = `You scored ${score}% (${questionsCorrect}/${quizData.questions.length}) on "${quizData.title}".`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // Show single combined toast
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+  };
 
   const handleNextQuestion = () => {
     if (quizData?.questions && currentQuestionIndex < quizData.questions.length - 1) {
@@ -162,20 +152,7 @@ const handleSubmit = async () => {
     setCurrentQuestionIndex(0);
   };
 
-  // ✅ Enhanced: Follow ViewFlashcards pattern for CreateQuiz integration
-  if (showCreateQuiz) {
-    return (
-      <CreateQuiz
-        material={material}
-        options={{
-          editMode: true,
-          editContent: material,
-        }}
-        onClose={() => setShowCreateQuiz(false)}
-        onSuccess={handleEditSuccess}
-      />
-    );
-  }
+  // ✅ REMOVED: Conditional rendering of CreateQuiz
 
   return (
     <div className="flex flex-col bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-xl h-[calc(100vh-6rem)]">
@@ -189,7 +166,7 @@ const handleSubmit = async () => {
         />
       )}
       
-      {/* ✅ Enhanced: Header following ViewFlashcards structure */}
+      {/* Header */}
       <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
         <div className="max-w-[90rem] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -211,7 +188,7 @@ const handleSubmit = async () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {/* ✅ Enhanced: Progress indicator */}
+              {/* Progress indicator */}
               {!quizSubmitted && quizData?.questions && quizData.questions.length > 0 && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full label-text">
@@ -227,8 +204,8 @@ const handleSubmit = async () => {
                   </div>
                 </div>
               )}
-              {/* ✅ Enhanced: Edit button following ViewFlashcards pattern */}
-              {!readOnly && (
+              {/* Edit button */}
+              {!readOnly && onEdit && (
                 <>
                   <div className="h-6 w-px bg-gray-200"></div>
                   <button
@@ -245,13 +222,13 @@ const handleSubmit = async () => {
         </div>
       </div>
 
-      {/* ✅ Enhanced: Content section following ViewFlashcards structure */}
+      {/* Content */}
       <div className="flex-1 overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 py-4 h-full">
           {quizData?.questions && quizData.questions.length > 0 ? (
             <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
               {!quizSubmitted ? (
-                // ✅ Enhanced: Quiz taking interface
+                // Quiz taking interface
                 <>
                   {/* Progress */}
                   <div className="flex items-center justify-between mb-8">
@@ -336,7 +313,7 @@ const handleSubmit = async () => {
                   </div>
                 </>
               ) : (
-                // ✅ Enhanced: Results interface
+                // Results interface
                 <>
                   <div className="text-center mb-8">
                     <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4 label-text">
@@ -411,14 +388,14 @@ const handleSubmit = async () => {
               )}
             </div>
           ) : (
-            // ✅ Enhanced: Empty state following ViewFlashcards pattern
+            // Empty state
             <div className="text-center py-12">
               <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
                 <HelpCircle size={48} className="text-gray-400" />
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-2 label-text">No questions available</h3>
               <p className="text-gray-600 label-text">This quiz is empty.</p>
-              {!readOnly && (
+              {!readOnly && onEdit && (
                 <button
                   onClick={handleEdit}
                   className="mt-4 exam-button-mini"
