@@ -1,5 +1,5 @@
-import { Upload, X, Check, AlertCircle, FileText, Trash2 } from 'lucide-react';
-import React, { useState, useRef } from 'react';
+import { AlertCircle, Check, FileText, Trash2, Upload, X } from 'lucide-react';
+import React, { useRef, useState } from 'react';
 
 const UploadFile = ({ isOpen, onClose, onUpload }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -109,7 +109,7 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 p-2 transition-colors"
+            className="text-gray-500 hover:text-gray-700 p-2 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X size={20} />
@@ -120,7 +120,7 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
         <div className="px-6 flex-1 overflow-y-auto">
           {/* Drop Zone */}
           <div
-            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer ${
+            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer bg-gray-50 ${
               isDragOver
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
@@ -131,7 +131,7 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload size={48} className={`mx-auto mb-4 ${isDragOver ? 'text-blue-500' : 'text-gray-400'}`} />
-            <h3 className="text-lg font-medium text-gray-800 mb-2">
+            <h3 className="text-lg font-medium text-gray-800 mb-2 label-text">
               {isDragOver ? 'Drop files here' : 'Choose files or drag & drop'}
             </h3>
             <p className="text-gray-600 text-sm mb-4">
@@ -158,13 +158,13 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
           {/* Selected Files List */}
           {selectedFiles.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-lg font-medium text-gray-800 mb-4">
+              <h3 className="text-lg font-medium text-gray-800 mb-4 label-text">
                 Selected Files ({selectedFiles.length})
               </h3>
               
               {/* Summary */}
               {selectedFiles.length > 0 && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-4">
                       {validFilesCount > 0 && (
@@ -174,13 +174,13 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
                         </span>
                       )}
                       {invalidFilesCount > 0 && (
-                        <span className="flex items-center gap-1 text-red-600">
+                        <span className="flex items-center gap-1 text-red-600 label-text">
                           <AlertCircle size={16} />
                           {invalidFilesCount} invalid file{invalidFilesCount !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
-                    <span className="text-gray-600">
+                    <span className="text-gray-600 label-text">
                       Total: {formatFileSize(selectedFiles.reduce((sum, f) => sum + f.size, 0))}
                     </span>
                   </div>
@@ -218,15 +218,15 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
                             )}
                           </div>
                           
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-2 text-xs">
                             <span className={`font-medium ${
                               fileData.size > maxSize ? 'text-red-600' : 'text-gray-600'
-                            }`}>
+                            } label-text`}>
                               {fileData.sizeFormatted}
                             </span>
                             
                             {!isValid && (
-                              <span className="text-red-600">• {errors.join(', ')}</span>
+                              <span className="text-red-600 label-text">• {errors.join(', ')}</span>
                             )}
                           </div>
                         </div>
@@ -248,37 +248,29 @@ const UploadFile = ({ isOpen, onClose, onUpload }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex justify-end items-center gap-3 p-6">
           <button
             onClick={handleClose}
-            className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
           >
             Cancel
           </button>
-          
-          <div className="flex items-center gap-3">
-            {hasInvalidFiles && (
-              <span className="text-sm text-red-600">
-                Remove invalid files to continue
-              </span>
-            )}
-            <button
-              onClick={handleUpload}
-              disabled={!canUpload || hasInvalidFiles}
-              className={`exam-button-mini px-6 py-2 ${
-                !canUpload ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              data-hover={
-                !canUpload 
-                  ? hasInvalidFiles 
-                    ? "Remove invalid files first"
-                    : "Select files to upload"
-                  : `Upload ${validFilesCount} file${validFilesCount !== 1 ? 's' : ''}`
-              }
-            >
-              {canUpload ? `Upload ${validFilesCount} File${validFilesCount !== 1 ? 's' : ''}` : 'Upload Files'}
-            </button>
-          </div>
+          <button
+            onClick={handleUpload}
+            disabled={!canUpload || hasInvalidFiles}
+            className={`exam-button-mini px-6 py-2 cursor-pointer ${
+              !canUpload ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            data-hover={
+              !canUpload 
+                ? hasInvalidFiles 
+                  ? "Remove invalid files first"
+                  : "Select files to upload"
+                : `Upload ${validFilesCount} file${validFilesCount !== 1 ? 's' : ''}`
+            }
+          >
+            {canUpload ? `Upload ${validFilesCount} File${validFilesCount !== 1 ? 's' : ''}` : 'Upload Files'}
+          </button>
         </div>
       </div>
     </div>
