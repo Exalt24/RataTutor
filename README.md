@@ -127,15 +127,44 @@ npm run dev
 
 This will:
 
-1. **Start the Django backend server:**
+1. **Create the test user** automatically for development
+2. **Start the Django backend server:**
    - Available at [http://localhost:8000](http://localhost:8000)
    - API endpoint at [http://localhost:8000/api/](http://localhost:8000/api/)
 
-2. **Launch the React frontend:**
+3. **Launch the React frontend:**
    - Available at [http://localhost:3000](http://localhost:3000)
    - API calls to `/api/*` are automatically proxied to Django
 
 All server logs appear in the same terminal window for easy monitoring.
+
+## 🔧 Additional Commands
+
+### Reset Database and Start Fresh
+
+If you encounter database issues or want to start with a clean database:
+
+```bash
+npm run reset
+```
+
+This command will:
+- Delete the existing SQLite database
+- Run migrations to create a fresh database
+- Start the development servers
+
+### Manual Commands
+
+```bash
+# Start only the backend server
+npm run backend
+
+# Start only the frontend server
+npm run frontend
+
+# Create test user manually
+npm run create-test-user
+```
 
 ## ✅ Quick Verification Test
 
@@ -153,28 +182,18 @@ cd backend && python manage.py makemigrations && python manage.py migrate && cd 
 # 3. Start the servers
 npm run dev
 
-# OR Use Docker
-docker build -t ratatutor . && \
-docker run --rm -it -p 8000:8000 \
-  -e SECRET_KEY="<your-secret>" \
-  -e DEBUG=True \
-  -e EMAIL_HOST_USER="<your-email>" \
-  -e EMAIL_HOST_PASSWORD="<your-google-api-app-password>" \
-  -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
-  -e CLOUDINARY_CLOUD_NAME="<your-cloudinary-cloud-name>" \
-  -e CLOUDINARY_API_KEY="<your-cloudinary-api-key>" \
-  -e CLOUDINARY_API_SECRET="<your-cloudinary-api-secret>" \
-  ratatutor
+# OR if you encounter database issues
+npm run reset
 ```
 
 Then verify these things work:
 
 1. **Database migrations** completed without errors
-2. **API test endpoint** works at [http://localhost:8000/api/ping/](http://localhost:8000/api/ping/)
-3. **Frontend** loads at [http://localhost:3000](http://localhost:3000) displaying "Backend says: pong"
+2. **Frontend** loads at [http://localhost:3000](http://localhost:3000)
+3. **Backend API** is accessible at [http://localhost:8000/api/](http://localhost:8000/api/)
 4. **Test user** is automatically created and you can log in with credentials (`testuser` / `t@st12345`)
 
-If any step fails, report an issue before continuing your work.
+If any step fails, try running `npm run reset` first, or report an issue if problems persist.
 
 ## 🗂️ Project Structure
 
@@ -294,8 +313,8 @@ RataTutor/
    ```
 3. **Verify**
 
-   * API ping: [http://localhost:8000/api/ping/](http://localhost:8000/api/ping/) → `{"message":"pong"}`
-   * SPA:        [http://localhost:8000/](http://localhost:8000/)        → your React app
+   * SPA: [http://localhost:8000/](http://localhost:8000/) → your React app
+   * API: [http://localhost:8000/api/](http://localhost:8000/api/) → Django REST API
 
 ## 🚀 Deployment on Render
 
@@ -321,7 +340,7 @@ Your service URL:
 https://<your-service-name>.onrender.com/
 ```
 
-* API ping: `/api/ping/`
+* API: `/api/`
 * SPA: `/`
 
 **Demo Site:** To see a working example, visit [https://ratatutor.onrender.com](https://ratatutor.onrender.com)
