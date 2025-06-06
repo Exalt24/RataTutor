@@ -141,7 +141,7 @@
   text-align: center;
 }
 
-.paper-content .handwriting-accent {
+.paper-content {
   font-size: 1.5rem;
   color: var(--text-dark);
 }

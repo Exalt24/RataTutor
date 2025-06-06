@@ -36,7 +36,7 @@ export default function Toast({
         <>
           <span className="pixel-accent">{message.title}</span>
           {message.subtitle && (
-            <span className="handwriting-accent" style={{ marginLeft: '.5rem' }}>
+            <span className="pixel-accent" style={{ marginLeft: '.5rem' }}>
               {message.subtitle}
             </span>
           )}

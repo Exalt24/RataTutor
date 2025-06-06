@@ -351,7 +351,6 @@ p {
   display: inline-block;
   vertical-align: middle;
   transform: translateY(-1px);
-  text-transform: uppercase;
   image-rendering: pixelated;
   -webkit-font-smoothing: none;
   position: relative;
@@ -368,13 +367,6 @@ p {
   mix-blend-mode: multiply;
 }
 
-.handwriting-accent {
-  font-family: var(--font-handwriting);
-  font-size: 1.2em;
-  display: inline-block;
-  transform: rotate(-2deg);
-  margin: 0 0.2em;
-}
 
 /* Cards */
 .exam-card {
