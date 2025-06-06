@@ -1,13 +1,11 @@
 import { Edit2, FilePlus, FileText, HelpCircle, Sparkles } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 import ChooseModal from './ChooseModal';
-import CreateFlashcards from './CreateFlashcards';
-import CreateNotes from './CreateNotes';
-import CreateQuiz from './CreateQuiz';
 import { useLoading } from './Loading/LoadingContext';
 import { useToast } from './Toast/ToastContext';
-import UploadFile from './UploadFile'; // This now uses the enhanced version
+import UploadFile from './UploadFile';
 import UploadPurposeModal from './UploadPurposeModal';
 
 const HomeScreen = ({ 
@@ -21,13 +19,15 @@ const HomeScreen = ({
   onUpdateMaterial,
   onNavigateToMaterial
 }) => {
+  const navigate = useNavigate();
+  
+  // ✅ REMOVED: createType and selectedMaterial state (now using routing)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isUploadPurposeModalOpen, setIsUploadPurposeModalOpen] = useState(false);
   const [isChooseModalOpen, setIsChooseModalOpen] = useState(false);
-  const [createType, setCreateType] = useState(null);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [modalMode, setModalMode] = useState('upload'); // 'upload', 'manual', or 'attachment'
+  const [pendingManualType, setPendingManualType] = useState(null); // ✅ NEW: Track manual creation type
 
   // Add refs and hooks for file upload functionality
   const fileInputRef = useRef(null);
@@ -37,15 +37,16 @@ const HomeScreen = ({
   const openUploadModal = () => setIsUploadModalOpen(true);
   const closeUploadModal = () => setIsUploadModalOpen(false);
 
+  // ✅ UPDATED: Use navigation instead of local state
   const openManualCreate = (type) => {
-    setCreateType(type);
+    setPendingManualType(type);
     setModalMode('manual');
     setIsChooseModalOpen(true);
   };
 
+  // ✅ UPDATED: Reset state without createType and selectedMaterial
   const closeCreate = () => {
-    setCreateType(null);
-    setSelectedMaterial(null);
+    setPendingManualType(null);
     setIsChooseModalOpen(false);
     setIsUploadPurposeModalOpen(false);
     setUploadedFiles([]);
@@ -101,72 +102,77 @@ const HomeScreen = ({
   };
 
   const handleMaterialAndTypeChoice = async (type, materialData) => {
-    try {
-      let material = null;
+  try {
+    let material = null;
 
-      if (materialData.isNew) {
-        // Create new material
-        const newMaterialData = {
-          title: materialData.name,
-          description: materialData.description || '',
-          status: 'active',
-          pinned: false,
-          public: false
-        };
+    if (materialData.isNew) {
+      // Create new material
+      const newMaterialData = {
+        title: materialData.name,
+        description: materialData.description || '',
+        status: 'active',
+        pinned: false,
+        public: false
+      };
 
-        // You'll need to import createMaterial from apiService
-        const { createMaterial } = await import('../services/apiService');
-        const response = await createMaterial(newMaterialData);
-        material = response.data;
-        
-        // Add to state
-        onAddMaterial(material);
-      } else {
-        // Use existing material
-        const materialId = parseInt(materialData.id);
-        material = materialsData.find(m => m.id === materialId);
-        
-        if (!material) {
-          console.error('Material not found with ID:', materialId);
-          throw new Error('Selected material not found');
-        }
+      const { createMaterial } = await import('../services/apiService');
+      const response = await createMaterial(newMaterialData);
+      material = response.data;
+      
+      // Add to state
+      onAddMaterial(material);
+    } else {
+      // Use existing material
+      const materialId = parseInt(materialData.id);
+      material = materialsData.find(m => m.id === materialId);
+      
+      if (!material) {
+        console.error('Material not found with ID:', materialId);
+        throw new Error('Selected material not found');
       }
-
-      if (material) {
-        setSelectedMaterial(material);
-        
-        // Handle different modal modes
-        if (modalMode === 'attachment') {
-          // Upload files as attachments
-          await handleAttachmentUpload(material);
-        } else if (modalMode === 'upload') {
-          // AI generation mode - TODO: Implement AI generation logic
-          // For now, just show a placeholder message
-          showToast({
-            variant: "info",
-            title: "AI Generation Coming Soon",
-            subtitle: `AI generation for ${type} will be implemented soon. Files have been attached to "${material.title}" instead.`,
-          });
-          
-          // Temporarily attach files until AI is implemented
-          await handleAttachmentUpload(material);
-        } else {
-          // Manual creation mode (flashcards, notes, quiz)
-          setCreateType(type);
-          setIsChooseModalOpen(false);
-        }
-      }
-    } catch (error) {
-      console.error('Error handling material selection:', error);
-      showToast({ 
-        variant: "error", 
-        title: "Error", 
-        subtitle: error.message || "Failed to process selection. Please try again." 
-      });
     }
-  };
 
- const handleAttachmentUpload = async (material) => {
+    if (material) {
+      // Handle different modal modes
+      if (modalMode === 'attachment') {
+        // Upload files as attachments
+        await handleAttachmentUpload(material);
+      } else if (modalMode === 'upload') {
+        // AI generation mode - TODO: Implement AI generation logic
+        // For now, just show a placeholder message
+        showToast({
+          variant: "info",
+          title: "AI Generation Coming Soon",
+          subtitle: `AI generation for ${type} will be implemented soon. Files have been attached to "${material.title}" instead.`,
+        });
+        
+        // Temporarily attach files until AI is implemented
+        await handleAttachmentUpload(material);
+      } else if (modalMode === 'manual') {
+        // ✅ UPDATED: Navigate to creation route - this will now auto-navigate to view after creation
+        const createType = pendingManualType || type;
+        const createUrl = `/dashboard/materials/${material.id}/${createType}/create`;
+        
+        // Close modal first
+        closeCreate();
+        
+        // Navigate to creation route
+        // Note: With the updated MaterialsScreen wrappers, this will automatically
+        // navigate to the view page after successful creation
+        navigate(createUrl);
+      }
+    }
+  } catch (error) {
+    console.error('Error handling material selection:', error);
+    showToast({ 
+      variant: "error", 
+      title: "Error", 
+      subtitle: error.message || "Failed to process selection. Please try again." 
+    });
+  }
+};
+
+  const handleAttachmentUpload = async (material) => {
   if (uploadedFiles.length === 0) return;
 
   try {
@@ -182,36 +188,34 @@ const HomeScreen = ({
 
     await Promise.all(uploadPromises);
     
-    // 🔥 Track activity but suppress immediate notification (same as other components)
+    // Track activity but suppress immediate notification
     const streakResult = await trackActivityAndNotify(showToast, true);
 
     // Refresh materials data to get updated attachments
     await onRefreshMaterials();
     
-    // 🔥 Create combined message using helper function (same as other components)
+    // Create combined message using helper function
     const baseTitle = "Files uploaded successfully!";
     const baseSubtitle = `${uploadedFiles.length} file(s) have been attached to "${material.title}".`;
     
     const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
     
-    // 🔥 Show single combined toast (same as other components)
+    // Show single combined toast
     showToast({
       variant: "success",
       title: combinedMessage.title,
       subtitle: combinedMessage.subtitle,
     });
 
-    // ✅ NEW: Navigate to MaterialContent to view the newly uploaded attachments
-    if (onNavigateToMaterial) {
-      // Get the updated material with the new attachments
-      const updatedMaterial = materialsData?.find(m => m.id === material.id) || material;
-      onNavigateToMaterial(updatedMaterial);
-    }
+    // ✅ UPDATED: Navigate directly to MaterialContent with attachments section expanded
+    // Since attachments don't have their own view routes like flashcards/notes/quizzes,
+    // going to MaterialContent makes sense, but we could add a hash or query param
+    // to scroll to or highlight the attachments section
+    navigate(`/dashboard/materials/${material.id}?section=attachments`);
     
     // Close modal and reset state
     setIsChooseModalOpen(false);
     setUploadedFiles([]);
-    setSelectedMaterial(null);
     setModalMode('upload');
 
   } catch (error) {
@@ -226,21 +230,9 @@ const HomeScreen = ({
   }
 };
 
-const handleCreationSuccess = async (newContent) => {
-    // Refresh materials to get updated data
-    await onRefreshMaterials();
-    
-    // ✅ NEW: Navigate to MaterialContent to view the newly created content
-    if (selectedMaterial && onNavigateToMaterial) {
-      // Get the updated material with the new content
-      const updatedMaterial = materialsData?.find(m => m.id === selectedMaterial.id) || selectedMaterial;
-      onNavigateToMaterial(updatedMaterial);
-    }
-    
-    // Close the creation component
-    setCreateType(null);
-    setSelectedMaterial(null);
-  };
+  // ✅ REMOVED: handleCreationSuccess (no longer needed with routing)
+  // ✅ REMOVED: Local component rendering logic
+
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -249,25 +241,7 @@ const handleCreationSuccess = async (newContent) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // If we have a selected material and create type, show the creation component
-  if (selectedMaterial && createType) {
-    const commonProps = {
-      material: selectedMaterial,
-      onClose: closeCreate,
-      onSuccess: handleCreationSuccess
-    };
-
-    switch (createType) {
-      case 'flashcards':
-        return <CreateFlashcards {...commonProps} mainMaterial={selectedMaterial} />;
-      case 'notes':
-        return <CreateNotes {...commonProps} />;
-      case 'quiz':
-        return <CreateQuiz {...commonProps} />;
-      default:
-        return null;
-    }
-  }
+  // ✅ REMOVED: Conditional rendering of create components (now handled by routing)
 
   return (
     <div className="space-y-8 mt-6 p-4">
@@ -342,14 +316,14 @@ const handleCreationSuccess = async (newContent) => {
         isOpen={isChooseModalOpen}
         onClose={() => {
           setIsChooseModalOpen(false);
-          setCreateType(null);
+          setPendingManualType(null);
           setUploadedFiles([]);
           setModalMode('upload');
         }}
         onCreate={handleMaterialAndTypeChoice}
         existingMaterials={materialsData || []}
         mode={modalMode}
-        preselectedType={createType}
+        preselectedType={pendingManualType}
       />
     </div>
   );

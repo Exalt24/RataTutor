@@ -33,7 +33,7 @@ const StreakModal = ({ onClose, profileData, motivationalMessage }) => {
             </div>
             <p className="text-sm text-gray-600">Current Streak</p>
             <p className="text-2xl font-bold text-gray-800">{profileData?.streak?.count || 0}</p>
-            <p className="text-xs text-gray-500">days</p>
+            <p className="text-xs text-gray-500">day{profileData?.streak?.count !== 1 ? 's' : ''}</p>
           </div>
 
           <div className="bg-white bg-opacity-50 rounded-xl p-4 text-center">
@@ -42,7 +42,7 @@ const StreakModal = ({ onClose, profileData, motivationalMessage }) => {
             </div>
             <p className="text-sm text-gray-600">Longest Streak</p>
             <p className="text-2xl font-bold text-gray-800">{profileData?.streak?.longest_streak || 0}</p>
-            <p className="text-xs text-gray-500">days</p>
+            <p className="text-xs text-gray-500">day{profileData?.streak?.longest_streak !== 1 ? 's' : ''}</p>
           </div>
 
           <div className="bg-white bg-opacity-50 rounded-xl p-4 text-center">
@@ -51,7 +51,7 @@ const StreakModal = ({ onClose, profileData, motivationalMessage }) => {
             </div>
             <p className="text-sm text-gray-600">Total Learning</p>
             <p className="text-2xl font-bold text-gray-800">{profileData?.streak?.total_days || 0}</p>
-            <p className="text-xs text-gray-500">days</p>
+            <p className="text-xs text-gray-500">day{profileData?.streak?.total_days !== 1 ? 's' : ''}</p>
           </div>
         </div>
 

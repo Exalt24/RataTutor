@@ -1,3 +1,4 @@
+// MaterialContent.jsx - Updated to use navigation instead of local view state
 import {
   ArrowLeft,
   BookOpen,
@@ -13,12 +14,12 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useToast } from '../components/Toast/ToastContext';
+import { useLoading } from '../components/Loading/LoadingContext';
+import { useMaterials } from '../utils/materialsContext';
+import { useFileUpload } from '../utils/useFileUpload';
 import { deleteAttachment, deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
-import FilePreview from "./FilePreview"; // ✅ NEW: Import FilePreview component
+import FilePreview from "./FilePreview";
 import MaterialFile from "./MaterialFile";
-import ViewFlashcards from "./ViewFlashcards";
-import ViewNotes from "./ViewNotes";
-import ViewQuiz from "./ViewQuiz";
 
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12 rounded-xl">
@@ -33,7 +34,7 @@ const EmptyState = () => (
   </div>
 );
 
-const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, onUpload, readOnly }) => (
+const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, readOnly }) => (
   <div className="flex items-center justify-between mb-4">
     <div className="flex items-center gap-3">
       <div className={`p-2.5 rounded-xl ${
@@ -110,25 +111,31 @@ const MaterialContent = ({
   material,
   isPublic,
   onVisibilityToggle,
-  onUploadAttachment,
   onCreateFlashcards,
   onCreateNotes,
   onCreateQuiz,
+  // ✅ NEW: Navigation handlers for viewing content
+  onViewFlashcards,
+  onViewNotes,
+  onViewQuiz,
   onBack,
   onTitleChange,
   onMaterialUpdate,
-  onRefreshMaterials,
   readOnly = false
 }) => {
   const { showToast } = useToast();
+  const { showLoading, hideLoading } = useLoading();
   
-  // View-related state
-  const [showViewFlashcards, setShowViewFlashcards] = useState(false);
-  const [showViewQuiz, setShowViewQuiz] = useState(false);
-  const [showViewNotes, setShowViewNotes] = useState(false);
-  const [selectedContent, setSelectedContent] = useState(null);
+  const { fetchMaterials, updateMaterial } = useMaterials();
+  const { FileInput, triggerFileSelect, createFileSelectHandler } = useFileUpload();
   
-  // ✅ NEW: Preview modal state
+  // ✅ REMOVED: View-related state (no longer needed with routing)
+  // const [showViewFlashcards, setShowViewFlashcards] = useState(false);
+  // const [showViewQuiz, setShowViewQuiz] = useState(false);
+  // const [showViewNotes, setShowViewNotes] = useState(false);
+  // const [selectedContent, setSelectedContent] = useState(null);
+  
+  // Preview modal state
   const [showPreview, setShowPreview] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState(null);
   
@@ -151,25 +158,33 @@ const MaterialContent = ({
   const quizzes = material?.quizzes || [];
   const attachments = material?.attachments || [];
 
-  const handleViewContent = (item, type) => {
-    setSelectedContent(item);
-    if (type === "flashcard") {
-      setShowViewFlashcards(true);
-    } else if (type === "quiz") {
-      setShowViewQuiz(true);
-    } else if (type === "note") {
-      setShowViewNotes(true);
+  const handleUploadAttachment = () => {
+    triggerFileSelect();
+  };
+
+  const refreshMaterialData = async () => {
+    try {
+      await fetchMaterials();
+    } catch (error) {
+      console.error('Error refreshing materials:', error);
     }
   };
 
-  const handleCloseView = () => {
-    setShowViewFlashcards(false);
-    setShowViewQuiz(false);
-    setShowViewNotes(false);
-    setSelectedContent(null);
+  // ✅ UPDATED: Navigation handlers instead of local state
+  const handleViewContent = (item, type) => {
+    if (type === "flashcard") {
+      onViewFlashcards?.(material, item);
+    } else if (type === "quiz") {
+      onViewQuiz?.(material, item);
+    } else if (type === "note") {
+      onViewNotes?.(material, item);
+    }
   };
 
-  // ✅ NEW: Preview handlers
+  // ✅ REMOVED: View components are now handled by routing
+  // No more local state management for views
+
+  // Preview handlers
   const handlePreviewAttachment = (attachment) => {
     setPreviewAttachment(attachment);
     setShowPreview(true);
@@ -244,45 +259,23 @@ const MaterialContent = ({
     if (readOnly) return;
     
     if (type === "flashcard") {
-      onCreateFlashcards(material, content, {
-        onSuccess: (updatedFlashcardSet) => {
-          setSelectedContent(updatedFlashcardSet);
-          setShowViewFlashcards(true);
-          return false;
-        }
-      });
+      onCreateFlashcards(material, content);
     } else if (type === "note") {
-      onCreateNotes(material, {
-        editMode: true,
-        editContent: content,
-        onSuccess: (updatedNote) => {
-          setSelectedContent(updatedNote);
-          setShowViewNotes(true);
-          return false;
-        }
-      });
+      onCreateNotes(material, content);
     } else if (type === "quiz") {
-      onCreateQuiz(material, {
-        editMode: true,
-        editContent: content,
-        onSuccess: (updatedQuiz) => {
-          setSelectedContent(updatedQuiz);
-          setShowViewQuiz(true);
-          return false;
-        }
-      });
+      onCreateQuiz(material, content);
     }
   };
 
   const handleDownloadAttachment = (attachment) => {
     try {
-      const link = document.createElement('a')
-      link.href = attachment.file
-      link.download = attachment.file.split('/').pop()
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const link = document.createElement('a');
+      link.href = attachment.file;
+      link.download = attachment.file.split('/').pop();
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       showToast({
         variant: "success",
@@ -290,14 +283,14 @@ const MaterialContent = ({
         subtitle: `Downloading "${attachment.file.split('/').pop()}"`,
       });
     } catch (error) {
-      console.error('Error downloading file:', error)
+      console.error('Error downloading file:', error);
       showToast({
         variant: "error",
         title: "Download failed",
         subtitle: "Failed to download file. Please try again.",
       });
     }
-  }
+  };
 
   const handleDeleteContent = async (contentId, type) => {
     if (readOnly) return;
@@ -332,6 +325,8 @@ const MaterialContent = ({
     }
 
     try {
+      showLoading();
+      
       switch (type) {
         case "flashcard":
           await deleteFlashcardSet(contentId);
@@ -349,34 +344,7 @@ const MaterialContent = ({
           throw new Error(`Unknown content type: ${type}`);
       }
 
-      if (onRefreshMaterials) {
-        try {
-          await onRefreshMaterials();
-        } catch (error) {
-          console.error('Error refreshing materials after delete:', error);
-        }
-      } else {
-        const updatedMaterial = { ...material };
-        
-        switch (type) {
-          case "flashcard":
-            updatedMaterial.flashcard_sets = flashcardSets.filter(set => set.id !== contentId);
-            break;
-          case "note":
-            updatedMaterial.notes = notes.filter(note => note.id !== contentId);
-            break;
-          case "quiz":
-            updatedMaterial.quizzes = quizzes.filter(quiz => quiz.id !== contentId);
-            break;
-          case "attachment":
-            updatedMaterial.attachments = attachments.filter(att => att.id !== contentId);
-            break;
-        }
-
-        if (onMaterialUpdate) {
-          onMaterialUpdate(updatedMaterial);
-        }
-      }
+      await refreshMaterialData();
 
       showToast({
         variant: "success",
@@ -392,157 +360,37 @@ const MaterialContent = ({
         title: "Delete failed",
         subtitle: `Failed to delete "${contentName}". Please try again.`,
       });
+    } finally {
+      hideLoading();
     }
   };
 
-  // View components remain the same...
-  if (showViewFlashcards) {
-    return (
-      <ViewFlashcards
-        mainMaterial={material}
-        material={selectedContent} 
-        onClose={handleCloseView} 
-        readOnly={readOnly}
-        onSuccess={async (updatedFlashcardSet) => {
-          if (onRefreshMaterials) {
-            try {
-              await onRefreshMaterials();
-              setSelectedContent(updatedFlashcardSet);
-            } catch (error) {
-              console.error('Error refreshing materials:', error);
-            }
-          } else {
-            const updatedMaterial = {
-              ...material,
-              flashcard_sets: material.flashcard_sets.map(set =>
-                set.id === updatedFlashcardSet.id ? updatedFlashcardSet : set
-              )
-            };
-            
-            setSelectedContent(updatedFlashcardSet);
-            
-            if (onMaterialUpdate) {
-              onMaterialUpdate(updatedMaterial);
-            }
-          }
-        }}
-        onEdit={(flashcardSet) => {
-          setShowViewFlashcards(false);
-          setSelectedContent(null);
-          
-          onCreateFlashcards(material, flashcardSet, {
-            onSuccess: (updatedFlashcardSet) => {
-              setSelectedContent(updatedFlashcardSet);
-              setShowViewFlashcards(true);
-              return false;
-            }
-          });
-        }}
-      />
-    );
-  }
+  // Navigation handlers for create buttons
+  const handleCreateFlashcards = () => {
+    onCreateFlashcards(material);
+  };
 
-  if (showViewNotes) {
-    return (
-      <ViewNotes
-        mainMaterial={material}
-        material={selectedContent} 
-        onClose={handleCloseView} 
-        readOnly={readOnly}
-        onSuccess={async (updatedNote) => {
-          if (onRefreshMaterials) {
-            try {
-              await onRefreshMaterials();
-              setSelectedContent(updatedNote);
-            } catch (error) {
-              console.error('Error refreshing materials:', error);
-            }
-          } else {
-            const updatedMaterial = {
-              ...material,
-              notes: material.notes.map(note =>
-                note.id === updatedNote.id ? updatedNote : note
-              )
-            };
-            
-            setSelectedContent(updatedNote);
-            
-            if (onMaterialUpdate) {
-              onMaterialUpdate(updatedMaterial);
-            }
-          }
-        }}
-        onEdit={(note) => {
-          setShowViewNotes(false);
-          setSelectedContent(null);
-          
-          onCreateNotes(material, {
-            editMode: true,
-            editContent: note,
-            onSuccess: (updatedNote) => {
-              setSelectedContent(updatedNote);
-              setShowViewNotes(true);
-              return false;
-            }
-          });
-        }}
-      />
-    );
-  }
+  const handleCreateNotes = () => {
+    onCreateNotes(material);
+  };
 
-  if (showViewQuiz) {
-    return (
-      <ViewQuiz
-        mainMaterial={material}
-        material={selectedContent} 
-        onClose={handleCloseView} 
-        readOnly={readOnly}
-        onSuccess={async (updatedQuiz) => {
-          if (onRefreshMaterials) {
-            try {
-              await onRefreshMaterials();
-              setSelectedContent(updatedQuiz);
-            } catch (error) {
-              console.error('Error refreshing materials:', error);
-            }
-          } else {
-            const updatedMaterial = {
-              ...material,
-              quizzes: material.quizzes.map(quiz =>
-                quiz.id === updatedQuiz.id ? updatedQuiz : quiz
-              )
-            };
-            
-            setSelectedContent(updatedQuiz);
-            
-            if (onMaterialUpdate) {
-              onMaterialUpdate(updatedMaterial);
-            }
-          }
-        }}
-        onEdit={(quiz) => {
-          setShowViewQuiz(false);
-          setSelectedContent(null);
-          
-          onCreateQuiz(material, {
-            editMode: true,
-            editContent: quiz,
-            onSuccess: (updatedQuiz) => {
-              setSelectedContent(updatedQuiz);
-              setShowViewQuiz(true);
-              return false;
-            }
-          });
-        }}
-      />
-    );
-  }
+  const handleCreateQuiz = () => {
+    onCreateQuiz(material);
+  };
 
   const totalItems = flashcardSets.length + notes.length + quizzes.length + attachments.length;
 
   if (totalItems === 0) {
     return (
       <>
+        <FileInput 
+          onFileSelect={createFileSelectHandler(
+            material?.id, 
+            material?.title, 
+            refreshMaterialData
+          )}
+        />
+
         <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl overflow-hidden">
           {/* Header */}
           <div className="flex-none border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm">
@@ -635,7 +483,7 @@ const MaterialContent = ({
                 </div>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={onUploadAttachment}
+                    onClick={handleUploadAttachment}
                     className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                     title="Upload Attachment"
                     disabled={readOnly}
@@ -647,13 +495,7 @@ const MaterialContent = ({
                       <div className="h-6 w-px bg-gray-200"></div>
                       <button
                         className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                        onClick={() => onCreateFlashcards(material, null, {
-                          onSuccess: (newFlashcardSet) => {
-                            setSelectedContent(newFlashcardSet);
-                            setShowViewFlashcards(true);
-                            return false;
-                          }
-                        })}
+                        onClick={handleCreateFlashcards}
                         data-hover="Create Flashcards"
                       >
                         <BookOpen size={16} />
@@ -661,13 +503,7 @@ const MaterialContent = ({
                       </button>
                       <button
                         className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                        onClick={() => onCreateNotes(material, {
-                          onSuccess: (newNote) => {
-                            setSelectedContent(newNote);
-                            setShowViewNotes(true);
-                            return false;
-                          }
-                        })}
+                        onClick={handleCreateNotes}
                         data-hover="Create Notes"
                       >
                         <FileText size={16} />
@@ -675,13 +511,7 @@ const MaterialContent = ({
                       </button>
                       <button
                         className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                        onClick={() => onCreateQuiz(material, {
-                          onSuccess: (newQuiz) => {
-                            setSelectedContent(newQuiz);
-                            setShowViewQuiz(true);
-                            return false;
-                          }
-                        })}
+                        onClick={handleCreateQuiz}
                         data-hover="Create Quiz"
                       >
                         <HelpCircle size={16} />
@@ -707,7 +537,6 @@ const MaterialContent = ({
                     count={attachments.length}
                     isExpanded={expandedSections.Attachments}
                     onToggle={() => toggleSection("Attachments")}
-                    onUpload={onUploadAttachment}
                     readOnly={readOnly}
                   />
                   {expandedSections.Attachments && (
@@ -759,7 +588,7 @@ const MaterialContent = ({
           </div>
         </div>
 
-        {/* ✅ NEW: File Preview Modal */}
+        {/* File Preview Modal */}
         <FilePreview 
           attachment={previewAttachment}
           isOpen={showPreview}
@@ -772,6 +601,14 @@ const MaterialContent = ({
 
   return (
     <>
+      <FileInput 
+        onFileSelect={createFileSelectHandler(
+          material?.id, 
+          material?.title, 
+          refreshMaterialData
+        )}
+      />
+
       <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl">
         <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
           <div className="max-w-[90rem] mx-auto px-6 py-4 rounded-t-xl">
@@ -863,7 +700,7 @@ const MaterialContent = ({
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={onUploadAttachment}
+                  onClick={handleUploadAttachment}
                   className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                   title="Upload Attachment"
                   disabled={readOnly}
@@ -875,13 +712,7 @@ const MaterialContent = ({
                     <div className="h-6 w-px bg-gray-200"></div>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateFlashcards(material, null, {
-                        onSuccess: (newFlashcardSet) => {
-                          setSelectedContent(newFlashcardSet);
-                          setShowViewFlashcards(true);
-                          return false;
-                        }
-                      })}
+                      onClick={handleCreateFlashcards}
                       data-hover="Create Flashcards"
                     >
                       <BookOpen size={16} />
@@ -889,13 +720,7 @@ const MaterialContent = ({
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateNotes(material, {
-                        onSuccess: (newNote) => {
-                          setSelectedContent(newNote);
-                          setShowViewNotes(true);
-                          return false;
-                        }
-                      })}
+                      onClick={handleCreateNotes}
                       data-hover="Create Notes"
                     >
                       <FileText size={16} />
@@ -903,13 +728,7 @@ const MaterialContent = ({
                     </button>
                     <button
                       className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={() => onCreateQuiz(material, {
-                        onSuccess: (newQuiz) => {
-                          setSelectedContent(newQuiz);
-                          setShowViewQuiz(true);
-                          return false;
-                        }
-                      })}
+                      onClick={handleCreateQuiz}
                       data-hover="Create Quiz"
                     >
                       <HelpCircle size={16} />
@@ -926,7 +745,7 @@ const MaterialContent = ({
           <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
             <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
               
-              {/* ✅ ENHANCED: Attachments Section with Preview Support */}
+              {/* Attachments Section with Preview Support */}
               <div>
                 <SectionHeader
                   icon={Paperclip}
@@ -934,7 +753,6 @@ const MaterialContent = ({
                   count={attachments.length}
                   isExpanded={expandedSections.Attachments}
                   onToggle={() => toggleSection("Attachments")}
-                  onUpload={onUploadAttachment}
                   readOnly={readOnly}
                 />
                 {expandedSections.Attachments && (
@@ -946,13 +764,13 @@ const MaterialContent = ({
                           content={{
                             id: attachment.id,
                             title: attachment.file?.split('/').pop() || 'File',
-                            file: attachment.file, // ✅ This makes MaterialFile detect it as attachment
+                            file: attachment.file,
                             uploaded_at: attachment.uploaded_at,
                             created_at: attachment.created_at
                           }}
                           onDelete={(e, id) => handleDeleteContent(id, "attachment")}
                           onDownload={handleDownloadAttachment}
-                          onPreview={handlePreviewAttachment} // ✅ NEW: Preview handler
+                          onPreview={handlePreviewAttachment}
                           readOnly={readOnly}
                         />
                       ))}
@@ -1066,7 +884,7 @@ const MaterialContent = ({
         </div>
       </div>
 
-      {/* ✅ NEW: File Preview Modal */}
+      {/* File Preview Modal */}
       <FilePreview 
         attachment={previewAttachment}
         isOpen={showPreview}

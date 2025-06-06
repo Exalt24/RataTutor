@@ -2,17 +2,23 @@ import { ArrowLeft, ArrowRight, BookOpen, Edit, Globe, Lock, Shuffle } from 'luc
 import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
 import '../styles/components/flashcards.css';
-import CreateFlashcards from './CreateFlashcards';
 import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 import { useToast } from '../components/Toast/ToastContext';
 
-const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onSuccess }) => {
+const ViewFlashcards = ({ 
+  mainMaterial, 
+  material, 
+  onClose, 
+  readOnly = false, 
+  onSuccess,
+  onEdit // ✅ NEW: Navigation handler for editing
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
-  const [shuffleSeed, setShuffleSeed] = useState(0); // Used to force re-shuffle
-  const [showCreateFlashcards, setShowCreateFlashcards] = useState(false);
+  const [shuffleSeed, setShuffleSeed] = useState(0);
+  // ✅ REMOVED: showCreateFlashcards state (no longer needed)
   const [isFinished, setIsFinished] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({
@@ -95,35 +101,33 @@ const ViewFlashcards = ({ mainMaterial, material, onClose, readOnly = false, onS
     }
   }, [safeCurrentIndex, currentIndex, formattedFlashcards.length]);
 
-  // Update the handleNext function (around line 90-110):
-const handleNext = async () => {
-  if (formattedFlashcards.length === 0) return;
-  
-  setShowAnswer(false);
-  
-  if (currentIndex === formattedFlashcards.length - 1) {
-    setIsFinished(true);
+  const handleNext = async () => {
+    if (formattedFlashcards.length === 0) return;
     
-    // 🔥 Track activity but suppress immediate notification (same as other components)
-    const streakResult = await trackActivityAndNotify(showToast, true);
+    setShowAnswer(false);
     
-    // 🔥 Create combined message using helper function (same as other components)
-    const baseTitle = "Flashcard review completed!";
-    const baseSubtitle = `You've reviewed all ${formattedFlashcards.length} flashcards${isShuffled ? ' in shuffled order' : ''}.`;
-    
-    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
-    
-    // 🔥 Show single combined toast (same as other components)
-    showToast({
-      variant: "success",
-      title: combinedMessage.title,
-      subtitle: combinedMessage.subtitle,
-    });
-  } else {
-    setCurrentIndex(prev => Math.min(prev + 1, formattedFlashcards.length - 1));
-  }
-};
-
+    if (currentIndex === formattedFlashcards.length - 1) {
+      setIsFinished(true);
+      
+      // Track activity but suppress immediate notification
+      const streakResult = await trackActivityAndNotify(showToast, true);
+      
+      // Create combined message using helper function
+      const baseTitle = "Flashcard review completed!";
+      const baseSubtitle = `You've reviewed all ${formattedFlashcards.length} flashcards${isShuffled ? ' in shuffled order' : ''}.`;
+      
+      const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+      
+      // Show single combined toast
+      showToast({
+        variant: "success",
+        title: combinedMessage.title,
+        subtitle: combinedMessage.subtitle,
+      });
+    } else {
+      setCurrentIndex(prev => Math.min(prev + 1, formattedFlashcards.length - 1));
+    }
+  };
 
   const handlePrevious = () => {
     if (formattedFlashcards.length === 0) return;
@@ -145,7 +149,7 @@ const handleNext = async () => {
     } else {
       // Shuffle: create new random order by updating seed
       setIsShuffled(true);
-      setShuffleSeed(prev => prev + 1); // This will trigger new shuffle in useMemo
+      setShuffleSeed(prev => prev + 1);
       setCurrentIndex(0);
       setShowAnswer(false);
       setIsFinished(false);
@@ -160,25 +164,15 @@ const handleNext = async () => {
     }, 150);
   };
 
+  // ✅ UPDATED: Use navigation instead of local state
   const handleEdit = () => {
-    if (!readOnly) {
-      setShowCreateFlashcards(true);
+    if (!readOnly && onEdit) {
+      onEdit(material); // Navigate to edit route
     }
   };
 
-  const handleEditSuccess = (updatedFlashcardSet) => {
-    if (onSuccess) {
-      onSuccess(updatedFlashcardSet);
-    }
-    
-    // Reset viewing state to provide clean UX after editing
-    setCurrentIndex(0);
-    setShowAnswer(false);
-    setIsFinished(false);
-    setIsShuffled(false);
-    setShuffleSeed(0);
-    setShowCreateFlashcards(false);
-  };
+  // ✅ REMOVED: handleEditSuccess (no longer needed with routing)
+  // ✅ REMOVED: showCreateFlashcards logic (no longer needed with routing)
 
   const resetToStart = () => {
     setCurrentIndex(0);
@@ -194,17 +188,7 @@ const handleNext = async () => {
     setShowAnswer(false);
   };
 
-  if (showCreateFlashcards) {
-    return (
-      <CreateFlashcards
-        mainMaterial={mainMaterial}
-        material={material} 
-        flashcardSet={material}
-        onClose={() => setShowCreateFlashcards(false)}
-        onSuccess={handleEditSuccess}
-      />
-    );
-  }
+  // ✅ REMOVED: Conditional rendering of CreateFlashcards
 
   return (
     <div className="flex flex-col bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 rounded-xl h-[calc(100vh-6rem)]">
@@ -239,7 +223,7 @@ const handleNext = async () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {!readOnly && (
+              {!readOnly && onEdit && (
                 <>
                   <div className="h-6 w-px bg-gray-200"></div>
                   <button
@@ -412,7 +396,7 @@ const handleNext = async () => {
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-2 label-text">No flashcards available</h3>
               <p className="text-gray-600 label-text">This flashcard set is empty.</p>
-              {!readOnly && (
+              {!readOnly && onEdit && (
                 <button
                   onClick={handleEdit}
                   className="mt-4 exam-button-mini"

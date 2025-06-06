@@ -7,7 +7,86 @@ import { createFlashcardSet, updateFlashcardSet } from '../services/apiService';
 import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 import { defaultValidators } from '../utils/validation';
 
-const CreateFlashcards = ({ 
+// ✅ Helper function to calculate border class (moved outside component)
+const getBorderClass = (isPartial, isEmpty, frontError, backError, isValid) => {
+  if (isPartial || (!isEmpty && (frontError || backError))) {
+    return 'border-l-4 border-l-yellow-400';
+  }
+  if (isValid) {
+    return 'border-l-4 border-l-green-400';
+  }
+  return '';
+};
+
+// ✅ Memoized components for better performance
+const CardStatusBadge = React.memo(({ status, isExisting }) => {
+  const statusConfig = {
+    'Empty': 'bg-gray-100 text-gray-600',
+    'Incomplete': 'bg-yellow-100 text-yellow-700', 
+    'Invalid': 'bg-red-100 text-red-700',
+    'Valid': 'bg-green-100 text-green-700'
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`px-2 py-1 rounded-full text-xs ${statusConfig[status]}`}>
+        {status}
+      </span>
+      {isExisting && (
+        <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs">
+          Existing
+        </span>
+      )}
+    </div>
+  );
+});
+
+CardStatusBadge.displayName = 'CardStatusBadge';
+
+const SummaryStats = React.memo(({ validCount, partialCount, invalidCount, emptyCount }) => (
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div className="text-center">
+      <div className="text-2xl font-bold text-green-600">{validCount}</div>
+      <div className="text-gray-600">Valid Cards</div>
+    </div>
+    <div className="text-center">
+      <div className="text-2xl font-bold text-yellow-600">{partialCount}</div>
+      <div className="text-gray-600">Incomplete Cards</div>
+    </div>
+    <div className="text-center">
+      <div className="text-2xl font-bold text-red-600">{invalidCount}</div>
+      <div className="text-gray-600">Invalid Cards</div>
+    </div>
+    <div className="text-center">
+      <div className="text-2xl font-bold text-gray-500">{emptyCount}</div>
+      <div className="text-gray-600">Empty Cards</div>
+    </div>
+  </div>
+));
+
+SummaryStats.displayName = 'SummaryStats';
+
+const ErrorBanner = React.memo(({ errors }) => {
+  if (errors.length === 0) return null;
+  
+  return (
+    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div className="flex items-start space-x-2">
+        <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+        <div className="text-sm text-red-700">
+          {errors.map((error, idx) => (
+            <p key={idx}>{error}</p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ErrorBanner.displayName = 'ErrorBanner';
+
+// ✅ FIXED: CreateFlashcards component with hooks rule violation resolved
+const CreateFlashcards = React.memo(({ 
   mainMaterial, 
   material, 
   flashcardSet = null, 
@@ -19,10 +98,19 @@ const CreateFlashcards = ({
   const { showToast } = useToast();
 
   // Extract success callback from either direct prop or options
-  const successCallback = options.onSuccess || onSuccess;
+  const successCallback = useMemo(() => 
+    options.onSuccess || onSuccess, [options.onSuccess, onSuccess]
+  );
 
-  // Derived state using useMemo
-  const isEditMode = useMemo(() => !!flashcardSet, [flashcardSet]);
+  // Edit mode detection - check options first, fall back to flashcardSet prop
+  const isEditMode = useMemo(() => {
+    return options.editMode ?? !!flashcardSet;
+  }, [options.editMode, flashcardSet]);
+
+  // Get flashcard set data from options or prop
+  const flashcardSetData = useMemo(() => {
+    return options.editContent || flashcardSet;
+  }, [options.editContent, flashcardSet]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -38,17 +126,17 @@ const CreateFlashcards = ({
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ Initialize form data - legitimate useEffect for form initialization
+  // Initialize form data
   useEffect(() => {
-    if (isEditMode && flashcardSet) {
+    if (isEditMode && flashcardSetData) {
       // Edit mode: populate with existing data
       setFormData({
-        title: flashcardSet.title || '',
-        description: flashcardSet.description || '',
+        title: flashcardSetData.title || '',
+        description: flashcardSetData.description || '',
       });
 
       // Convert existing flashcards to the expected format
-      const existingCards = flashcardSet.flashcards || flashcardSet.cards || [];
+      const existingCards = flashcardSetData.flashcards || flashcardSetData.cards || [];
       if (existingCards.length > 0) {
         setItems(existingCards.map(card => ({
           front: card.question || card.front || '',
@@ -62,7 +150,7 @@ const CreateFlashcards = ({
       // Set initial validity for pre-filled title
       setValidities(prev => ({
         ...prev,
-        title: !!(flashcardSet.title && flashcardSet.title.trim()),
+        title: !!(flashcardSetData.title && flashcardSetData.title.trim()),
       }));
     } else if (material?.title) {
       // Create mode: auto-suggest title based on material
@@ -75,9 +163,9 @@ const CreateFlashcards = ({
         title: true,
       }));
     }
-  }, [flashcardSet, material?.title, isEditMode]);
+  }, [flashcardSetData, material?.title, isEditMode]);
 
-  // Memoized card validation to avoid recalculating on every render
+  // ✅ Memoized card validation
   const cardValidationStatus = useMemo(() => {
     let validCardCount = 0;
     let invalidCardCount = 0;
@@ -117,6 +205,7 @@ const CreateFlashcards = ({
     };
   }, [items]);
 
+  // ✅ Optimized handlers
   const addNewItem = useCallback(() => {
     setItems(prev => [...prev, { front: '', back: '' }]);
   }, []);
@@ -242,7 +331,6 @@ const CreateFlashcards = ({
     return errors;
   }, [items]);
 
-  // ✅ Updated handleSave - follows EditProfileScreen pattern exactly
   const handleSave = useCallback(async () => {
     setBannerErrors([]);
     
@@ -253,7 +341,7 @@ const CreateFlashcards = ({
     }
 
     setSubmitting(true);
-    showLoading(); // ✅ Same as EditProfileScreen
+    showLoading();
 
     try {
       const validFlashcards = items
@@ -280,7 +368,7 @@ const CreateFlashcards = ({
         return;
       }
 
-      const flashcardSetData = {
+      const flashcardSetDataPayload = {
         material: mainMaterial?.id,
         title: formData.title,
         description: formData.description,
@@ -289,41 +377,35 @@ const CreateFlashcards = ({
 
       let response;
       if (isEditMode) {
-        response = await updateFlashcardSet(flashcardSet.id, flashcardSetData);
+        response = await updateFlashcardSet(flashcardSetData.id, flashcardSetDataPayload);
       } else {
-        response = await createFlashcardSet(flashcardSetData);
+        response = await createFlashcardSet(flashcardSetDataPayload);
       }
 
-      // 🔥 Track activity but suppress immediate notification
       const streakResult = await trackActivityAndNotify(showToast, true);
       
-      // 🔥 Create combined message using helper function
       const baseTitle = `Flashcards ${isEditMode ? 'updated' : 'created'} successfully!`;
       const baseSubtitle = `${isEditMode ? 'Updated' : 'Created'} ${validFlashcards.length} flashcards in "${formData.title}" set.`;
       
       const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
-      // ✅ Show success toast (same as EditProfileScreen)
+      
       showToast({
-      variant: "success",
-      title: combinedMessage.title,
-      subtitle: combinedMessage.subtitle,
-    });
+        variant: "success",
+        title: combinedMessage.title,
+        subtitle: combinedMessage.subtitle,
+      });
 
-      // ✅ Close component immediately after API success (same as EditProfileScreen)
       onClose();
 
-      // ✅ Call success callback separately (like fetchProfileData in EditProfileScreen)
       if (successCallback) {
         try {
-          await successCallback(response.data); // This will call onRefreshMaterials()
+          await successCallback(response.data);
         } catch (callbackError) {
           console.error('Error in success callback:', callbackError);
-          // Don't show this error to user since main operation succeeded
         }
       }
 
     } catch (err) {
-      // ✅ Only handle actual API failures (same as EditProfileScreen error handling)
       console.error('API Error creating/updating flashcards:', err);
       
       const data = err.response?.data || {};
@@ -363,14 +445,33 @@ const CreateFlashcards = ({
 
     } finally {
       setSubmitting(false);
-      hideLoading(); // ✅ Same as EditProfileScreen
+      hideLoading();
     }
-  }, [items, formData, isEditMode, flashcardSet?.id, mainMaterial?.id, onClose, validateFlashcards, showLoading, hideLoading, showToast, successCallback]);
+  }, [items, formData, isEditMode, flashcardSetData?.id, mainMaterial?.id, onClose, validateFlashcards, showLoading, hideLoading, showToast, successCallback]);
 
   // Memoized button state
   const isDisabled = useMemo(() => {
     return !validities.title || !cardValidationStatus.hasValidCards || cardValidationStatus.hasProblems || submitting;
   }, [validities.title, cardValidationStatus.hasValidCards, cardValidationStatus.hasProblems, submitting]);
+
+  const buttonText = useMemo(() => {
+    if (submitting) {
+      return isEditMode ? "Updating..." : "Creating...";
+    }
+    return isEditMode ? "Update Flashcards" : "Create Flashcards";
+  }, [submitting, isEditMode]);
+
+  const buttonHover = useMemo(() => {
+    if (submitting) {
+      return isEditMode ? "Updating..." : "Creating...";
+    } else if (cardValidationStatus.hasProblems) {
+      return "Complete all cards to save";
+    } else if (!cardValidationStatus.hasValidCards) {
+      return "Add at least one valid card";
+    } else {
+      return isEditMode ? `Update ${cardValidationStatus.validCardCount} Flashcard(s)` : "Create";
+    }
+  }, [submitting, isEditMode, cardValidationStatus]);
 
   return (
     <div className="letter-no-lines">
@@ -394,7 +495,7 @@ const CreateFlashcards = ({
                   for "{mainMaterial.title}"
                   {isEditMode && (
                     <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                      Editing: {flashcardSet.title}
+                      Editing: {flashcardSetData.title}
                     </span>
                   )}
                 </p>
@@ -404,18 +505,7 @@ const CreateFlashcards = ({
         </div>
 
         {/* Error Banner */}
-        {bannerErrors.length > 0 && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start space-x-2">
-              <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-red-700">
-                {bannerErrors.map((error, idx) => (
-                  <p key={idx}>{error}</p>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <ErrorBanner errors={bannerErrors} />
 
         {/* Details Section */}
         <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all mb-8">
@@ -464,20 +554,18 @@ const CreateFlashcards = ({
             const frontError = defaultValidators.flashcardQuestion(item.front);
             const backError = defaultValidators.flashcardAnswer(item.back);
             const isValid = !isEmpty && !frontError && !backError;
-            
-            let cardStatusColor = 'bg-gray-100 text-gray-600';
-            let cardStatusText = 'Empty';
-            
+
+            let cardStatus = 'Empty';
             if (isPartial) {
-              cardStatusColor = 'bg-yellow-100 text-yellow-700';
-              cardStatusText = 'Incomplete';
+              cardStatus = 'Incomplete';
             } else if (!isEmpty && (frontError || backError)) {
-              cardStatusColor = 'bg-red-100 text-red-700';
-              cardStatusText = 'Invalid';
+              cardStatus = 'Invalid';
             } else if (isValid) {
-              cardStatusColor = 'bg-green-100 text-green-700';
-              cardStatusText = 'Valid';
+              cardStatus = 'Valid';
             }
+
+            // ✅ FIXED: Calculate border class inline instead of using useMemo inside map
+            const borderClass = getBorderClass(isPartial, isEmpty, frontError, backError, isValid);
 
             return (
               <div
@@ -488,25 +576,14 @@ const CreateFlashcards = ({
                 onDrop={() => handleDrop(index)}
                 className={`bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all cursor-move ${
                   draggedIndex === index ? 'shadow-lg' : ''
-                } ${
-                  isPartial || (!isEmpty && (frontError || backError)) ? 'border-l-4 border-l-yellow-400' : ''
-                } ${
-                  isValid ? 'border-l-4 border-l-green-400' : ''
-                }`}
+                } ${borderClass}`}
               >
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-medium label-text">
                       Card {index + 1}
                     </h3>
-                    <span className={`px-2 py-1 rounded-full text-xs ${cardStatusColor}`}>
-                      {cardStatusText}
-                    </span>
-                    {item.id && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-xs">
-                        Existing
-                      </span>
-                    )}
+                    <CardStatusBadge status={cardStatus} isExisting={!!item.id} />
                   </div>
                   <div className="flex items-center gap-4">
                     <GripVertical size={24} className="text-gray-400 rotate-90" />
@@ -538,7 +615,7 @@ const CreateFlashcards = ({
                     value={item.front}
                     onChange={(e) => updateItem(index, 'front', e.target.value)}
                     required={true}
-                    onValidityChange={() => {}}
+                    onValidityChange={(field, isValid) => {}}
                     rows={4}
                     disabled={submitting}
                     variant="card"
@@ -552,7 +629,7 @@ const CreateFlashcards = ({
                     value={item.back}
                     onChange={(e) => updateItem(index, 'back', e.target.value)}
                     required={true}
-                    onValidityChange={() => {}}
+                    onValidityChange={(field, isValid) => {}}
                     rows={4}
                     disabled={submitting}
                     variant="card"
@@ -568,24 +645,12 @@ const CreateFlashcards = ({
         {items.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-8">
             <h3 className="text-lg font-medium label-text mb-3">Summary</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{cardValidationStatus.validCardCount}</div>
-                <div className="text-gray-600">Valid Cards</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{cardValidationStatus.partialCardCount}</div>
-                <div className="text-gray-600">Incomplete Cards</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{cardValidationStatus.invalidCardCount}</div>
-                <div className="text-gray-600">Invalid Cards</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-500">{cardValidationStatus.emptyCardCount}</div>
-                <div className="text-gray-600">Empty Cards</div>
-              </div>
-            </div>
+            <SummaryStats
+              validCount={cardValidationStatus.validCardCount}
+              partialCount={cardValidationStatus.partialCardCount}
+              invalidCount={cardValidationStatus.invalidCardCount}
+              emptyCount={cardValidationStatus.emptyCardCount}
+            />
             {cardValidationStatus.validCardCount > 0 && (
               <p className="text-sm text-blue-700 mt-4">
                 ✅ {cardValidationStatus.validCardCount} card(s) will be saved.
@@ -621,27 +686,18 @@ const CreateFlashcards = ({
             <button
               onClick={handleSave}
               className={`exam-button-mini ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              data-hover={
-                submitting 
-                  ? (isEditMode ? "Updating..." : "Creating...") 
-                  : cardValidationStatus.hasProblems
-                    ? "Complete all cards to save"
-                    : !cardValidationStatus.hasValidCards
-                      ? "Add at least one valid card"
-                      : (isEditMode ? `Update ${cardValidationStatus.validCardCount} Flashcard(s)` : `Create`)
-              }
+              data-hover={buttonHover}
               disabled={isDisabled}
             >
-              {submitting 
-                ? (isEditMode ? "Updating..." : "Creating...") 
-                : (isEditMode ? "Update Flashcards" : "Create Flashcards")
-              }
+              {buttonText}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-};
+});
+
+CreateFlashcards.displayName = 'CreateFlashcards';
 
 export default CreateFlashcards;

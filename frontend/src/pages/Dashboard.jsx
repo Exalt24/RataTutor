@@ -1,5 +1,7 @@
+// Dashboard.jsx - Pass profile refresh function to ExploreScreen
+
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import EditProfileScreen from '../components/EditProfileScreen';
 import ExploreScreen from '../components/ExploreScreen';
 import Header from '../components/Header';
@@ -10,23 +12,26 @@ import ProfileScreen from '../components/ProfileScreen';
 import RataAIScreen from '../components/RataAIScreen';
 import Sidebar from '../components/Sidebar';
 import TrashScreen from '../components/TrashScreen';
-import { getMaterials, getTrashedMaterials } from '../services/apiService';
+import { MaterialsProvider, useMaterials } from '../utils/materialsContext';
 import { getProfile, logout } from '../services/authService';
 import '../styles/pages/dashboard.css';
 
 const Dashboard = () => {
-  const [screen, setScreen] = useState('home');
   const [profileData, setProfileData] = useState(null);
-  const [materialsData, setMaterialsData] = useState(null);
-  const [trashedMaterialsData, setTrashedMaterialsData] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   
-  // ✅ NEW: Material view navigation state
-  const [materialToView, setMaterialToView] = useState(null);
-  
-  const nav = useNavigate();
-
+  const navigate = useNavigate();
+  const location = useLocation();
   const { showLoading, hideLoading } = useLoading();
+
+  // Get current screen from URL path
+  const getCurrentScreen = () => {
+    const path = location.pathname.replace('/dashboard', '') || '/';
+    const segments = path.split('/').filter(Boolean);
+    return segments[0] || 'home';
+  };
+
+  const currentScreen = getCurrentScreen();
 
   const fetchProfileData = async () => {
     try {
@@ -34,82 +39,62 @@ const Dashboard = () => {
       setProfileData(profile || {});
     } catch (error) {
       console.error('❌ Error fetching profile data:', error);
-      setProfileData({}); // Fallback to empty object
-    }
-  };
-
-  const fetchMaterialsData = async () => {
-    try {
-      const [materials, trashedMaterials] = await Promise.all([
-        getMaterials(),
-        getTrashedMaterials()
-      ]);
-      
-      // Ensure we always have arrays
-      setMaterialsData(materials?.data || []);
-      setTrashedMaterialsData(trashedMaterials?.data || []);
-    } catch (error) {
-      console.error('Error fetching materials data:', error);
-      setMaterialsData([]);
-      setTrashedMaterialsData([]);
+      setProfileData({});
     }
   };
 
   const fetchAllData = async () => {
     try {
-      console.trace('🔍 Call stack for fetchAllData:');
-      
-      await Promise.all([
-        fetchMaterialsData(), // Refresh materials 
-        fetchProfileData()    // Refresh profile
-      ]);
-      
+      await fetchProfileData();
     } catch (error) {
       console.error('❌ Error refreshing data:', error);
     }
   };
 
+  // ✅ Function to refresh profile after material actions
+  const refreshProfileAfterAction = async () => {
+    setTimeout(async () => {
+      try {
+        console.log('🔄 Dashboard: Refreshing profile data...') // Debug log
+        await fetchProfileData();
+        console.log('✅ Dashboard: Profile data refreshed') // Debug log
+      } catch (error) {
+        console.error('❌ Error refreshing profile after action:', error);
+      }
+    }, 500); // ✅ INCREASED: Even longer delay for copy actions
+  };
+
   const fetchInitialData = async () => {
     try {
-      await Promise.all([
-        fetchProfileData(),
-        fetchMaterialsData()
-      ]);
+      await fetchProfileData();
     } catch (error) {
       console.error('Error fetching initial data:', error);
     } finally {
-      hideLoading(); // Use your existing loading context
+      hideLoading();
     }
   };
 
   useEffect(() => {
     showLoading();
-    
-    const savedScreen = localStorage.getItem('currentScreen');
-    if (savedScreen) {
-      setScreen(savedScreen);
-    }
-    
     fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('currentScreen', screen);
-  }, [screen]);
-
-  // Handle Logout
-  const doLogout = () => {
-    logout();
-    nav('/login', { replace: true });
+  // Navigation functions
+  const setScreen = (screenName) => {
+    navigate(`/dashboard/${screenName}`);
   };
 
-  // Screen navigation
+  const doLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   const showProfile = () => {
-    setScreen('profile');
+    navigate('/dashboard/profile');
   };
   
   const showStreak = () => {
-    setScreen('streak');
+    navigate('/dashboard/streak');
   };
 
   const handleFileChange = (e) => {
@@ -121,69 +106,13 @@ const Dashboard = () => {
     // Your generate logic
   };
 
-  // Helper function to update a specific material in the state
-  const updateMaterialInState = (updatedMaterial) => {
-    setMaterialsData(prevMaterials => 
-      prevMaterials.map(material => 
-        material.id === updatedMaterial.id ? updatedMaterial : material
-      )
-    );
-  };
-
-  // Helper function to add a new material to state
-  const addMaterialToState = (newMaterial) => {
-    setMaterialsData(prevMaterials => [newMaterial, ...prevMaterials]);
-  };
-
-  // Helper function to remove material from state (when deleted or trashed)
-  const removeMaterialFromState = (materialId) => {
-    setMaterialsData(prevMaterials => 
-      prevMaterials.filter(material => material.id !== materialId)
-    );
-  };
-
-  // Helper function to move material to trash
-  const moveMaterialToTrash = (material) => {
-    removeMaterialFromState(material.id);
-    setTrashedMaterialsData(prevTrashed => [material, ...prevTrashed]);
-  };
-
-  // Helper function to restore material from trash
-  const restoreMaterialFromTrash = (material) => {
-    setTrashedMaterialsData(prevTrashed => 
-      prevTrashed.filter(m => m.id !== material.id)
-    );
-    setMaterialsData(prevMaterials => [material, ...prevMaterials]);
-  };
-
-  const removeMaterialFromTrash = (materialId) => {
-    setTrashedMaterialsData(prevTrashed => 
-      prevTrashed.filter(material => material.id !== materialId)
-    );
-  };
-
-  // Helper function to remove multiple materials from trash
-  const removeMaterialsFromTrash = (materialIds) => {
-    setTrashedMaterialsData(prevTrashed => 
-      prevTrashed.filter(material => !materialIds.includes(material.id))
-    );
-  };
-
-  // ✅ NEW: Navigation handler for HomeScreen
+  // Navigation handler for HomeScreen
   const handleNavigateToMaterial = (material) => {
-    // Store material for MaterialsScreen to pick up
-    setMaterialToView(material);
-    // Navigate to materials screen
-    setScreen('materials');
-  };
-
-  // ✅ NEW: Clear material view state
-  const handleMaterialViewed = () => {
-    setMaterialToView(null);
+    navigate(`/dashboard/materials/${material.id}`);
   };
   
   const getBgColor = () => {
-    switch (screen) {
+    switch (currentScreen) {
       case 'home':
         return 'bg-color-1';
       case 'materials':
@@ -207,79 +136,179 @@ const Dashboard = () => {
     }
   };
 
-  // Fixed loading logic - use OR instead of AND
-  const isLoading = profileData === null || materialsData === null;
+  const isLoading = profileData === null;
 
   return isLoading ? (
     <div className="flex justify-center items-center h-screen"></div>
   ) : (
-    <div className="flex h-screen text-xs sm:text-sm">
-      <Sidebar screen={screen} setScreen={setScreen} />
-      <div className="flex-1 flex flex-col">
-        <Header
-          onLogout={doLogout}
-          onProfile={showProfile}
-          onStreak={showStreak}
-          profileData={profileData}
-        />
-        <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
-          {screen === 'home' && (
-            <HomeScreen 
-              selectedFile={selectedFile} 
-              handleFileChange={handleFileChange} 
-              uploadAndGenerate={uploadAndGenerate} 
-              generated={profileData}
-              materialsData={materialsData}
-              onRefreshMaterials={fetchAllData} 
-              onAddMaterial={addMaterialToState}
-              onUpdateMaterial={updateMaterialInState}
-              onNavigateToMaterial={handleNavigateToMaterial}
-            />
-          )}
-          {screen === 'materials' && (
-            <MaterialsScreen 
-              materialsData={materialsData}
-              onRefreshMaterials={fetchAllData}
-              onUpdateMaterial={updateMaterialInState}
-              onAddMaterial={addMaterialToState}
-              onRemoveMaterial={removeMaterialFromState}
-              onMoveMaterialToTrash={moveMaterialToTrash}
-              materialToView={materialToView}
-              onMaterialViewed={handleMaterialViewed}
-            />
-          )}
-          {screen === 'trash' && (
-            <TrashScreen 
-              trashedMaterialsData={trashedMaterialsData}
-              onRefreshMaterials={fetchAllData}
-              onRestoreMaterial={restoreMaterialFromTrash}
-              onRemoveMaterial={removeMaterialFromTrash}
-              onRemoveMaterials={removeMaterialsFromTrash}
-            />
-          )}
-          {screen === 'explore' && (
-            <ExploreScreen onRefreshMaterials={fetchMaterialsData} />
-          )}
-          {screen === 'rata' && (
-            <RataAIScreen materialsData={materialsData} />
-          )}
-          {screen === 'profile' && (
-            <ProfileScreen 
-              onEditProfile={() => setScreen('edit-profile')} 
-              profileData={profileData} 
-            />
-          )}
-          {screen === 'edit-profile' && (
-            <EditProfileScreen 
-              onBack={() => setScreen('profile')} 
-              profileData={profileData} 
-              fetchProfileData={fetchProfileData} 
-            />
-          )}
-        </main>
+    <MaterialsProvider onMaterialsChange={refreshProfileAfterAction}>
+      <div className="flex h-screen text-xs sm:text-sm">
+        <Sidebar screen={currentScreen} setScreen={setScreen} />
+        <div className="flex-1 flex flex-col">
+          <Header
+            onLogout={doLogout}
+            onProfile={showProfile}
+            onStreak={showStreak}
+            profileData={profileData}
+          />
+          <main className={`flex-1 overflow-auto p-2 sm:p-4 ${getBgColor()}`}>
+            <Routes>
+              {/* Default route redirects to home */}
+              <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
+              
+              {/* Home Screen */}
+              <Route 
+                path="/home" 
+                element={
+                  <HomeScreenWrapper 
+                    selectedFile={selectedFile} 
+                    handleFileChange={handleFileChange} 
+                    uploadAndGenerate={uploadAndGenerate} 
+                    generated={profileData}
+                    onRefreshMaterials={fetchAllData} 
+                    onNavigateToMaterial={handleNavigateToMaterial}
+                  />
+                } 
+              />
+              
+              {/* Materials Screen with nested routes */}
+              <Route 
+                path="/materials/*" 
+                element={<MaterialsScreen onRefreshProfile={refreshProfileAfterAction} />} 
+              />
+              
+              {/* Trash Screen */}
+              <Route 
+                path="/trash" 
+                element={<TrashScreenWrapper onRefreshMaterials={fetchAllData} />} 
+              />
+              
+              {/* Explore Screen - ✅ CHANGED: Pass profile refresh function */}
+              <Route 
+                path="/explore" 
+                element={<ExploreScreen onRefreshProfile={refreshProfileAfterAction} />} 
+              />
+              
+              {/* Rata AI Screen */}
+              <Route 
+                path="/rata" 
+                element={<RataAIScreenWrapper />} 
+              />
+              
+              {/* Profile Screen */}
+              <Route 
+                path="/profile" 
+                element={
+                  <ProfileScreen 
+                    onEditProfile={() => navigate('/dashboard/edit-profile')} 
+                    profileData={profileData} 
+                  />
+                } 
+              />
+              
+              {/* Edit Profile Screen */}
+              <Route 
+                path="/edit-profile" 
+                element={
+                  <EditProfileScreen 
+                    onBack={() => navigate('/dashboard/profile')} 
+                    profileData={profileData} 
+                    fetchProfileData={fetchProfileData} 
+                  />
+                } 
+              />
+              
+              {/* Streak Screen */}
+              <Route 
+                path="/streak" 
+                element={
+                  <div className="p-4">
+                    <h1>Streak Screen</h1>
+                    <p>Your streak information will go here.</p>
+                  </div>
+                } 
+              />
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<Navigate to="/dashboard/home" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </MaterialsProvider>
   );
+};
+
+// Keep all wrapper components exactly the same...
+const HomeScreenWrapper = ({ 
+  selectedFile, 
+  handleFileChange, 
+  uploadAndGenerate, 
+  generated, 
+  onRefreshMaterials, 
+  onNavigateToMaterial 
+}) => {
+  const { 
+    materials, 
+    fetchMaterials, 
+    addMaterial, 
+    updateMaterial, 
+    isInitialized, 
+    isFetching 
+  } = useMaterials();
+
+  return (
+    <HomeScreen 
+      selectedFile={selectedFile} 
+      handleFileChange={handleFileChange} 
+      uploadAndGenerate={uploadAndGenerate} 
+      generated={generated}
+      materialsData={materials}
+      onRefreshMaterials={() => {
+        fetchMaterials();
+        onRefreshMaterials();
+      }}
+      onAddMaterial={addMaterial}
+      onUpdateMaterial={updateMaterial}
+      onNavigateToMaterial={onNavigateToMaterial}
+    />
+  );
+};
+
+const TrashScreenWrapper = ({ onRefreshMaterials }) => {
+  const { 
+    trashedMaterials, 
+    fetchMaterials,
+    restoreMaterial, 
+    removeFromTrash, 
+    bulkRemoveFromTrash,
+    isInitialized,
+    isFetching
+  } = useMaterials();
+
+  return (
+    <TrashScreen 
+      trashedMaterialsData={trashedMaterials}
+      onRefreshMaterials={() => {
+        fetchMaterials();
+        onRefreshMaterials();
+      }}
+      onRestoreMaterial={restoreMaterial}
+      onRemoveMaterial={removeFromTrash}
+      onRemoveMaterials={bulkRemoveFromTrash}
+    />
+  );
+};
+
+const RataAIScreenWrapper = () => {
+  const { 
+    materials, 
+    fetchMaterials, 
+    isInitialized, 
+    isFetching 
+  } = useMaterials();
+
+  return <RataAIScreen materialsData={materials} />;
 };
 
 export default Dashboard;
