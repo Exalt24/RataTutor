@@ -1,7 +1,7 @@
 import { CalendarDaysIcon, FireIcon, TrophyIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React from 'react';
 
-const StreakModal = ({ onClose, profileData }) => {
+const StreakModal = ({ onClose, profileData, motivationalMessage }) => {
   return (
     <div 
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
@@ -32,7 +32,7 @@ const StreakModal = ({ onClose, profileData }) => {
               <FireIcon className="w-8 h-8 text-red-500" />
             </div>
             <p className="text-sm text-gray-600">Current Streak</p>
-            <p className="text-2xl font-bold text-gray-800">{profileData.streak.count}</p>
+            <p className="text-2xl font-bold text-gray-800">{profileData?.streak?.count || 0}</p>
             <p className="text-xs text-gray-500">days</p>
           </div>
 
@@ -41,7 +41,7 @@ const StreakModal = ({ onClose, profileData }) => {
               <TrophyIcon className="w-8 h-8 text-yellow-500" />
             </div>
             <p className="text-sm text-gray-600">Longest Streak</p>
-            <p className="text-2xl font-bold text-gray-800">{profileData.streak.longest_streak}</p>
+            <p className="text-2xl font-bold text-gray-800">{profileData?.streak?.longest_streak || 0}</p>
             <p className="text-xs text-gray-500">days</p>
           </div>
 
@@ -50,17 +50,15 @@ const StreakModal = ({ onClose, profileData }) => {
               <CalendarDaysIcon className="w-8 h-8 text-blue-500" />
             </div>
             <p className="text-sm text-gray-600">Total Learning</p>
-            <p className="text-2xl font-bold text-gray-800">{profileData.streak.total_days}</p>
+            <p className="text-2xl font-bold text-gray-800">{profileData?.streak?.total_days || 0}</p>
             <p className="text-xs text-gray-500">days</p>
           </div>
         </div>
 
-        {/* Motivational Message */}
+        {/* Motivational Message - now uses pre-computed message from Header */}
         <div className="text-center">
           <p className="exam-msg text-lg mb-4">
-            {profileData.streak.count > 0
-              ? "You're on fire! Keep the momentum going!"
-              : "Start your streak today!"}
+            {motivationalMessage}
           </p>
           <button 
             className="exam-button-mini"

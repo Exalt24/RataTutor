@@ -20,19 +20,23 @@ const Dashboard = () => {
   const [materialsData, setMaterialsData] = useState(null);
   const [trashedMaterialsData, setTrashedMaterialsData] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  
+  // ✅ NEW: Material view navigation state
+  const [materialToView, setMaterialToView] = useState(null);
+  
   const nav = useNavigate();
 
   const { showLoading, hideLoading } = useLoading();
 
-const fetchProfileData = async () => {
-  try {
-    const profile = await getProfile();
-    
-    setProfileData(profile);
-  } catch (error) {
-    console.error('❌ Error fetching profile data:', error);
-  }
-};
+  const fetchProfileData = async () => {
+    try {
+      const profile = await getProfile();
+      setProfileData(profile || {});
+    } catch (error) {
+      console.error('❌ Error fetching profile data:', error);
+      setProfileData({}); // Fallback to empty object
+    }
+  };
 
   const fetchMaterialsData = async () => {
     try {
@@ -40,8 +44,10 @@ const fetchProfileData = async () => {
         getMaterials(),
         getTrashedMaterials()
       ]);
-      setMaterialsData(materials.data);
-      setTrashedMaterialsData(trashedMaterials.data);
+      
+      // Ensure we always have arrays
+      setMaterialsData(materials?.data || []);
+      setTrashedMaterialsData(trashedMaterials?.data || []);
     } catch (error) {
       console.error('Error fetching materials data:', error);
       setMaterialsData([]);
@@ -50,18 +56,18 @@ const fetchProfileData = async () => {
   };
 
   const fetchAllData = async () => {
-  try {
-    console.trace('🔍 Call stack for fetchAllData:');
-    
-    await Promise.all([
-      fetchMaterialsData(), // Refresh materials 
-      fetchProfileData()    // Refresh profile
-    ]);
-    
-  } catch (error) {
-    console.error('❌ Error refreshing data:', error);
-  }
-};
+    try {
+      console.trace('🔍 Call stack for fetchAllData:');
+      
+      await Promise.all([
+        fetchMaterialsData(), // Refresh materials 
+        fetchProfileData()    // Refresh profile
+      ]);
+      
+    } catch (error) {
+      console.error('❌ Error refreshing data:', error);
+    }
+  };
 
   const fetchInitialData = async () => {
     try {
@@ -72,7 +78,7 @@ const fetchProfileData = async () => {
     } catch (error) {
       console.error('Error fetching initial data:', error);
     } finally {
-      hideLoading();
+      hideLoading(); // Use your existing loading context
     }
   };
 
@@ -151,17 +157,30 @@ const fetchProfileData = async () => {
   };
 
   const removeMaterialFromTrash = (materialId) => {
-  setTrashedMaterialsData(prevTrashed => 
-    prevTrashed.filter(material => material.id !== materialId)
-  );
-};
+    setTrashedMaterialsData(prevTrashed => 
+      prevTrashed.filter(material => material.id !== materialId)
+    );
+  };
 
-// Helper function to remove multiple materials from trash
-const removeMaterialsFromTrash = (materialIds) => {
-  setTrashedMaterialsData(prevTrashed => 
-    prevTrashed.filter(material => !materialIds.includes(material.id))
-  );
-};
+  // Helper function to remove multiple materials from trash
+  const removeMaterialsFromTrash = (materialIds) => {
+    setTrashedMaterialsData(prevTrashed => 
+      prevTrashed.filter(material => !materialIds.includes(material.id))
+    );
+  };
+
+  // ✅ NEW: Navigation handler for HomeScreen
+  const handleNavigateToMaterial = (material) => {
+    // Store material for MaterialsScreen to pick up
+    setMaterialToView(material);
+    // Navigate to materials screen
+    setScreen('materials');
+  };
+
+  // ✅ NEW: Clear material view state
+  const handleMaterialViewed = () => {
+    setMaterialToView(null);
+  };
   
   const getBgColor = () => {
     switch (screen) {
@@ -188,8 +207,8 @@ const removeMaterialsFromTrash = (materialIds) => {
     }
   };
 
-  // Show loading until all essential data is available
-  const isLoading = profileData === null && materialsData === null;
+  // Fixed loading logic - use OR instead of AND
+  const isLoading = profileData === null || materialsData === null;
 
   return isLoading ? (
     <div className="flex justify-center items-center h-screen"></div>
@@ -214,6 +233,7 @@ const removeMaterialsFromTrash = (materialIds) => {
               onRefreshMaterials={fetchAllData} 
               onAddMaterial={addMaterialToState}
               onUpdateMaterial={updateMaterialInState}
+              onNavigateToMaterial={handleNavigateToMaterial}
             />
           )}
           {screen === 'materials' && (
@@ -224,6 +244,8 @@ const removeMaterialsFromTrash = (materialIds) => {
               onAddMaterial={addMaterialToState}
               onRemoveMaterial={removeMaterialFromState}
               onMoveMaterialToTrash={moveMaterialToTrash}
+              materialToView={materialToView}
+              onMaterialViewed={handleMaterialViewed}
             />
           )}
           {screen === 'trash' && (
@@ -235,8 +257,12 @@ const removeMaterialsFromTrash = (materialIds) => {
               onRemoveMaterials={removeMaterialsFromTrash}
             />
           )}
-          {screen === 'explore' && <ExploreScreen onRefreshMaterials={fetchMaterialsData} />}
-          {screen === 'rata' && <RataAIScreen materialsData={materialsData} />}
+          {screen === 'explore' && (
+            <ExploreScreen onRefreshMaterials={fetchMaterialsData} />
+          )}
+          {screen === 'rata' && (
+            <RataAIScreen materialsData={materialsData} />
+          )}
           {screen === 'profile' && (
             <ProfileScreen 
               onEditProfile={() => setScreen('edit-profile')} 

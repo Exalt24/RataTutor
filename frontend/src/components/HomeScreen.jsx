@@ -18,7 +18,8 @@ const HomeScreen = ({
   materialsData,
   onRefreshMaterials,
   onAddMaterial,
-  onUpdateMaterial
+  onUpdateMaterial,
+  onNavigateToMaterial
 }) => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isUploadPurposeModalOpen, setIsUploadPurposeModalOpen] = useState(false);
@@ -165,8 +166,7 @@ const HomeScreen = ({
     }
   };
 
-  /// Update the handleAttachmentUpload function (around line 150-190):
-const handleAttachmentUpload = async (material) => {
+ const handleAttachmentUpload = async (material) => {
   if (uploadedFiles.length === 0) return;
 
   try {
@@ -188,12 +188,6 @@ const handleAttachmentUpload = async (material) => {
     // Refresh materials data to get updated attachments
     await onRefreshMaterials();
     
-    // Close modal and reset state
-    setIsChooseModalOpen(false);
-    setUploadedFiles([]);
-    setSelectedMaterial(null);
-    setModalMode('upload');
-
     // 🔥 Create combined message using helper function (same as other components)
     const baseTitle = "Files uploaded successfully!";
     const baseSubtitle = `${uploadedFiles.length} file(s) have been attached to "${material.title}".`;
@@ -207,6 +201,19 @@ const handleAttachmentUpload = async (material) => {
       subtitle: combinedMessage.subtitle,
     });
 
+    // ✅ NEW: Navigate to MaterialContent to view the newly uploaded attachments
+    if (onNavigateToMaterial) {
+      // Get the updated material with the new attachments
+      const updatedMaterial = materialsData?.find(m => m.id === material.id) || material;
+      onNavigateToMaterial(updatedMaterial);
+    }
+    
+    // Close modal and reset state
+    setIsChooseModalOpen(false);
+    setUploadedFiles([]);
+    setSelectedMaterial(null);
+    setModalMode('upload');
+
   } catch (error) {
     console.error('Error uploading attachments:', error);
     showToast({
@@ -219,15 +226,21 @@ const handleAttachmentUpload = async (material) => {
   }
 };
 
-  const handleCreationSuccess = async (newContent) => {
+const handleCreationSuccess = async (newContent) => {
     // Refresh materials to get updated data
     await onRefreshMaterials();
+    
+    // ✅ NEW: Navigate to MaterialContent to view the newly created content
+    if (selectedMaterial && onNavigateToMaterial) {
+      // Get the updated material with the new content
+      const updatedMaterial = materialsData?.find(m => m.id === selectedMaterial.id) || selectedMaterial;
+      onNavigateToMaterial(updatedMaterial);
+    }
     
     // Close the creation component
     setCreateType(null);
     setSelectedMaterial(null);
   };
-
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

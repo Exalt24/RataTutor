@@ -30,7 +30,9 @@ const MaterialsScreen = ({
   onUpdateMaterial,
   onAddMaterial,
   onRemoveMaterial,
-  onMoveMaterialToTrash 
+  onMoveMaterialToTrash,
+  materialToView, // ✅ NEW
+  onMaterialViewed // ✅ NEW
 }) => {
   // Existing state
   const [showUpdatedDropdown, setShowUpdatedDropdown] = useState(false)
@@ -84,6 +86,16 @@ const MaterialsScreen = ({
       }
     }
   }, [materialsData, selectedMaterial?.id]);
+
+  // ✅ NEW: Auto-navigate to MaterialContent when coming from HomeScreen
+useEffect(() => {
+  if (materialToView && onMaterialViewed) {
+    // Auto-navigate to the material content view
+    handleViewMaterial(materialToView, false);
+    // Clear the pending material
+    onMaterialViewed();
+  }
+}, [materialToView, onMaterialViewed]);
 
   const getTagColor = (tag) => {
   if (tag.toLowerCase().includes('flashcard set')) {

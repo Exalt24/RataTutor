@@ -1,8 +1,8 @@
-// src/components/Header.jsx
 import { ChevronDown, Flame, LogOut, User } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { getCurrentAvatarOrDefault } from '../utils/avatarUtils';
 import StreakModal from "./StreakModal";
+import { getStreakMotivationalMessage } from "../utils/streakNotifications";
 
 const Header = ({
   onLogout,
@@ -30,6 +30,8 @@ const Header = ({
   const currentAvatar = getCurrentAvatarOrDefault(profileData);
   
   const streakCount = profileData?.streak?.count || 0;
+
+  const motivationalMessage = getStreakMotivationalMessage(profileData?.streak?.count || 0);
 
   return (
     <>
@@ -127,6 +129,7 @@ const Header = ({
         <StreakModal
           onClose={() => setShowStreakModal(false)}
           profileData={profileData}
+          motivationalMessage={motivationalMessage}
         />
       )}
     </>
