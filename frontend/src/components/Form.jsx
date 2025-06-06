@@ -105,11 +105,15 @@ export default function Form({
         {bannerErrors.length > 0 && (
           <div className="form-banner-error">
             <CircleAlert className="banner-icon" />
-            <ul className="banner-list">
-              {bannerErrors.map((msg, i) => (
-                <li key={i}>{msg}</li>
-              ))}
-            </ul>
+            {bannerErrors.length === 1 ? (
+              <p className="banner-single">{bannerErrors[0]}</p>
+            ) : (
+              <ul className="banner-list">
+                {bannerErrors.map((msg, i) => (
+                  <li key={i}>{msg}</li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
