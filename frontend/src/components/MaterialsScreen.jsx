@@ -584,8 +584,8 @@ useEffect(() => {
         />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-4 text-xs sm:text-sm p-4">
-            <div className="relative w-full max-w-md">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 text-xs sm:text-sm p-4">
+            <div className="relative w-full sm:w-auto sm:max-w-md">
               <div className={`
                 relative flex items-center
                 transition-all duration-200
