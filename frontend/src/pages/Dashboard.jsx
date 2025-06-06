@@ -52,7 +52,6 @@ const fetchProfileData = async () => {
 
   const fetchAllData = async () => {
   try {
-    console.log('🔄 fetchAllData called - refreshing both materials and profile');
     console.trace('🔍 Call stack for fetchAllData:');
     
     await Promise.all([
@@ -60,7 +59,6 @@ const fetchProfileData = async () => {
       fetchProfileData()    // Refresh profile
     ]);
     
-    console.log('✅ Both materials, profile, and streak refreshed successfully');
   } catch (error) {
     console.error('❌ Error refreshing data:', error);
   }
@@ -153,6 +151,19 @@ const fetchProfileData = async () => {
     setMaterialsData(prevMaterials => [material, ...prevMaterials]);
   };
 
+  const removeMaterialFromTrash = (materialId) => {
+  setTrashedMaterialsData(prevTrashed => 
+    prevTrashed.filter(material => material.id !== materialId)
+  );
+};
+
+// Helper function to remove multiple materials from trash
+const removeMaterialsFromTrash = (materialIds) => {
+  setTrashedMaterialsData(prevTrashed => 
+    prevTrashed.filter(material => !materialIds.includes(material.id))
+  );
+};
+  
   const getBgColor = () => {
     switch (screen) {
       case 'home':
@@ -221,6 +232,8 @@ const fetchProfileData = async () => {
               trashedMaterialsData={trashedMaterialsData}
               onRefreshMaterials={fetchAllData}
               onRestoreMaterial={restoreMaterialFromTrash}
+              onRemoveMaterial={removeMaterialFromTrash}
+              onRemoveMaterials={removeMaterialsFromTrash}
             />
           )}
           {screen === 'exams' && <ExamsScreen />}

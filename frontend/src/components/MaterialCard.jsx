@@ -83,9 +83,6 @@ const MaterialCard = ({
     e.stopPropagation()
     onCreateFlashcards(file, null, {
       onSuccess: (newFlashcardSet) => {
-        // Auto-navigate to view the newly created flashcard set
-        // This will be handled by the parent component
-        console.log('MaterialCard - flashcard created:', newFlashcardSet);
         return false; // Tell parent to delay modal closing for navigation
       }
     })
@@ -96,8 +93,6 @@ const MaterialCard = ({
     e.stopPropagation()
     onCreateNotes(file, {
       onSuccess: (newNote) => {
-        // Auto-navigate to view the newly created note
-        console.log('MaterialCard - note created:', newNote);
         return false; // Tell parent to delay modal closing for navigation
       }
     })
@@ -108,8 +103,6 @@ const MaterialCard = ({
     e.stopPropagation()
     onCreateQuiz(file, {
       onSuccess: (newQuiz) => {
-        // Auto-navigate to view the newly created quiz
-        console.log('MaterialCard - quiz created:', newQuiz);
         return false; // Tell parent to delay modal closing for navigation
       }
     })

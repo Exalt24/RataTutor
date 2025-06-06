@@ -17,7 +17,6 @@ const Header = ({
   
   const streakCount = profileData?.streak?.count || 0;
 
-  console.log('🔄 Header component rendered with profileData:', profileData);
   return (
     <>
       <header className="relative flex items-center justify-between bg-white px-4 py-4 shadow text-xs sm:text-sm">

@@ -67,7 +67,6 @@ const ExploreScreen = ({ onRefreshMaterials }) => {
         subtitle: `"${response.data.title}" has been added to your materials.`,
       })
       
-      console.log('Material copied:', response.data)
       
       // Refresh materials data in Dashboard after successful copy
       if (onRefreshMaterials) {

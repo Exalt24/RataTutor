@@ -112,7 +112,6 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated, onRefreshMaterials}) 
 
       // 🔥 ALSO refresh all data to get updated streak
       if (onRefreshMaterials) {
-        console.log('🔥 Material created, calling fetchAllData to refresh streak...');
         await onRefreshMaterials();
       }
 

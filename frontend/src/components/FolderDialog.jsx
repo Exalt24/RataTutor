@@ -95,8 +95,6 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
   };
 
   const handleDelete = () => {
-    // Here you would implement the delete functionality
-    console.log('Deleting files:', selectedFiles);
     setSelectedFiles([]);
   };
 
@@ -127,8 +125,6 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
   };
 
   const handleGenerateOption = (type) => {
-    console.log(`Generating ${type} for file:`, contextMenu.file);
-    // Here you would implement the generation functionality
     setContextMenu({ show: false, x: 0, y: 0, file: null });
   };
 

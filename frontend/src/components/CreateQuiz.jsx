@@ -358,7 +358,6 @@ const CreateQuiz = ({
     // ✅ Call success callback separately
     if (successCallback) {
       try {
-        console.log('CreateQuiz - calling success callback with:', response.data);
         await successCallback(response.data);
       } catch (callbackError) {
         console.error('Error in success callback:', callbackError);

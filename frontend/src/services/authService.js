@@ -155,7 +155,6 @@ export async function getProfile() {
     },
   });
 
-  console.log("Profile data:", res.data);
   if (!res.data) {
     throw new Error("Failed to fetch profile data");
   }
@@ -243,7 +242,6 @@ export async function getStreakStatus() {
 export async function trackStudyActivity() {
   try {
     if (!isLoggedIn()) {
-      console.log("User not logged in, skipping streak tracking");
       return null;
     }
 
@@ -251,7 +249,6 @@ export async function trackStudyActivity() {
     
     if (result.streak_updated) {
       console.log("Streak updated:", result.streak);
-      // You could show a notification here if the streak was updated
     }
     
     return result;
