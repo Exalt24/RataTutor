@@ -190,6 +190,8 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
   }));
   
   const [serverErrors, setServerErrors] = useState({});
+  // ✅ NEW: Add banner errors for general validation messages
+  const [bannerErrors, setBannerErrors] = useState([]);
 
   const { showLoading, hideLoading } = useLoading();
   const { showToast } = useToast();
@@ -198,6 +200,7 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
     // Clear server error for this field when user starts typing
     setServerErrors(prev => {
       if (prev[name]) {
@@ -207,7 +210,12 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
       }
       return prev;
     });
-  }, []);
+    
+    // ✅ NEW: Clear banner errors when user starts making changes
+    if (bannerErrors.length > 0) {
+      setBannerErrors([]);
+    }
+  }, [bannerErrors.length]);
 
   // Handle validation state changes - MEMOIZED to prevent infinite re-renders
   const handleValidityChange = useCallback((field, isValid) => {
@@ -267,7 +275,9 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
     // Early return if button should be disabled (safety check)
     if (isSaveDisabled) return;
 
-    setServerErrors({}); // Clear previous server errors
+    // ✅ NEW: Clear all errors at start
+    setServerErrors({});
+    setBannerErrors([]);
     showLoading();
 
     try {
@@ -285,20 +295,37 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
     } catch (error) {
       console.error('Error updating profile:', error.response?.data || error);
       
-      // Handle server validation errors
+      // ✅ ENHANCED: Handle both field-specific AND general errors
       const errorData = error.response?.data || {};
       const fieldErrors = {};
+      const generalErrors = [];
       
       Object.entries(errorData).forEach(([key, val]) => {
-        if (Array.isArray(val)) {
-          fieldErrors[key] = val[0]; // Take first error message
-        } else if (typeof val === 'string') {
-          fieldErrors[key] = val;
+        const errorMessages = Array.isArray(val) ? val : [val];
+        
+        // Check if this is a field-specific error
+        const isFieldError = ['username', 'email', 'full_name', 'bio', 'avatar'].includes(key);
+        
+        if (isFieldError) {
+          fieldErrors[key] = errorMessages[0]; // Take first error message
+        } else {
+          // General errors (non_field_errors, etc.)
+          generalErrors.push(...errorMessages);
         }
       });
       
+      // Set field-specific errors
       if (Object.keys(fieldErrors).length > 0) {
         setServerErrors(fieldErrors);
+      }
+      
+      // Set general errors
+      if (generalErrors.length > 0) {
+        setBannerErrors(generalErrors);
+      }
+      
+      // Show appropriate toast
+      if (Object.keys(fieldErrors).length > 0 || generalErrors.length > 0) {
         showToast({
           variant: 'error',
           title: 'Validation Error',
@@ -347,6 +374,31 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
               Save Changes
             </button>
           </div>
+
+          {/* ✅ NEW: Banner Errors Display */}
+          {bannerErrors.length > 0 && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Please fix the following errors:
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      {bannerErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Avatar Section */}
           <div className="flex flex-col items-center space-y-4">

@@ -101,7 +101,7 @@ const HomeScreen = ({
     setIsChooseModalOpen(true);
   };
 
-  const handleMaterialAndTypeChoice = async (type, materialData) => {
+ const handleMaterialAndTypeChoice = async (type, materialData) => {
   try {
     let material = null;
 
@@ -138,37 +138,239 @@ const HomeScreen = ({
         // Upload files as attachments
         await handleAttachmentUpload(material);
       } else if (modalMode === 'upload') {
-        // AI generation mode - TODO: Implement AI generation logic
-        // For now, just show a placeholder message
-        showToast({
-          variant: "info",
-          title: "AI Generation Coming Soon",
-          subtitle: `AI generation for ${type} will be implemented soon. Files have been attached to "${material.title}" instead.`,
-        });
-        
-        // Temporarily attach files until AI is implemented
-        await handleAttachmentUpload(material);
+        // ✅ FIXED: AI generation mode - let handleAIGeneration manage modal state
+        await handleAIGeneration(material, type);
       } else if (modalMode === 'manual') {
-        // ✅ UPDATED: Navigate to creation route - this will now auto-navigate to view after creation
+        // Navigate to creation route
         const createType = pendingManualType || type;
         const createUrl = `/dashboard/materials/${material.id}/${createType}/create`;
         
-        // Close modal first
+        // Close modal first for manual creation
         closeCreate();
         
         // Navigate to creation route
-        // Note: With the updated MaterialsScreen wrappers, this will automatically
-        // navigate to the view page after successful creation
         navigate(createUrl);
       }
     }
   } catch (error) {
     console.error('Error handling material selection:', error);
+    
+    // ✅ FIXED: Only close modal on error, not in normal flow
+    if (modalMode !== 'upload') {
+      closeCreate();
+    }
+    
     showToast({ 
       variant: "error", 
       title: "Error", 
       subtitle: error.message || "Failed to process selection. Please try again." 
     });
+  }
+};
+
+const handleAIGeneration = async (material, type) => {
+  if (uploadedFiles.length === 0) return;
+
+  try {
+    showLoading();
+    
+    // Step 1: Upload all files
+    console.log('📤 Uploading files...');
+    const { uploadAttachment } = await import('../services/apiService');
+    
+    const uploadPromises = uploadedFiles.map(fileData => {
+      return uploadAttachment(material.id, fileData.file);
+    });
+
+    const uploadResults = await Promise.all(uploadPromises);
+    console.log('✅ All files uploaded:', uploadResults.length);
+    
+    // Step 1.5: Extract attachment IDs from upload results
+    const attachmentIds = uploadResults.map(result => result.data.id);
+    console.log('📎 Attachment IDs:', attachmentIds);
+    
+    // Step 1.6: Wait for database consistency
+    console.log('⏳ Waiting for database consistency...');
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Increased to 1.5 seconds
+    
+    // Step 2: Generate content based on type using specific attachments
+    console.log(`🤖 Generating ${type} from ${attachmentIds.length} specific attachments...`);
+    let generateResponse;
+    let contentType;
+    
+    const { 
+      generateFlashcardsFromSpecificFiles, 
+      generateNotesFromSpecificFiles, 
+      generateQuizFromSpecificFiles 
+    } = await import('../services/apiService');
+    
+    switch (type) {
+      case 'flashcards':
+        contentType = 'flashcards';
+        generateResponse = await generateFlashcardsFromSpecificFiles(
+          material.id, 
+          attachmentIds, 
+          10
+        );
+        break;
+        
+      case 'quiz':
+        contentType = 'quiz questions';
+        generateResponse = await generateQuizFromSpecificFiles(
+          material.id, 
+          attachmentIds, 
+          10
+        );
+        break;
+        
+      case 'notes':
+      default:
+        contentType = 'notes';
+        generateResponse = await generateNotesFromSpecificFiles(
+          material.id, 
+          attachmentIds
+        );
+        break;
+    }
+    
+    console.log('🎯 Generation response:', generateResponse?.data);
+    
+    // Track activity but suppress immediate notification
+    const streakResult = await trackActivityAndNotify(showToast, true);
+
+    // Step 3: Create combined success message
+    const baseTitle = "AI Content Generated Successfully!";
+    const baseSubtitle = `Uploaded ${uploadedFiles.length} file(s) and generated ${contentType} for "${material.title}" using AI.`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // Show single combined toast
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+
+    // ✅ FIXED: Close modal state BEFORE navigation and refresh
+    setIsChooseModalOpen(false);
+    setIsUploadPurposeModalOpen(false);
+    setUploadedFiles([]);
+    setModalMode('upload');
+    setPendingManualType(null);
+    
+    // ✅ IMPROVED: More reliable navigation strategy
+    const navigateToGeneratedContent = async () => {
+      try {
+        // Refresh materials data first
+        console.log('🔄 Refreshing materials data...');
+        await onRefreshMaterials();
+        
+        // Wait a bit more for the refresh to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Try to get the content ID from the response first
+        const createdContentId = generateResponse?.data?.id;
+        
+        if (createdContentId) {
+          // Direct navigation with response ID
+          let viewUrl;
+          switch (type) {
+            case 'flashcards':
+              viewUrl = `/dashboard/materials/${material.id}/flashcards/${createdContentId}/view`;
+              break;
+            case 'quiz':
+              viewUrl = `/dashboard/materials/${material.id}/quiz/${createdContentId}/view`;
+              break;
+            case 'notes':
+              viewUrl = `/dashboard/materials/${material.id}/notes/${createdContentId}/view`;
+              break;
+          }
+          
+          if (viewUrl) {
+            console.log(`🎯 Direct navigation to generated ${contentType}:`, viewUrl);
+            navigate(viewUrl);
+            return;
+          }
+        }
+        
+        // ✅ IMPROVED: Fallback strategy with fresh material data
+        console.log('🔄 Using fallback navigation strategy...');
+        
+        // Get fresh materials data
+        const { getMaterials } = await import('../services/apiService');
+        const freshMaterialsResponse = await getMaterials();
+        const freshMaterial = freshMaterialsResponse.data?.find(m => m.id === material.id);
+        
+        if (freshMaterial) {
+          let latestContent = null;
+          let fallbackViewUrl = null;
+          
+          switch (type) {
+            case 'flashcards':
+              latestContent = freshMaterial.flashcard_sets?.sort((a, b) => 
+                new Date(b.created_at) - new Date(a.created_at)
+              )[0];
+              if (latestContent) {
+                fallbackViewUrl = `/dashboard/materials/${material.id}/flashcards/${latestContent.id}/view`;
+              }
+              break;
+              
+            case 'quiz':
+              latestContent = freshMaterial.quizzes?.sort((a, b) => 
+                new Date(b.created_at) - new Date(a.created_at)
+              )[0];
+              if (latestContent) {
+                fallbackViewUrl = `/dashboard/materials/${material.id}/quiz/${latestContent.id}/view`;
+              }
+              break;
+              
+            case 'notes':
+              latestContent = freshMaterial.notes?.sort((a, b) => 
+                new Date(b.created_at) - new Date(a.created_at)
+              )[0];
+              if (latestContent) {
+                fallbackViewUrl = `/dashboard/materials/${material.id}/notes/${latestContent.id}/view`;
+              }
+              break;
+          }
+          
+          if (fallbackViewUrl) {
+            console.log(`🎯 Fallback navigation to latest ${contentType}:`, fallbackViewUrl);
+            navigate(fallbackViewUrl);
+            return;
+          }
+        }
+        
+        // ✅ FINAL FALLBACK: Go to material page
+        console.log('⚠️ All navigation strategies failed, going to material page');
+        navigate(`/dashboard/materials/${material.id}`);
+        
+      } catch (error) {
+        console.error('Error in navigation strategy:', error);
+        navigate(`/dashboard/materials/${material.id}`);
+      }
+    };
+    
+    // Execute navigation strategy
+    await navigateToGeneratedContent();
+
+  } catch (error) {
+    console.error('Error in AI generation:', error);
+    
+    // ✅ FIXED: Also close modal on error
+    setIsChooseModalOpen(false);
+    setIsUploadPurposeModalOpen(false);
+    setUploadedFiles([]);
+    setModalMode('upload');
+    setPendingManualType(null);
+    
+    showToast({
+      variant: "error",
+      title: "AI Generation Failed",
+      subtitle: error.response?.data?.detail || error.message || "Failed to generate content. Please try again.",
+    });
+  } finally {
+    hideLoading();
   }
 };
 

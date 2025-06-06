@@ -11,9 +11,10 @@ A full-stack AI-powered study assistant that converts your notes into flashcards
 
 - **Backend:** Django + Django REST Framework + django-cors-headers  
 - **Frontend:** React + Vite + Tailwind CSS
-- **AI Integration:** OpenRouter API for AI text generation
+- **AI Integration:** OpenRouter API with smart conversation management
 - **Development:** Single command (`npm run dev`) to run everything
 - **API Proxy:** Frontend `/api/*` requests automatically forwarded to Django
+- **Smart Features:** Adaptive AI context, material organization, and content generation
 
 ## 📋 Prerequisites
 
@@ -248,16 +249,215 @@ RataTutor/
 
 ## 🚀 Features
 
-- **File Upload & Processing**: Upload study materials in various formats (PDF, DOCX, TXT, PPTX)
-- **AI-Powered Content Generation**:
-  - Generate flashcards with question/answer pairs
-  - Create concise summaries of key concepts
-  - Produce practice quiz questions to test knowledge
-- **User Management**: Secure account creation and authentication system
-- **Material Organization**: Save, categorize, and manage study materials with attachments
-- **Progress Tracking**: Monitor learning progress and quiz performance
-- **Responsive Design**: Study seamlessly across desktop and mobile devices
-- **File Management**: Upload and attach documents to study materials
+### 📚 Study Material Management
+- **Multi-format Upload**: PDF, DOCX, TXT, PPTX support with smart text extraction
+- **Intelligent Organization**: Pin materials, trash/restore system, public/private sharing
+- **Material Discovery**: Browse and copy public materials from other users
+- **Flexible Status Management**: Active, trashed, permanently deleted states
+- **Unique Constraints**: Prevents duplicate material titles per user
+- **Smart Validation**: Comprehensive permission checking for all operations
+
+### 🤖 AI-Powered Learning Assistant
+- **Smart Conversations**: Dedicated AI tutor for each material with persistent chat history
+- **Adaptive Context**: AI automatically manages conversation context with intelligent summarization
+- **Content Generation**: Create flashcards (1-20), quizzes (1-20), and summary notes
+- **Document-Aware Responses**: AI references uploaded content when relevant
+- **Topic Detection**: AI recognizes study patterns (flashcards, quizzes, notes) and adjusts responses
+- **Conversation Management**: Organized chat history with smart context preservation
+
+### 📊 Advanced Study Tools
+- **Interactive Flashcards**: AI-generated question/answer pairs with educational validation
+- **Practice Quizzes**: Multiple-choice questions with intelligent distractor generation
+- **Smart Summaries**: Key concept extraction with topic-focused formatting
+- **Progress Tracking**: Monitor learning progress across all materials
+- **Public Sharing**: Share your best study materials with the community
+
+### 🔧 Developer-Friendly Architecture
+- **Comprehensive API**: RESTful endpoints for all features with detailed documentation
+- **Smart Validation**: Robust permission checking and data validation
+- **Flexible Design**: Modular architecture supporting easy feature additions
+- **Responsive UI**: Study seamlessly across desktop and mobile devices
+
+## 🧠 AI-Powered Study Features
+
+### Smart Conversation Assistant
+- **Material-Specific Chats**: Each study material gets its own dedicated AI tutor
+- **Adaptive Context Management**: AI automatically summarizes long conversations to maintain context
+- **Intelligent Topic Detection**: AI recognizes when you're studying flashcards, taking quizzes, or reviewing notes
+- **Document-Aware Responses**: AI references your uploaded files when answering questions
+- **Conversation Persistence**: All chat history is saved and organized by material
+
+### Advanced Material Management
+- **Status System**: 
+  - Active materials for current study
+  - Trash system with restore functionality
+  - Permanent deletion option
+- **Organization Tools**:
+  - Pin important materials to the top
+  - Public/private sharing controls
+  - Material duplication for different study sessions
+- **Smart Discovery**: Browse public materials shared by other users
+
+### Intelligent Content Generation
+- **Context-Aware Generation**: AI considers your conversation history when creating content
+- **Adaptive Flashcards**: Number of cards based on material complexity (1-20)
+- **Dynamic Quizzes**: Multiple-choice questions with intelligent distractor generation (1-20)
+- **Smart Summaries**: Key concept extraction with topic-focused formatting
+
+## 🔧 API Endpoints (For Developers)
+
+### Core Resources
+```bash
+# Materials
+GET    /api/materials/              # List user's materials
+POST   /api/materials/              # Create new material
+GET    /api/materials/pinned/       # Get pinned materials
+GET    /api/materials/trash/        # Get trashed materials
+GET    /api/materials/public/       # Browse public materials
+POST   /api/materials/{id}/copy/    # Copy a material
+
+# AI Conversations  
+GET    /api/conversations/                           # List all conversations
+GET    /api/materials/{id}/conversation/             # Get/create material conversation
+POST   /api/conversations/{id}/chat/                 # Send message to AI
+DELETE /api/conversations/{id}/delete/               # Delete conversation
+POST   /api/conversations/{id}/regenerate-summary/   # Manually regenerate summary
+
+# Content Generation
+POST   /api/materials/{id}/generate-flashcards/     # Generate flashcards
+POST   /api/materials/{id}/generate-quiz/           # Generate quiz
+POST   /api/materials/{id}/generate-notes/          # Generate summary notes
+
+# File Management
+POST   /api/materials/{id}/upload/                  # Upload attachment
+DELETE /api/attachments/{id}/                       # Delete attachment
+
+# Notes Management
+GET    /api/notes/                                  # List notes
+POST   /api/notes/                                  # Create note
+GET    /api/notes/{id}/                             # Get specific note
+PATCH  /api/notes/{id}/                             # Update note
+DELETE /api/notes/{id}/                             # Delete note
+
+# Flashcard Sets
+GET    /api/flashcard-sets/                         # List flashcard sets
+POST   /api/flashcard-sets/                         # Create flashcard set
+GET    /api/flashcard-sets/{id}/                    # Get specific set
+PATCH  /api/flashcard-sets/{id}/                    # Update set
+DELETE /api/flashcard-sets/{id}/                    # Delete set
+
+# Flashcards
+GET    /api/flashcards/                             # List flashcards
+POST   /api/flashcards/                             # Create flashcard
+GET    /api/flashcards/{id}/                        # Get specific flashcard
+PATCH  /api/flashcards/{id}/                        # Update flashcard
+DELETE /api/flashcards/{id}/                        # Delete flashcard
+
+# Quizzes
+GET    /api/quizzes/                                # List quizzes
+POST   /api/quizzes/                                # Create quiz
+GET    /api/quizzes/{id}/                           # Get specific quiz
+PATCH  /api/quizzes/{id}/                           # Update quiz
+DELETE /api/quizzes/{id}/                           # Delete quiz
+
+# Quiz Questions
+GET    /api/quiz-questions/                         # List quiz questions
+POST   /api/quiz-questions/                         # Create quiz question
+GET    /api/quiz-questions/{id}/                    # Get specific question
+PATCH  /api/quiz-questions/{id}/                    # Update question
+DELETE /api/quiz-questions/{id}/                    # Delete question
+```
+
+### Material Actions
+```bash
+# Material Management
+POST   /api/materials/{id}/toggle_pin/              # Pin/unpin material
+POST   /api/materials/{id}/toggle_visibility/       # Make public/private
+PATCH  /api/materials/{id}/                         # Update (including restore)
+DELETE /api/materials/{id}/                         # Soft delete (move to trash)
+POST   /api/materials/{id}/permanent_delete/        # Permanent deletion
+```
+
+## 🎯 Advanced Usage Examples
+
+### Starting an AI Study Session
+```javascript
+// Get or create a conversation for a material
+const conversation = await startMaterialConversation(materialId);
+
+// Send a message and get AI response
+const response = await sendMessage(conversation.id, "Explain photosynthesis");
+
+// Access smart context information
+console.log(response.topic);                // Current conversation topic
+console.log(response.messagesSinceSummary); // Messages since last summary
+console.log(response.summaryPreview);       // Preview of conversation summary
+```
+
+### Managing Study Materials
+```javascript
+// Create a material and upload files
+const material = await createMaterial({
+  title: "Biology Chapter 3",
+  description: "Photosynthesis and cellular respiration"
+});
+
+// Upload study document
+await uploadAttachment(material.id, file);
+
+// Generate study content
+await generateFlashcards(material.id, 10);  // Generate 10 flashcards
+await generateQuiz(material.id, 5);         // Generate 5 quiz questions
+await generateNotes(material.id);           // Generate summary notes
+
+// Organize materials
+await toggleMaterialPin(material.id);       // Pin/unpin material
+await toggleMaterialVisibility(material.id); // Make public/private
+```
+
+### Working with Generated Content
+```javascript
+// Get all content for a material
+const material = await getMaterial(materialId);
+console.log(material.flashcard_sets);      // All flashcard sets
+console.log(material.quizzes);             // All quizzes
+console.log(material.notes);               // All notes
+
+// Create custom flashcard set
+const flashcardSet = await createFlashcardSet({
+  material: materialId,
+  title: "Key Terms",
+  description: "Important vocabulary",
+  flashcards: [
+    { question: "What is photosynthesis?", answer: "The process by which plants convert light energy into chemical energy" },
+    { question: "What is chlorophyll?", answer: "The green pigment that captures light energy in plants" }
+  ]
+});
+```
+
+## 🔍 Smart Features in Detail
+
+### Adaptive AI Context
+The AI conversation system includes sophisticated context management:
+- **Automatic Summarization**: Long conversations are automatically summarized to maintain context without overwhelming the AI
+- **Threshold Management**: Summary frequency adapts based on conversation complexity (5-8 messages depending on topic complexity)
+- **Topic Detection**: AI recognizes study patterns and adjusts responses accordingly
+- **Material Integration**: AI knows when to reference uploaded documents vs. general knowledge
+- **Conversation Memory**: Smart context preservation across sessions
+
+### Material Organization Intelligence
+- **Unique Constraints**: Prevents duplicate material titles per user with automatic numbering
+- **Smart Validation**: Comprehensive permission checking for all operations
+- **Flexible Status Management**: Materials can be active, trashed, or permanently deleted
+- **Public Discovery**: Users can browse and copy public materials from others
+- **Hierarchical Organization**: Materials contain notes, flashcard sets, quizzes, and conversations
+
+### Content Generation Intelligence
+- **Smart Defaults**: Generation parameters adapt to content complexity
+- **Context Awareness**: AI considers previous conversations and material content
+- **Format Optimization**: Generated content follows educational best practices
+- **Validation**: All generated content is validated for educational quality
+- **Incremental Building**: Generate content iteratively based on study progress
 
 ## 🛠️ Troubleshooting
 
@@ -272,6 +472,11 @@ npm run reset
 - Check that `backend/media/` and `backend/attachments/` directories are writable
 - On Unix systems: `chmod 755 backend/media backend/attachments`
 
+**AI conversation errors:**
+- Verify `OPENROUTER_API_KEY` is set correctly in backend `.env`
+- Check API key permissions on OpenRouter dashboard
+- Monitor API usage limits
+
 **Port conflicts:**
 - Backend (Django): Change port in `npm run backend` if 8000 is busy
 - Frontend (React): Change port in `npm run frontend` if 3000 is busy
@@ -282,6 +487,15 @@ npm run reset
 npm install
 cd backend && pip install -r requirements.txt && cd ..
 cd frontend && npm install && cd ..
+```
+
+**Conversation context issues:**
+```bash
+# Reset conversation summaries (via Django shell)
+cd backend
+python manage.py shell
+>>> from api.models import AIConversation
+>>> AIConversation.objects.update(summary_context="", messages_since_summary=0)
 ```
 
 ### Clean Installation
@@ -314,16 +528,28 @@ npm run dev
         <em>Upload Notes</em>
       </td>
       <td align="center">
-        <img src="https://via.placeholder.com/400x225?text=Flashcards+Generation" alt="Flashcards Generation"/>
+        <img src="https://via.placeholder.com/400x225?text=AI+Chat+Interface" alt="AI Chat Interface"/>
         <br/>
-        <em>Flashcards Generation</em>
+        <em>AI Chat Assistant</em>
       </td>
     </tr>
     <tr>
       <td align="center">
+        <img src="https://via.placeholder.com/400x225?text=Flashcards+Generation" alt="Flashcards Generation"/>
+        <br/>
+        <em>Flashcards Generation</em>
+      </td>
+      <td align="center">
         <img src="https://via.placeholder.com/400x225?text=Quiz+Mode" alt="Quiz Mode"/>
         <br/>
-        <em>Quiz Mode</em>
+        <em>Interactive Quizzes</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="https://via.placeholder.com/400x225?text=Material+Dashboard" alt="Material Dashboard"/>
+        <br/>
+        <em>Material Dashboard</em>
       </td>
       <td align="center">
         <img src="https://via.placeholder.com/400x225?text=Study+Summary" alt="Study Summary"/>
@@ -340,6 +566,14 @@ npm run dev
 2. **Make focused commits** that address specific issues
 3. **Push your branch** and open a Pull Request against `main`
 4. **Run the verification test** before requesting a code review
+
+### Development Guidelines
+
+- Follow Django and React best practices
+- Ensure all API endpoints have proper validation
+- Add tests for new AI conversation features
+- Update documentation for new endpoints
+- Test AI generation with various content types
 
 ## 🐳 Local Docker Test
 

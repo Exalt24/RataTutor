@@ -78,15 +78,162 @@ export const getQuizQuestionsForQuiz = (quizId) => api.get('/quiz-questions/', {
 // Copy Material
 export const copyMaterial = (materialId) => api.post(`/materials/${materialId}/copy/`);
 
-// AI-powered generation endpoints
-export const generateNotes = (materialId) => api.post(`/materials/${materialId}/generate-notes/`);
-export const generateFlashcards = (materialId, numCards = 5) =>
-  api.post(`/materials/${materialId}/generate-flashcards/`, { num_cards: numCards });
-export const generateQuiz = (materialId, numQuestions = 5) =>
-  api.post(`/materials/${materialId}/generate-quiz/`, { num_questions: numQuestions });
+export const generateFlashcardsFromSpecificFiles = (materialId, attachmentIds, numCards = 5) =>
+  api.post(`/materials/${materialId}/generate-flashcards/`, { 
+    num_cards: numCards,
+    specific_attachments: attachmentIds 
+  });
 
-// Conversations
+export const generateQuizFromSpecificFiles = (materialId, attachmentIds, numQuestions = 5) =>
+  api.post(`/materials/${materialId}/generate-quiz/`, { 
+    num_questions: numQuestions,
+    specific_attachments: attachmentIds 
+  });
+
+export const generateNotesFromSpecificFiles = (materialId, attachmentIds) =>
+  api.post(`/materials/${materialId}/generate-notes/`, { 
+    specific_attachments: attachmentIds 
+  });
+
+// ===== SMART CONVERSATION MANAGEMENT =====
+
+// ✅ NEW: Get all conversations for the user
+export const getConversations = () => api.get('/conversations/');
+
+// ✅ Enhanced getMaterialConversation with debugging
+export const getMaterialConversation = (materialId) => {
+  console.log('🔍 API Debug - getMaterialConversation called with materialId:', materialId, typeof materialId);
+  const url = `/materials/${materialId}/conversation/`;
+  console.log('🔍 API Debug - Constructed URL:', url);
+  
+  return api.get(url);
+};
+
+// ✅ LEGACY: Create conversation manually (kept for backward compatibility)
 export const createConversation = (data) => api.post('/conversations/create/', data);
+
+// ✅ ENHANCED: Chat with AI (now uses smart context management)
 export const chatConversation = (conversationId, prompt) =>
   api.post(`/conversations/${conversationId}/chat/`, { prompt });
+
+// ✅ Get specific conversation details
 export const getConversation = (conversationId) => api.get(`/conversations/${conversationId}/`);
+
+// ✅ NEW: Delete a conversation
+export const deleteConversation = (conversationId) => api.delete(`/conversations/${conversationId}/delete/`);
+
+// ✅ NEW: Manually regenerate conversation summary
+export const regenerateConversationSummary = (conversationId) =>
+  api.post(`/conversations/${conversationId}/regenerate-summary/`);
+
+// ===== CONVERSATION HELPER FUNCTIONS =====
+
+/**
+ * Get or create a conversation for a material and return it ready for chatting
+ * This is the recommended way to start a conversation with a material
+ */
+// ✅ Enhanced startMaterialConversation with debugging  
+export const startMaterialConversation = async (materialId) => {
+  try {
+    console.log('🔍 API Debug - startMaterialConversation called with materialId:', materialId, typeof materialId);
+    const response = await getMaterialConversation(materialId);
+    console.log('✅ API Debug - Conversation response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('❌ API Debug - Failed to get/create conversation for material:', materialId);
+    console.error('❌ API Debug - Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method,
+      data: error.response?.data,
+      message: error.message
+    });
+    
+    // ✅ Enhanced error logging for 500 errors
+    if (error.response?.status === 500) {
+      console.error('🚨 500 Error - This is likely a backend database/constraint issue');
+      console.error('💡 Check Django logs and run the debug script provided');
+      console.error('🔧 Possible fixes:');
+      console.error('   1. Update GetOrCreateConversationView');
+      console.error('   2. Run migrations: python manage.py makemigrations && python manage.py migrate');
+      console.error('   3. Check for duplicate conversations in database');
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Send a message and get AI response with smart context management
+ * Enhanced to handle the new response format with conversation metadata
+ */
+export const sendMessage = async (conversationId, message) => {
+  try {
+    const response = await chatConversation(conversationId, message);
+    
+    // The response now includes additional context info
+    const {
+      user_message,
+      ai_response,
+      messages,
+      conversation_topic,
+      messages_since_summary,
+      summary_preview
+    } = response.data;
+    
+    return {
+      userMessage: user_message,
+      aiResponse: ai_response,
+      allMessages: messages,
+      topic: conversation_topic,
+      messagesSinceSummary: messages_since_summary,
+      summaryPreview: summary_preview,
+      // For backward compatibility
+      messages: messages
+    };
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all conversations organized by material
+ * The response groups conversations by their associated materials
+ */
+export const getOrganizedConversations = async () => {
+  try {
+    const response = await getConversations();
+    return response.data; // Already organized by the backend
+  } catch (error) {
+    console.error('Failed to get organized conversations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Enhanced material conversation workflow
+ * Opens a material's conversation and provides context about the conversation state
+ */
+export const openMaterialChat = async (materialId) => {
+  try {
+    const conversationResponse = await getMaterialConversation(materialId);
+    const conversation = conversationResponse.data;
+    
+    return {
+      conversation,
+      isNew: conversation.is_new,
+      hasMessages: conversation.messages && conversation.messages.length > 0,
+      topic: conversation.messages?.length > 0 ? 'continuing' : 'new',
+      summaryExists: !!conversation.summary_context
+    };
+  } catch (error) {
+    console.error('Failed to open material chat:', error);
+    throw error;
+  }
+};
+
+
+
+

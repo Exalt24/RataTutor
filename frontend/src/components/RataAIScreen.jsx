@@ -8,11 +8,42 @@ import {
   Send,
   Upload,
   X,
+  HelpCircle,
+  Edit2,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import { getConversation, chatConversation } from "../services/apiService"; // adjust the import path as needed
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
+import { useMaterials } from '../utils/materialsContext';
+import { useLoading } from '../components/Loading/LoadingContext';
+import { useToast } from '../components/Toast/ToastContext';
+import UploadFile from '../components/UploadFile';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
-const RataAIScreen = ({ materialsData }) => {
+import { 
+  getMaterialConversation, 
+  chatConversation,
+  startMaterialConversation,
+  sendMessage,
+  uploadAttachment,
+  generateFlashcardsFromSpecificFiles,
+  generateNotesFromSpecificFiles, 
+  generateQuizFromSpecificFiles,
+  createMaterial
+} from "../services/apiService";
+
+const RataAIScreen = () => {
+  const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoading();
+  const { showToast } = useToast();
+  const { 
+    materials, 
+    fetchMaterials, 
+    addMaterial,
+    isInitialized, 
+    isFetching 
+  } = useMaterials();
+
+  // UI State
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [expandedFolders, setExpandedFolders] = useState({});
@@ -21,29 +52,46 @@ const RataAIScreen = ({ materialsData }) => {
   const [isPanelVisible, setIsPanelVisible] = useState(true);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Conversation State
+  const [conversation, setConversation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // ✅ NEW: Upload flow state following HomeScreen pattern
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isChooseModalOpen, setIsChooseModalOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+
+  // Refs
   const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  const [conversation, setConversation] = useState(null);
+  const messagesEndRef = useRef(null);
 
-  const conversationId = 1; // hardcoded for now
-
-  const fetchConversation = () => {
-    getConversation(conversationId)
-      .then((response) => {
-        setConversation(response.data);
-        setMessages(response.data.messages || []);
-      })
-      .catch((err) => {
-        console.error("Error fetching conversation:", err);
-        setError("Failed to load conversation.");
-      });
-  };
-
+  // ✅ Initialize materials data on mount
   useEffect(() => {
-    fetchConversation();
-  }, []);
-  // empty dependency array → runs once on mount
+    if (!isInitialized && !isFetching) {
+      console.log('🔄 RataAI: Fetching materials...');
+      fetchMaterials();
+    }
+  }, [isInitialized, isFetching, fetchMaterials]);
+
+  // ✅ Debug: Log materials when they change
+  useEffect(() => {
+    if (isInitialized) {
+      console.log('📚 RataAI: Materials updated:', materials.length, 'materials available');
+      console.log('📚 Active materials:', materials.filter(m => m.status === 'active').length);
+    }
+  }, [materials, isInitialized]);
+
+  // ✅ Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -57,61 +105,29 @@ const RataAIScreen = ({ materialsData }) => {
     adjustTextareaHeight();
   }, [input]);
 
-  const files = [
-    {
-      name: "Exam ni eli jang",
-      flashcards: [
-        { title: "Algebra Formulas", created: "2h ago" },
-        { title: "Geometry Theorems", created: "1d ago" },
-      ],
-      notes: [
-        { title: "Calculus Summary", created: "3h ago" },
-        { title: "Statistics Notes", created: "5h ago" },
-      ],
-    },
-    {
-      name: "Intro to Programming",
-      flashcards: [
-        { title: "World War II Dates", created: "1d ago" },
-        { title: "Ancient Civilizations", created: "2d ago" },
-      ],
-      notes: [
-        { title: "Renaissance Period", created: "4h ago" },
-        { title: "Industrial Revolution", created: "6h ago" },
-      ],
-    },
-  ];
-
-  const filteredMaterials = materialsData
+  // ✅ Filter materials based on search query
+  const filteredMaterials = materials
+    .filter(material => material.status === 'active') // Only show active materials
     .map((material) => {
       const filteredFlashcardSets = material.flashcard_sets
-        .map((set) => ({
-          ...set,
-          flashcards: set.flashcards.filter((card) =>
-            card.question.toLowerCase().includes(searchQuery.toLowerCase())
-          ),
-        }))
-        .filter(
-          (set) =>
-            set.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            set.flashcards.length > 0
-        );
+        ?.filter((set) =>
+          set.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || [];
 
-      const filteredNotes = material.notes.filter((note) =>
-        note.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const filteredNotes = material.notes
+        ?.filter((note) =>
+          note.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || [];
 
-      const filteredQuizzes = material.quizzes.filter(
-        (quiz) =>
-          quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          quiz.questions.some((q) =>
-            q.question_text.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-      );
+      const filteredQuizzes = material.quizzes
+        ?.filter((quiz) =>
+          quiz.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || [];
 
-      const filteredAttachments = material.attachments.filter((att) =>
-        att.file.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const filteredAttachments = material.attachments
+        ?.filter((att) =>
+          att.file.toLowerCase().includes(searchQuery.toLowerCase())
+        ) || [];
 
       return {
         ...material,
@@ -130,25 +146,140 @@ const RataAIScreen = ({ materialsData }) => {
         material.attachments.length > 0
     );
 
-  const handleSend = async () => {
-  if (!input.trim()) return;
-  setLoading(true);
-
-  try {
-    const response = await chatConversation(conversationId, input);
-
-    // If the response already includes the AI reply:
-    if (response.data && response.data.complete) {
-      await fetchConversation();
+  // ✅ Start conversation with material (with retry logic for new materials)
+  const startConversationWithMaterial = useCallback(async (material, retryCount = 0) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🤖 Starting conversation with material:', material.title, `(attempt ${retryCount + 1})`);
+      
+      // Get or create conversation for this material
+      const conversationData = await startMaterialConversation(material.id);
+      
+      setConversation(conversationData);
+      setMessages(conversationData.messages || []);
+      
+      // If it's a new conversation, add welcome message
+      if (!conversationData.messages || conversationData.messages.length === 0) {
+        const welcomeMessage = {
+          role: "assistant",
+          content: `Hello! I'm here to help you with "${material.title}". Feel free to ask me any questions about this material, or I can help you create flashcards, quizzes, and notes based on your content.`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages([welcomeMessage]);
+      }
+      
+      // ✅ FIXED: Only show toast for new conversations
+      if (conversationData.is_new) {
+        showToast({
+          variant: "success",
+          title: "Conversation Started!",
+          subtitle: `Now chatting about: ${material.title}`,
+        });
+      } else {
+        console.log('📝 Resumed existing conversation with', material.title);
+      }
+    } catch (error) {
+      console.error('❌ Error starting conversation:', error);
+      
+      // Retry logic for newly created materials (backend might need time to process)
+      if (retryCount < 2 && (error.response?.status === 500 || error.response?.status === 404)) {
+        console.log('🔄 Retrying conversation creation after delay...');
+        setTimeout(() => {
+          startConversationWithMaterial(material, retryCount + 1);
+        }, 1000 * (retryCount + 1)); // Exponential backoff: 1s, 2s
+        return;
+      }
+      
+      // Fallback: Allow manual conversation without backend
+      console.log('💬 Falling back to local conversation mode');
+      setConversation({ id: `local-${material.id}`, material: material.id });
+      const fallbackMessage = {
+        role: "assistant",
+        content: `Hello! I'm here to help you with "${material.title}". (Note: I'm running in offline mode - your conversation won't be saved, but I can still help you with questions about this material.)`,
+        timestamp: new Date().toISOString()
+      };
+      setMessages([fallbackMessage]);
+      setError('Running in offline mode - conversations won\'t be saved');
+      showToast({
+        variant: "error",
+        title: "Connection Failed",
+        subtitle: "Running in offline mode - conversations won't be saved",
+      });
+    } finally {
+      setLoading(false);
     }
+  }, [showToast]);
+
+  // ✅ Send message handler (with fallback for local mode)
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || !conversation?.id) return;
+    
+    const userMessage = input.trim();
     setInput("");
-  } catch (err) {
-    console.error("Error sending message:", err);
-    setError("Failed to send message.");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setError(null);
+
+    // Add user message immediately to UI
+    const newUserMessage = {
+      role: "user",
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, newUserMessage]);
+
+    try {
+      // Check if this is a local conversation (fallback mode)
+      if (conversation.id.toString().startsWith('local-')) {
+        // Local mode - provide helpful response without backend
+        const localResponse = {
+          role: "assistant",
+          content: `I understand you're asking about "${userMessage}". Since I'm running in offline mode, I can't access the full AI capabilities right now, but I can help you with general questions about your material "${selectedMaterial?.title}". Try refreshing the page or check your internet connection to enable full AI features.`,
+          timestamp: new Date().toISOString()
+        };
+        
+        setTimeout(() => {
+          setMessages(prev => [...prev, localResponse]);
+          setLoading(false);
+        }, 1000); // Simulate thinking time
+        
+        return;
+      }
+      
+      // Normal mode - send to backend
+      const response = await sendMessage(conversation.id, userMessage);
+      
+      // Add AI response to messages
+      const aiMessage = {
+        role: "assistant",
+        content: response.aiResponse,
+        timestamp: new Date().toISOString()
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // Update conversation with all messages if provided
+      if (response.allMessages) {
+        setMessages(response.allMessages);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      setError('Failed to send message');
+      showToast({
+        variant: "error",
+        title: "Message Failed",
+        subtitle: "Could not send your message. Please try again.",
+      });
+      
+      // Remove the user message that failed to send
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setLoading(false);
+    }
+  }, [input, conversation, selectedMaterial, showToast]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -164,39 +295,222 @@ const RataAIScreen = ({ materialsData }) => {
     }));
   };
 
-  const handleFileUpload = (event) => {
-    const files = event.target.files;
-    if (files.length > 0) {
-      console.log("Selected file:", files[0].name);
-      // Here you would typically handle the file upload, e.g., send to a backend
+  // ✅ NEW: Upload flow following HomeScreen pattern
+  const openUploadModal = () => setIsUploadModalOpen(true);
+  const closeUploadModal = () => setIsUploadModalOpen(false);
+
+  const handleFileUpload = (files) => {
+    // Files are already validated in the UploadFile component
+    const newFiles = files.map(file => {
+      const extension = file.name.split('.').pop().toLowerCase();
+      
+      let type = extension;
+      if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+        type = 'image';
+      } else if (['mp4', 'mov', 'avi'].includes(extension)) {
+        type = 'video';
+      } else if (['mp3', 'wav'].includes(extension)) {
+        type = 'audio';
+      } else if (['doc', 'docx'].includes(extension)) {
+        type = 'doc';
+      } else if (['ppt', 'pptx'].includes(extension)) {
+        type = 'ppt';
+      } else if (extension === 'pdf') {
+        type = 'pdf';
+      } else if (extension === 'txt') {
+        type = 'txt';
+      }
+
+      return {
+        name: file.name,
+        type: type,
+        size: formatFileSize(file.size),
+        date: new Date().toISOString().split('T')[0],
+        file: file
+      };
+    });
+    
+    setUploadedFiles(newFiles);
+    closeUploadModal();
+    // Skip material selection since selectedMaterial is already chosen
+    // Go directly to content type selection
+    setIsChooseModalOpen(true);
+  };
+
+  const handleMaterialAndTypeChoice = async (type) => {
+    try {
+      // Use the already selected material from the materials panel
+      if (!selectedMaterial) {
+        throw new Error('No material selected. Please select a material first.');
+      }
+
+      // Upload files and generate content for the selected material
+      await handleUploadAndGenerate(type);
+    } catch (error) {
+      console.error('Error handling content type selection:', error);
+      showToast({ 
+        variant: "error", 
+        title: "Error", 
+        subtitle: error.message || "Failed to process selection. Please try again." 
+      });
     }
   };
 
-  const triggerFileUpload = () => {
-    fileInputRef.current.click();
+  const handleUploadAndGenerate = async (type) => {
+  if (uploadedFiles.length === 0 || !selectedMaterial) return;
+
+  try {
+    showLoading();
+    
+    // Step 1: Upload all files
+    console.log('📤 Uploading files...');
+    const uploadPromises = uploadedFiles.map(fileData => {
+      return uploadAttachment(selectedMaterial.id, fileData.file);
+    });
+
+    const uploadResults = await Promise.all(uploadPromises);
+    console.log('✅ All files uploaded:', uploadResults.length);
+    
+    // Step 1.5: Extract attachment IDs from upload results
+    const attachmentIds = uploadResults.map(result => result.data.id);
+    console.log('📎 Attachment IDs:', attachmentIds);
+    
+    // Step 1.6: Wait a moment for database to be consistent
+    console.log('⏳ Waiting for database consistency...');
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+    
+    // Step 1.7: Refresh materials to ensure we have the latest data
+    console.log('🔄 Refreshing materials data...');
+    await fetchMaterials();
+    
+    // Step 2: Generate content based on type using specific attachments
+    console.log(`🤖 Generating ${type} from ${attachmentIds.length} specific attachments...`);
+    let generateResponse;
+    let contentType;
+    
+    switch (type) {
+      case 'flashcards':
+        contentType = 'flashcards';
+        generateResponse = await generateFlashcardsFromSpecificFiles(
+          selectedMaterial.id, 
+          attachmentIds, 
+          10
+        );
+        break;
+      case 'quiz':
+        contentType = 'quiz questions';
+        generateResponse = await generateQuizFromSpecificFiles(
+          selectedMaterial.id, 
+          attachmentIds, 
+          10
+        );
+        break;
+      case 'notes':
+      default:
+        contentType = 'notes';
+        generateResponse = await generateNotesFromSpecificFiles(
+          selectedMaterial.id, 
+          attachmentIds
+        );
+        break;
+    }
+    
+    // Track activity but suppress immediate notification
+    const streakResult = await trackActivityAndNotify(showToast, true);
+
+    // Step 3: Refresh materials to show new content
+    await fetchMaterials();
+    
+    // Step 4: Create combined success message
+    const baseTitle = "Content Generated Successfully!";
+    const baseSubtitle = `Uploaded ${uploadedFiles.length} file(s) and generated ${contentType} for "${selectedMaterial.title}" using the specific uploaded content.`;
+    
+    const combinedMessage = createCombinedSuccessMessage(baseTitle, baseSubtitle, streakResult);
+    
+    // Show single combined toast
+    showToast({
+      variant: "success",
+      title: combinedMessage.title,
+      subtitle: combinedMessage.subtitle,
+    });
+
+    // Step 5: Add context message about the upload
+    setTimeout(() => {
+      const contextMessage = {
+        role: "assistant",
+        content: `I've successfully uploaded ${uploadedFiles.length} file(s) and generated ${contentType} based on the specific content you uploaded. The generated content is focused on the material from these files: ${uploadedFiles.map(f => f.name).join(', ')}. Feel free to ask me questions about this content!`,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, contextMessage]);
+    }, 1000);
+    
+    // Close modal and reset state
+    setIsChooseModalOpen(false);
+    setUploadedFiles([]);
+
+  } catch (error) {
+    console.error('Error uploading files or generating content:', error);
+    showToast({
+      variant: "error",
+      title: "Upload failed",
+      subtitle: error.response?.data?.error || error.message || "Failed to upload files. Please try again.",
+    });
+  } finally {
+    hideLoading();
+  }
+};
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  const handleMaterialSelect = (material) => {
+  // ✅ Handle material selection
+  const handleMaterialSelect = useCallback(async (material) => {
     setSelectedFile(null);
     setSelectedMaterial(material);
-    setMessages([
-      {
-        role: "assistant",
-        content: `Hello! I'm here to help you with "${material.title}". Feel free to ask me any questions about this material.`,
-      },
-    ]);
-  };
+    await startConversationWithMaterial(material);
+  }, [startConversationWithMaterial]);
 
-  const handleFileSelect = (file, material) => {
+  // ✅ Handle specific file/content selection within a material
+  const handleFileSelect = useCallback(async (file, material) => {
     setSelectedFile(file);
     setSelectedMaterial(material);
-    setMessages([
-      {
-        role: "assistant",
-        content: `Hello! I'm here to help you with "${file.title}" from "${material.title}". Feel free to ask me any questions about this content.`,
-      },
-    ]);
+    
+    // Start conversation with the material if not already started
+    if (!conversation || conversation.material !== material.id) {
+      await startConversationWithMaterial(material);
+    }
+    
+    // Add context message about the specific file
+    const contextMessage = {
+      role: "assistant",
+      content: `I'm now focusing on "${file.title}" from "${material.title}". How can I help you with this specific content?`,
+      timestamp: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, contextMessage]);
+  }, [conversation, startConversationWithMaterial]);
+
+  // ✅ Navigate to materials if none available
+  const handleGoToMaterials = () => {
+    navigate('/dashboard/materials');
   };
+
+  // ✅ Loading state when materials aren't initialized
+  if (!isInitialized && isFetching) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading materials...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">
@@ -208,11 +522,18 @@ const RataAIScreen = ({ materialsData }) => {
       >
         {/* Header */}
         <div className="h-16 px-4 border-b border-gray-200 bg-white flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-800 label-text">
-            {selectedMaterial
-              ? `Chatting about: ${selectedMaterial.title}`
-              : "Select a material to start chatting"}
-          </h2>
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-gray-800 label-text">
+              {selectedMaterial
+                ? `Chatting about: ${selectedMaterial.title}`
+                : "Select a material to start chatting"}
+            </h2>
+            {error && (
+              <p className="text-xs text-amber-600 mt-1">
+                {error}
+              </p>
+            )}
+          </div>
           <button
             onClick={() => setIsPanelVisible(!isPanelVisible)}
             className="bg-gray-50 rounded-full p-2 shadow-sm hover:bg-gray-100 transition-colors"
@@ -223,61 +544,102 @@ const RataAIScreen = ({ materialsData }) => {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
-          {messages.length === 0 && !selectedMaterial ? (
+          {!selectedMaterial ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500 max-w-md">
                 <BookOpen size={48} className="mx-auto mb-4 text-gray-400" />
                 <p className="text-lg font-medium text-gray-700">
                   No material selected
                 </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Select a material from the panel to start chatting with Rata
-                  AI
+                <p className="text-sm text-gray-500 mt-2 mb-4">
+                  Select a material from the panel to start chatting with Rata AI
                 </p>
+                {materials.length === 0 && (
+                  <button
+                    onClick={handleGoToMaterials}
+                    className="exam-button-mini"
+                  >
+                    Go to Materials
+                  </button>
+                )}
               </div>
             </div>
           ) : (
-            messages.map((message, index) => {
-              const isUser = message.role === "user";
-              const localTime = new Date(message.timestamp).toLocaleTimeString(
-                [],
-                {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              );
+            <>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center justify-between">
+                  <span>{error}</span>
+                  {error.includes('offline mode') && selectedMaterial && (
+                    <button
+                      onClick={() => startConversationWithMaterial(selectedMaterial)}
+                      className="ml-2 px-3 py-1 bg-red-100 hover:bg-red-200 rounded text-xs transition-colors"
+                      disabled={loading}
+                    >
+                      {loading ? 'Retrying...' : 'Retry'}
+                    </button>
+                  )}
+                </div>
+              )}
+              
+              {messages.map((message, index) => {
+                const isUser = message.role === "user";
+                const localTime = message.timestamp 
+                  ? new Date(message.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : '';
 
-              return (
-                <div
-                  key={index}
-                  className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-                >
+                return (
                   <div
-                    className={`flex flex-col max-w-[80%] space-y-1 ${
-                      isUser ? "items-end" : "items-start"
-                    }`}
+                    key={index}
+                    className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`rounded-xl p-4 break-words shadow-sm label-text ${
-                        isUser ? "text-white" : "text-gray-800 bg-white"
+                      className={`flex flex-col max-w-[80%] space-y-1 ${
+                        isUser ? "items-end" : "items-start"
                       }`}
-                      style={{
-                        backgroundColor: isUser
-                          ? "var(--pastel-blue)"
-                          : "white",
-                        wordBreak: "break-word",
-                        overflowWrap: "break-word",
-                      }}
                     >
-                      {message.content}
+                      <div
+                        className={`rounded-xl p-4 break-words shadow-sm label-text ${
+                          isUser ? "text-white" : "text-gray-800 bg-white"
+                        }`}
+                        style={{
+                          backgroundColor: isUser
+                            ? "var(--pastel-blue)"
+                            : "white",
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                        }}
+                      >
+                        {message.content}
+                      </div>
+                      {localTime && (
+                        <span className="text-xs text-gray-400 px-2">
+                          {localTime}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-400 px-2">
-                      {localTime}
-                    </span>
+                  </div>
+                );
+              })}
+              
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="flex flex-col max-w-[80%] space-y-1 items-start">
+                    <div className="rounded-xl p-4 bg-white text-gray-800 shadow-sm">
+                      <div className="flex items-center space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              );
-            })
+              )}
+              
+              <div ref={messagesEndRef} />
+            </>
           )}
         </div>
 
@@ -285,19 +647,18 @@ const RataAIScreen = ({ materialsData }) => {
         <div className="border-t border-gray-200 p-4 bg-white">
           <div className="flex items-center gap-3 max-w-4xl mx-auto">
             <button
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Upload file"
-              onClick={triggerFileUpload}
+              className={`p-2 rounded-full transition-colors ${
+                selectedMaterial 
+                  ? 'hover:bg-gray-100' 
+                  : 'opacity-50 cursor-not-allowed'
+              }`}
+              title={selectedMaterial ? `Upload files to generate content for "${selectedMaterial.title}"` : "Select a material first"}
+              onClick={selectedMaterial ? openUploadModal : undefined}
+              disabled={!selectedMaterial}
               style={{ backgroundColor: "var(--pastel-green)" }}
             >
               <Upload size={20} className="text-white" />
             </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              onChange={handleFileUpload}
-            />
             <div className="flex-1 relative label-text">
               <textarea
                 ref={textareaRef}
@@ -309,7 +670,8 @@ const RataAIScreen = ({ materialsData }) => {
                     ? "Type your message..."
                     : "Select a material to start chatting"
                 }
-                className="w-full p-3 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none min-h-[40px] max-h-[120px] bg-gray-50 overflow-hidden"
+                disabled={!selectedMaterial || loading}
+                className="w-full p-3 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none min-h-[40px] max-h-[120px] bg-gray-50 overflow-hidden disabled:opacity-50"
                 rows={1}
                 style={{
                   transition: "height 0.1s ease-out",
@@ -318,7 +680,8 @@ const RataAIScreen = ({ materialsData }) => {
             </div>
             <button
               onClick={handleSend}
-              className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm"
+              disabled={!input.trim() || !selectedMaterial || loading}
+              className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               title="Send message"
               style={{ backgroundColor: "var(--pastel-blue)" }}
             >
@@ -328,7 +691,7 @@ const RataAIScreen = ({ materialsData }) => {
         </div>
       </div>
 
-      {/* Files Panel */}
+      {/* Materials Panel */}
       {isPanelVisible && (
         <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-lg rounded-r-xl overflow-hidden">
           <div className="h-16 px-4 border-b border-gray-200 bg-white">
@@ -351,7 +714,7 @@ const RataAIScreen = ({ materialsData }) => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search files..."
+                        placeholder="Search materials..."
                         className="label-text w-48 px-3 py-1.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all duration-300 ease-in-out bg-gray-50"
                         autoFocus
                       />
@@ -370,6 +733,7 @@ const RataAIScreen = ({ materialsData }) => {
               </div>
             </div>
           </div>
+          
           <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
             <div className="space-y-4">
               {filteredMaterials.length === 0 ? (
@@ -380,20 +744,31 @@ const RataAIScreen = ({ materialsData }) => {
                       className="mx-auto mb-4 text-gray-400"
                     />
                     <p className="text-lg font-medium text-gray-700">
-                      No materials yet
+                      {materials.length === 0 ? 'No materials yet' : 'No materials found'}
                     </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Go to Materials to add your study materials
+                    <p className="text-sm text-gray-500 mt-2 mb-4">
+                      {materials.length === 0 
+                        ? 'Create your first material to start chatting with Rata AI'
+                        : 'Try adjusting your search query'
+                      }
                     </p>
+                    {materials.length === 0 && (
+                      <button
+                        onClick={handleGoToMaterials}
+                        className="exam-button-mini"
+                      >
+                        Go to Materials
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
                 filteredMaterials.map((material, fileIndex) => (
                   <div
-                    key={fileIndex}
+                    key={material.id}
                     className={`exam-card exam-card--alt p-4 transition-all duration-300 ease-in-out cursor-pointer hover:bg-white rounded-xl border border-gray-200 ${
-                      selectedMaterial?.title === material.title
-                        ? "bg-white shadow-sm"
+                      selectedMaterial?.id === material.id
+                        ? "bg-white shadow-sm ring-2 ring-blue-200"
                         : "bg-white/50"
                     }`}
                     onClick={() => handleMaterialSelect(material)}
@@ -403,149 +778,264 @@ const RataAIScreen = ({ materialsData }) => {
                     </h3>
 
                     {/* Flashcards Folder */}
-                    <div className="mb-3" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => toggleFolder(fileIndex, "flashcards")}
-                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-                      >
-                        {expandedFolders[`${fileIndex}-flashcards`] ? (
-                          <ChevronDown size={16} />
-                        ) : (
-                          <ChevronRight size={16} />
-                        )}
-                        <BookOpen size={16} />
-                        <span>Flashcards</span>
-                      </button>
-                      {expandedFolders[`${fileIndex}-flashcards`] && (
-                        <div className="ml-6 mt-2 space-y-2">
-                          {material.flashcard_sets.map(
-                            (flashcard_set, flashIndex) => (
+                    {material.flashcard_sets && material.flashcard_sets.length > 0 && (
+                      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFolder(fileIndex, "flashcards")}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                        >
+                          {expandedFolders[`${fileIndex}-flashcards`] ? (
+                            <ChevronDown size={16} />
+                          ) : (
+                            <ChevronRight size={16} />
+                          )}
+                          <BookOpen size={16} />
+                          <span>Flashcards ({material.flashcard_sets.length})</span>
+                        </button>
+                        {expandedFolders[`${fileIndex}-flashcards`] && (
+                          <div className="ml-6 mt-2 space-y-2">
+                            {material.flashcard_sets.map((flashcard_set, flashIndex) => (
                               <div
-                                key={flashIndex}
+                                key={flashcard_set.id}
                                 className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
-                                onClick={() =>
-                                  handleFileSelect(flashcard_set, material)
-                                }
+                                onClick={() => handleFileSelect(flashcard_set, material)}
                               >
                                 <div className="font-medium text-gray-800">
                                   {flashcard_set.title}
                                 </div>
                                 <div className="text-gray-500 text-[10px]">
-                                  Created{" "}
-                                  {new Date(
-                                    flashcard_set.created_at
-                                  ).toLocaleString()}
+                                  {flashcard_set.flashcards?.length || 0} cards
                                 </div>
                               </div>
-                            )
-                          )}
-                        </div>
-                      )}
-                    </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Notes Folder */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => toggleFolder(fileIndex, "notes")}
-                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-                      >
-                        {expandedFolders[`${fileIndex}-notes`] ? (
-                          <ChevronDown size={16} />
-                        ) : (
-                          <ChevronRight size={16} />
-                        )}
-                        <FileText size={16} />
-                        <span>Notes</span>
-                      </button>
-                      {expandedFolders[`${fileIndex}-notes`] && (
-                        <div className="ml-6 mt-2 space-y-2">
-                          {material.notes.map((note, noteIndex) => (
-                            <div
-                              key={noteIndex}
-                              className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
-                              onClick={() => handleFileSelect(note, material)}
-                            >
-                              <div className="font-medium text-gray-800">
-                                {note.title}
+                    {material.notes && material.notes.length > 0 && (
+                      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFolder(fileIndex, "notes")}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                        >
+                          {expandedFolders[`${fileIndex}-notes`] ? (
+                            <ChevronDown size={16} />
+                          ) : (
+                            <ChevronRight size={16} />
+                          )}
+                          <FileText size={16} />
+                          <span>Notes ({material.notes.length})</span>
+                        </button>
+                        {expandedFolders[`${fileIndex}-notes`] && (
+                          <div className="ml-6 mt-2 space-y-2">
+                            {material.notes.map((note) => (
+                              <div
+                                key={note.id}
+                                className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                                onClick={() => handleFileSelect(note, material)}
+                              >
+                                <div className="font-medium text-gray-800">
+                                  {note.title}
+                                </div>
+                                <div className="text-gray-500 text-[10px]">
+                                  Note
+                                </div>
                               </div>
-                              <div className="text-gray-500 text-[10px]">
-                                Created{" "}
-                                {new Date(note.created_at).toLocaleString()}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Attachments Folder */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => toggleFolder(fileIndex, "attachments")}
-                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 mt-3"
-                      >
-                        {expandedFolders[`${fileIndex}-attachments`] ? (
-                          <ChevronDown size={16} />
-                        ) : (
-                          <ChevronRight size={16} />
+                            ))}
+                          </div>
                         )}
-                        <FileText size={16} />
-                        <span>Attachments</span>
-                      </button>
-                      {expandedFolders[`${fileIndex}-attachments`] && (
-                        <div className="ml-6 mt-2 space-y-2">
-                          {material.attachments.map((att, attIndex) => (
-                            <a
-                              key={attIndex}
-                              href={att.file}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50 text-blue-600 underline"
-                            >
-                              {att.file.split("/").pop()}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Quizzes Folder */}
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => toggleFolder(fileIndex, "quizzes")}
-                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 mt-3"
-                      >
-                        {expandedFolders[`${fileIndex}-quizzes`] ? (
-                          <ChevronDown size={16} />
-                        ) : (
-                          <ChevronRight size={16} />
+                    {material.quizzes && material.quizzes.length > 0 && (
+                      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFolder(fileIndex, "quizzes")}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                        >
+                          {expandedFolders[`${fileIndex}-quizzes`] ? (
+                            <ChevronDown size={16} />
+                          ) : (
+                            <ChevronRight size={16} />
+                          )}
+                          <BookOpen size={16} />
+                          <span>Quizzes ({material.quizzes.length})</span>
+                        </button>
+                        {expandedFolders[`${fileIndex}-quizzes`] && (
+                          <div className="ml-6 mt-2 space-y-2">
+                            {material.quizzes.map((quiz) => (
+                              <div
+                                key={quiz.id}
+                                className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                                onClick={() => handleFileSelect(quiz, material)}
+                              >
+                                <div className="font-medium text-gray-800">
+                                  {quiz.title}
+                                </div>
+                                <div className="text-gray-500 text-[10px]">
+                                  {quiz.questions?.length || 0} questions
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
-                        <BookOpen size={16} />
-                        <span>Quizzes</span>
-                      </button>
-                      {expandedFolders[`${fileIndex}-quizzes`] && (
-                        <div className="ml-6 mt-2 space-y-2">
-                          {material.quizzes.map((quiz, quizIndex) => (
-                            <div
-                              key={quizIndex}
-                              className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
-                              onClick={() => handleFileSelect(quiz, material)}
-                            >
-                              <div className="font-medium text-gray-800">
-                                {quiz.title}
-                              </div>
-                              <div className="text-gray-500 text-[10px]">
-                                Created{" "}
-                                {new Date(quiz.created_at).toLocaleString()}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Attachments Folder */}
+                    {material.attachments && material.attachments.length > 0 && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFolder(fileIndex, "attachments")}
+                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                        >
+                          {expandedFolders[`${fileIndex}-attachments`] ? (
+                            <ChevronDown size={16} />
+                          ) : (
+                            <ChevronRight size={16} />
+                          )}
+                          <FileText size={16} />
+                          <span>Files ({material.attachments.length})</span>
+                        </button>
+                        {expandedFolders[`${fileIndex}-attachments`] && (
+                          <div className="ml-6 mt-2 space-y-2">
+                            {material.attachments.map((att) => (
+                              <a
+                                key={att.id}
+                                href={att.file}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50 text-blue-600 underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {att.file.split("/").pop()}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Upload File Modal */}
+      <UploadFile 
+        isOpen={isUploadModalOpen} 
+        onClose={closeUploadModal} 
+        onUpload={handleFileUpload}
+      />
+
+      {/* ✅ Content Type Selection Modal */}
+      {isChooseModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="letter-no-lines max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 pt-3 px-3 label-text">
+                Generate Content for "{selectedMaterial?.title}"
+              </h2>
+              <button
+                onClick={() => {
+                  setIsChooseModalOpen(false);
+                  setUploadedFiles([]);
+                }}
+                className="text-gray-500 hover:text-gray-700 p-4 transition-colors"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="px-4 pb-4">
+              {/* Show uploaded files summary */}
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 className="text-sm font-medium text-blue-800 mb-2 label-text">Files to Upload:</h3>
+                <div className="space-y-1">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="text-sm text-blue-700 flex items-center gap-2 label-text">
+                      <FileText size={16} />
+                      <span>{file.name}</span>
+                      <span className="text-blue-500">({file.size})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content type selection */}
+              <div className="grid grid-cols-1 gap-4 mb-8">
+                <div
+                  className="p-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-300"
+                  onClick={() => handleMaterialAndTypeChoice('flashcards')}
+                  role="button"
+                  tabIndex="0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-white shadow-sm">
+                      <FileText size={24} className="text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 label-text">Generate Flashcards</h3>
+                      <p className="text-gray-600 text-sm">Create flashcards from your uploaded content</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="p-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer bg-green-50 hover:bg-green-100 border-2 border-transparent hover:border-green-300"
+                  onClick={() => handleMaterialAndTypeChoice('quiz')}
+                  role="button"
+                  tabIndex="0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-white shadow-sm">
+                      <HelpCircle size={24} className="text-green-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 label-text">Generate Quiz</h3>
+                      <p className="text-gray-600 text-sm">Create quiz questions from your uploaded content</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="p-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer bg-purple-50 hover:bg-purple-100 border-2 border-transparent hover:border-purple-300"
+                  onClick={() => handleMaterialAndTypeChoice('notes')}
+                  role="button"
+                  tabIndex="0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-white shadow-sm">
+                      <Edit2 size={24} className="text-purple-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 label-text">Generate Notes</h3>
+                      <p className="text-gray-600 text-sm">Create study notes from your uploaded content</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cancel button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    setIsChooseModalOpen(false);
+                    setUploadedFiles([]);
+                  }}
+                  className="exam-button-mini"
+                  aria-label="Cancel upload"
+                  data-hover="Cancel"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

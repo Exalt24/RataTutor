@@ -273,3 +273,103 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['username', 'email', 'full_name', 'bio', 'avatar', 'streak']
+
+class UpdateProfileSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        required=True, 
+        max_length=150, 
+        allow_blank=False,
+        validators=[
+            RegexValidator(
+                regex=USERNAME_REGEX,
+                message=(
+                    "Username must be ≥3 chars and can only contain "
+                    "letters, numbers, and @/./+/-/_ (no spaces)."
+                )
+            )
+        ],
+        error_messages={
+            'required': 'Username is required.',
+            'blank': 'Username cannot be blank.',
+            'max_length': 'Username cannot exceed 150 characters.',
+        }
+    )
+    email = serializers.EmailField(
+        required=True, 
+        allow_blank=False,
+        error_messages={
+            'required': 'Email is required.',
+            'blank': 'Email cannot be blank.',
+            'invalid': 'Please enter a valid email address.',
+        }
+    )
+    full_name = serializers.CharField(
+        required=True, 
+        max_length=255, 
+        allow_blank=False,
+        error_messages={
+            'required': 'Full name is required.',
+            'blank': 'Full name cannot be blank.',
+            'max_length': 'Full name cannot exceed 255 characters.',
+        }
+    )
+    bio = serializers.CharField(
+        required=False, 
+        allow_blank=True,
+        error_messages={
+            'max_length': 'Bio is too long.',
+        }
+    )
+    avatar = serializers.CharField(
+        required=True,
+        allow_blank=False,
+        allow_null=False,
+        help_text="Identifier or URL string for the selected premade avatar.",
+        error_messages={
+            'required': 'Avatar selection is required.',
+            'blank': 'Please select an avatar.',
+            'null': 'Avatar cannot be null.',
+        }
+    )
+
+    def validate_username(self, value):
+        """Validate username uniqueness, excluding current user."""
+        # Get the current user from the context (passed from the view)
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user'):
+            raise serializers.ValidationError("Unable to validate username.")
+        
+        current_user = request.user
+        
+        # Check if username is taken by another user
+        if User.objects.filter(username=value).exclude(pk=current_user.pk).exists():
+            raise serializers.ValidationError("That username is already taken.")
+        
+        return value.strip()
+
+    def validate_email(self, value):
+        """Validate email uniqueness, excluding current user."""
+        # Get the current user from the context
+        request = self.context.get('request')
+        if not request or not hasattr(request, 'user'):
+            raise serializers.ValidationError("Unable to validate email.")
+        
+        current_user = request.user
+        
+        # Check if email is taken by another user (case-insensitive)
+        if User.objects.filter(email__iexact=value).exclude(pk=current_user.pk).exists():
+            raise serializers.ValidationError("That email is already registered.")
+        
+        return value.strip()
+
+    def validate(self, data):
+        """Cross-field validation."""
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')  # Won't exist in update, but safe to check
+        
+        # Prevent username/email from being the same (security best practice)
+        if username and email and username.lower() == email.lower():
+            raise serializers.ValidationError("Username cannot be the same as email.")
+        
+        return data
