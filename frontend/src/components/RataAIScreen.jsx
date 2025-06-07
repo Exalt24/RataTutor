@@ -511,37 +511,37 @@ const RataAIScreen = () => {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Chat Area */}
       <div
         className={`flex-1 flex flex-col shadow-lg overflow-hidden ${
-          isPanelVisible ? "rounded-l-xl" : "rounded-xl"
+          isPanelVisible ? "md:rounded-l-xl" : "rounded-xl"
         }`}
       >
         {/* Header */}
         <div className="h-16 px-4 border-b border-gray-200 bg-white flex items-center justify-between">
-          <div className="flex flex-col">
-            <h2 className="text-lg font-semibold text-gray-800 label-text">
+          <div className="flex flex-col flex-1 min-w-0">
+            <h2 className="text-lg font-semibold text-gray-800 label-text truncate">
               {selectedMaterial
                 ? `Chatting about: ${selectedMaterial.title}`
                 : "Select a material to start chatting"}
             </h2>
             {error && (
-              <p className="text-xs text-amber-600 mt-1">
+              <p className="text-xs text-amber-600 mt-1 truncate">
                 {error}
               </p>
             )}
           </div>
           <button
             onClick={() => setIsPanelVisible(!isPanelVisible)}
-            className="bg-gray-50 rounded-full p-2 shadow-sm hover:bg-gray-100 transition-colors"
+            className="ml-2 bg-gray-50 rounded-full p-2 shadow-sm hover:bg-gray-100 transition-colors flex-shrink-0"
           >
             <MoreHorizontal size={20} className="text-gray-600" />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-gray-50">
           {!selectedMaterial ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500 max-w-md">
@@ -640,10 +640,10 @@ const RataAIScreen = () => {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 p-4 bg-white">
-          <div className="flex items-center gap-3 max-w-4xl mx-auto">
+        <div className="border-t border-gray-200 p-3 md:p-4 bg-white">
+          <div className="flex items-center gap-2 md:gap-3 max-w-4xl mx-auto">
             <button
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-2 rounded-full transition-colors flex-shrink-0 ${
                 selectedMaterial 
                   ? 'hover:bg-gray-100' 
                   : 'opacity-50 cursor-not-allowed'
@@ -653,9 +653,9 @@ const RataAIScreen = () => {
               disabled={!selectedMaterial}
               style={{ backgroundColor: "var(--pastel-green)" }}
             >
-              <Upload size={20} className="text-white" />
+              <Upload size={18} className="text-white" />
             </button>
-            <div className="flex-1 relative label-text">
+            <div className="flex-1 relative label-text min-w-0">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -667,7 +667,7 @@ const RataAIScreen = () => {
                     : "Select a material to start chatting"
                 }
                 disabled={!selectedMaterial || loading}
-                className="w-full p-3 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none min-h-[40px] max-h-[120px] bg-gray-50 overflow-hidden disabled:opacity-50"
+                className="w-full p-2 md:p-3 pr-10 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 resize-none min-h-[40px] max-h-[120px] bg-gray-50 overflow-hidden disabled:opacity-50"
                 rows={1}
                 style={{
                   transition: "height 0.1s ease-out",
@@ -677,11 +677,11 @@ const RataAIScreen = () => {
             <button
               onClick={handleSend}
               disabled={!input.trim() || !selectedMaterial || loading}
-              className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
               title="Send message"
               style={{ backgroundColor: "var(--pastel-blue)" }}
             >
-              <Send size={20} />
+              <Send size={18} />
             </button>
           </div>
         </div>
@@ -689,7 +689,7 @@ const RataAIScreen = () => {
 
       {/* Materials Panel */}
       {isPanelVisible && (
-        <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full shadow-lg rounded-r-xl overflow-hidden">
+        <div className="w-full md:w-80 bg-white border-t md:border-l border-gray-200 flex flex-col h-[50vh] md:h-full shadow-lg md:rounded-r-xl overflow-hidden">
           <div className="h-16 px-4 border-b border-gray-200 bg-white">
             <div className="flex items-center h-full relative">
               <h2 className="label-text text-lg font-semibold text-gray-800">
@@ -711,7 +711,7 @@ const RataAIScreen = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search materials..."
-                        className="label-text w-48 px-3 py-1.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all duration-300 ease-in-out bg-gray-50"
+                        className="label-text w-36 md:w-48 px-3 py-1.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all duration-300 ease-in-out bg-gray-50"
                         autoFocus
                       />
                       <button
@@ -730,7 +730,7 @@ const RataAIScreen = () => {
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-3 md:p-4 bg-gray-50">
             <div className="space-y-4">
               {filteredMaterials.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
@@ -956,10 +956,10 @@ const RataAIScreen = () => {
 
       {/* ✅ Content Type Selection Modal */}
       {isChooseModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true">
-          <div className="letter-no-lines max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800 pt-3 px-3 label-text">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true">
+          <div className="letter-no-lines w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4 md:mb-6">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-800 pt-3 px-3 label-text truncate">
                 Generate Content for "{selectedMaterial?.title}"
               </h2>
               <button
@@ -974,23 +974,23 @@ const RataAIScreen = () => {
               </button>
             </div>
             
-            <div className="px-4 pb-4">
+            <div className="px-3 md:px-4 pb-4">
               {/* Show uploaded files summary */}
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 className="text-sm font-medium text-blue-800 mb-2 label-text">Files to Upload:</h3>
                 <div className="space-y-1">
                   {uploadedFiles.map((file, index) => (
-                    <div key={index} className="text-sm text-blue-700 flex items-center gap-2 label-text">
-                      <FileText size={16} />
-                      <span>{file.name}</span>
-                      <span className="text-blue-500">({file.size})</span>
+                    <div key={index} className="text-sm text-blue-700 flex items-center gap-2 label-text truncate">
+                      <FileText size={16} className="flex-shrink-0" />
+                      <span className="truncate">{file.name}</span>
+                      <span className="text-blue-500 flex-shrink-0">({file.size})</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Content type selection */}
-              <div className="grid grid-cols-1 gap-4 mb-8">
+              <div className="grid grid-cols-1 gap-3 md:gap-4 mb-6 md:mb-8">
                 <div
                   className="p-4 rounded-lg shadow-sm transition-all duration-200 cursor-pointer bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-300"
                   onClick={() => handleMaterialAndTypeChoice('flashcards')}
