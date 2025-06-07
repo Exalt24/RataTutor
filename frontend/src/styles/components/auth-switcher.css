@@ -122,3 +122,26 @@
   0%,100% { transform: translateX(-50%) rotate(-4deg); }
   50%     { transform: translateX(-50%) rotate(4deg); }
 }
+
+@media screen and (max-width: 768px) {
+  .slide-arrow {
+    top: 2rem;
+    transform: none;
+  }
+
+  .slide-arrow.left {
+    transform: none;
+  }
+
+  .slide-arrow:hover {
+    transform: rotate(15deg);
+  }
+
+  .slide-arrow.left:hover {
+    transform: rotate(15deg);
+  }
+
+  .slide-tag {
+    top: calc(100% + 0.5rem);
+  }
+}

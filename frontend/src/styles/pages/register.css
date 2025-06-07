@@ -178,3 +178,19 @@
 .register-delivery-particle:nth-child(6) { transform: translate(15px, 4px); animation-delay: 0.5s; }
 .register-delivery-particle:nth-child(7) { transform: translate(30px, 7px); animation-delay: 0.6s; }
 .register-delivery-particle:nth-child(8) { transform: translate(45px, 3px); animation-delay: 0.7s; }
+
+@media screen and (max-width: 768px) {
+  .register-mailbox {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) perspective(1000px) rotateY(0deg);
+    z-index: 1;
+  }
+
+  @keyframes sendToMailbox {
+    0% { transform: none; opacity: 1; }
+    50% { transform: translate(0, -40px) scale(0.8) rotate(0deg); opacity: 1; }
+    100% { transform: translate(0, -40px) scale(0.1, 0.05); opacity: 0; }
+  }
+}

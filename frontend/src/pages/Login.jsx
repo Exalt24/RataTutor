@@ -171,9 +171,31 @@ export default function Login({ isActive, onGoRegister }) {
         </div>
       </div>
 
-      <a href="/" className="fixed bottom-5 left-5 z-50">
-        <button data-hover="Back to Home" className="exam-button-mini">Back to Home</button>
-      </a>
+      <div
+        className="slide-arrow left"
+        onClick={(e) => {
+          e.stopPropagation();
+          nav('/');
+        }}
+      >
+        <div role="button" aria-label="Back to Home">
+          <ArrowRight size={24} strokeWidth={2} style={{ transform: 'rotate(180deg)' }} />
+        </div>
+
+        <div className="slide-tag">
+          <span>Back to</span>
+          <button
+            type="button"
+            className="slide-tag-link"
+            onClick={(e) => {
+              e.stopPropagation();
+              nav('/');
+            }}
+          >
+            Home
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
