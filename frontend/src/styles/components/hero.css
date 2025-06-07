@@ -227,6 +227,7 @@ input:not(:checked) + label.card .hero-center {
 }
 
 
+
 .slide-card:hover {
   transform: translateY(-5px) rotate(2deg);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
