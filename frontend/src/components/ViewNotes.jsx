@@ -1,7 +1,8 @@
 import { ArrowLeft, Edit, FileText, Search } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
+import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useToast } from '../components/Toast/ToastContext';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
 const ViewNotes = ({ 
   mainMaterial, 
@@ -124,13 +125,25 @@ const ViewNotes = ({
   // ✅ REMOVED: handleEditSuccess (no longer needed with routing)
   // ✅ REMOVED: showCreateNotes logic (no longer needed with routing)
 
-  // Function to highlight text in HTML content
+  // Function to highlight text
   const highlightText = (html, query) => {
     if (!query) return html;
-    
-    const regex = new RegExp(`(${query})`, 'gi');
+
+    // Escape special characters in the query for regex
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
     return html.replace(regex, '<span class="bg-yellow-200">$1</span>');
   };
+
+  // Simple check for common markdown syntax (can be refined)
+  const containsMarkdown = (text) => {
+    if (!text) return false;
+    // Check for code blocks, headers, lists, bold/italic as indicators
+    return /```/.test(text) || /^#+\s/.test(text) || /[-*+]\s/.test(text) || /_.*_/g.test(text) || /\*.*\*/g.test(text);
+  };
+
+  // Determine which rendering method to use
+  const shouldUseMarkdown = containsMarkdown(noteContent);
 
   // ✅ REMOVED: Conditional rendering of CreateNotes
 
@@ -148,7 +161,7 @@ const ViewNotes = ({
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate overflow-hidden">
                   {noteTitle}
                 </h1>
                 <p className="text-sm text-gray-500 label-text">
@@ -216,13 +229,20 @@ const ViewNotes = ({
               </div>
 
               {/* Note content with proper scrolling */}
-              <div className="overflow-y-auto h-[calc(100%-6rem)] pr-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-400/50">
-                <div 
+              <div className="overflow-y-auto h-[calc(100%-7rem)] pr-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-400/50">
+                <div
                   className="prose max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-600"
-                  dangerouslySetInnerHTML={{ 
-                    __html: highlightText(noteContent, searchQuery)
-                  }}
-                />
+                >
+                  {shouldUseMarkdown ? (
+                    // Use ReactMarkdown for content detected as markdown
+                    <ReactMarkdown>{noteContent}</ReactMarkdown>
+                  ) : (
+                    // Use dangerouslySetInnerHTML with highlighting for other content
+                    <div dangerouslySetInnerHTML={{
+                      __html: highlightText(noteContent, searchQuery)
+                    }} />
+                  )}
+                </div>
               </div>
             </div>
           ) : (
