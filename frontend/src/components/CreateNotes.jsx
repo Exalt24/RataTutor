@@ -10,14 +10,13 @@ import TextStyle from '@tiptap/extension-text-style';
 import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, AlertCircle, ArrowLeft, Bold, FileText, Heading1, Heading2, Heading3, Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, MinusCircle, RotateCcw, RotateCw, Strikethrough, Underline as UnderlineIcon } from 'lucide-react';
+import { AlertCircle, AlignCenter, AlignLeft, AlignRight, ArrowLeft, Bold, FileText, Heading1, Heading2, Heading3, Highlighter, Italic, MinusCircle, RotateCcw, RotateCw, Strikethrough, Underline as UnderlineIcon } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import ValidatedInput from '../components/ValidatedInput';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
-import { defaultValidators } from '../utils/validation';
+import ValidatedInput from '../components/ValidatedInput';
 import { createNote, updateNote } from '../services/apiService';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
 // ✅ NEW: Memoized components for better performance
 const ErrorBanner = React.memo(({ errors }) => {
@@ -177,22 +176,22 @@ const MenuBar = React.memo(({ editor, submitting }) => {
   ], []);
 
   return (
-    <div className="flex flex-wrap gap-1 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+    <div className="flex flex-wrap gap-0.5 sm:gap-1 p-1.5 sm:p-2 md:p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg min-w-[320px] sm:min-w-[600px]">
       {/* Format buttons */}
       {menuButtons.map(({ action, isActive, canExecute, icon: Icon, title }) => (
         <button
           key={title}
           onMouseDown={handleAction(action)}
           disabled={!canExecute || submitting}
-          className={`p-2 rounded transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200'} ${(!canExecute || submitting) ? 'opacity-50' : ''}`}
+          className={`p-1 sm:p-1.5 md:p-2 rounded transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200'} ${(!canExecute || submitting) ? 'opacity-50' : ''}`}
           title={title}
         >
-          <Icon size={16} />
+          <Icon size={14} className="sm:w-4 sm:h-4" />
         </button>
       ))}
       
       {/* Separator */}
-      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+      <div className="w-px h-5 sm:h-6 bg-gray-300 mx-0.5 sm:mx-1"></div>
       
       {/* Alignment buttons */}
       {alignmentButtons.map(({ action, isActive, icon: Icon, title }) => (
@@ -200,15 +199,15 @@ const MenuBar = React.memo(({ editor, submitting }) => {
           key={title}
           onMouseDown={handleAction(action)}
           disabled={submitting}
-          className={`p-2 rounded transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200'}`}
+          className={`p-1 sm:p-1.5 md:p-2 rounded transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200'}`}
           title={title}
         >
-          <Icon size={16} />
+          <Icon size={14} className="sm:w-4 sm:h-4" />
         </button>
       ))}
       
       {/* Separator */}
-      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+      <div className="w-px h-5 sm:h-6 bg-gray-300 mx-0.5 sm:mx-1"></div>
       
       {/* Heading buttons */}
       {headingButtons.map(({ action, isActive, icon: Icon, title }) => (
@@ -216,36 +215,36 @@ const MenuBar = React.memo(({ editor, submitting }) => {
           key={title}
           onMouseDown={handleAction(action)}
           disabled={submitting}
-          className={`p-2 rounded transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200'}`}
+          className={`p-1 sm:p-1.5 md:p-2 rounded transition-colors ${isActive ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200'}`}
           title={title}
         >
-          <Icon size={16} />
+          <Icon size={14} className="sm:w-4 sm:h-4" />
         </button>
       ))}
       
       {/* Separator */}
-      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+      <div className="w-px h-5 sm:h-6 bg-gray-300 mx-0.5 sm:mx-1"></div>
       
       {/* Undo/Redo */}
       <button 
         onMouseDown={handleAction(() => editor.chain().focus().undo().run())} 
         disabled={!editor.can().chain().focus().undo().run() || submitting} 
-        className="p-2 rounded transition-colors hover:bg-gray-200 disabled:opacity-50" 
+        className="p-1 sm:p-1.5 md:p-2 rounded transition-colors hover:bg-gray-200 disabled:opacity-50" 
         title="Undo"
       >
-        <RotateCcw size={16} />
+        <RotateCcw size={14} className="sm:w-4 sm:h-4" />
       </button>
       <button 
         onMouseDown={handleAction(() => editor.chain().focus().redo().run())} 
         disabled={!editor.can().chain().focus().redo().run() || submitting} 
-        className="p-2 rounded transition-colors hover:bg-gray-200 disabled:opacity-50" 
+        className="p-1 sm:p-1.5 md:p-2 rounded transition-colors hover:bg-gray-200 disabled:opacity-50" 
         title="Redo"
       >
-        <RotateCw size={16} />
+        <RotateCw size={14} className="sm:w-4 sm:h-4" />
       </button>
 
       {/* Separator */}
-      <div className="w-px h-6 bg-gray-300 mx-1"></div>
+      <div className="w-px h-5 sm:h-6 bg-gray-300 mx-0.5 sm:mx-1"></div>
 
       {/* Color buttons */}
       {colorButtons.map(({ color, title }) => (
@@ -253,7 +252,7 @@ const MenuBar = React.memo(({ editor, submitting }) => {
           key={color}
           onMouseDown={handleAction(() => setTextColor(color))}
           disabled={submitting}
-          className={`w-6 h-6 rounded-full border border-gray-300 ${editor.isActive('textStyle', { color }) ? 'ring-2 ring-blue-500' : ''}`}
+          className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border border-gray-300 ${editor.isActive('textStyle', { color }) ? 'ring-2 ring-blue-500' : ''}`}
           style={{ backgroundColor: color }}
           title={title}
         />
@@ -261,10 +260,10 @@ const MenuBar = React.memo(({ editor, submitting }) => {
       <button
         onMouseDown={handleAction(() => editor.chain().focus().unsetColor().run())}
         disabled={!editor.isActive('textStyle') || submitting}
-        className={`w-6 h-6 rounded-full bg-gray-300 border border-gray-300 flex items-center justify-center ${!editor.isActive('textStyle') ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-400'}`}
+        className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full bg-gray-300 border border-gray-300 flex items-center justify-center ${!editor.isActive('textStyle') ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-400'}`}
         title="Unset Text Color"
       >
-        <MinusCircle size={12} className="text-gray-600" />
+        <MinusCircle size={8} className="sm:w-3 sm:h-3 text-gray-600" />
       </button>
     </div>
   );
@@ -533,26 +532,26 @@ const CreateNotes = React.memo(({
 
   return (
     <div className="letter-no-lines">
-      <div className="max-w-[90rem] mx-auto px-10 py-3">
+      <div className="max-w-[90rem] mx-auto px-2 sm:px-4 md:px-6 lg:px-10 py-2 sm:py-3">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-8">
+          <div className="flex items-center mb-4 sm:mb-0">
             <button
               onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-4"
+              className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2 sm:mr-4"
               disabled={submitting}
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
             </button>
-            <div>
-              <h2 className="text-3xl font-semibold label-text">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold label-text break-words">
                 {isEditMode ? 'Edit Note' : 'Create Note'}
               </h2>
               {material && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 break-words">
                   for "{material.title}"
                   {isEditMode && (
-                    <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                    <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-700 rounded-full text-xs inline-block mt-1 sm:mt-0">
                       Editing: {editContent?.title}
                     </span>
                   )}
@@ -566,13 +565,13 @@ const CreateNotes = React.memo(({
         <ErrorBanner errors={bannerErrors} />
 
         {/* Details Section */}
-        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all mb-8">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-sm hover:shadow-md transition-all mb-4 sm:mb-6 md:mb-8">
+          <div className="flex justify-between items-center mb-3 sm:mb-4 md:mb-6">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-medium label-text">Details</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-medium label-text">Details</h3>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
             <ValidatedInput
               label="Title"
               name="noteTitle"
@@ -603,20 +602,20 @@ const CreateNotes = React.memo(({
         </div>
 
         {/* Content Section */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all mb-8">
-          <div className="p-8 pb-0">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-medium label-text">Content</h3>
-                <div className="flex items-center gap-2">
-                  <FileText size={20} className="text-purple-500" />
-                  <span className="text-sm text-gray-500">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all mb-4 sm:mb-6 md:mb-8">
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 pb-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-4 md:mb-6">
+              <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                <h3 className="text-base sm:text-lg md:text-xl font-medium label-text">Content</h3>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <FileText size={16} className="sm:w-5 sm:h-5 text-purple-500" />
+                  <span className="text-xs sm:text-sm text-gray-500">
                     {contentValidation.length} characters
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 rounded-full text-xs ${
+                <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs ${
                   contentValidation.isValid 
                     ? 'bg-green-100 text-green-700' 
                     : contentValidation.isEmpty
@@ -634,12 +633,14 @@ const CreateNotes = React.memo(({
             </div>
           </div>
           
-          <div className="mx-8 mb-8 border border-gray-200 rounded-lg overflow-hidden">
-            <MenuBar editor={editor} submitting={submitting} />
+          <div className="mx-1 sm:mx-2 md:mx-4 lg:mx-8 mb-3 sm:mb-4 md:mb-6 lg:mb-8 border border-gray-200 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto -mx-1 sm:mx-0">
+              <MenuBar editor={editor} submitting={submitting} />
+            </div>
             <div className="relative">
               <EditorContent 
                 editor={editor} 
-                className="min-h-[400px] focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500 transition-all"
+                className="min-h-[250px] sm:min-h-[300px] md:min-h-[400px] focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500 transition-all prose-sm sm:prose-base max-w-none px-2 sm:px-4"
               />
             </div>
           </div>
@@ -649,24 +650,22 @@ const CreateNotes = React.memo(({
         <ContentStats contentValidation={contentValidation} validities={validities} />
 
         {/* Actions */}
-        <div className="flex justify-end mt-8">
-          <div className="space-x-4">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-              disabled={submitting}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className={`exam-button-mini ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              data-hover={buttonHover}
-              disabled={isDisabled}
-            >
-              {buttonText}
-            </button>
-          </div>
+        <div className="flex flex-col sm:flex-row justify-end mt-4 sm:mt-6 md:mt-8 gap-2 sm:gap-4">
+          <button
+            onClick={onClose}
+            className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 order-2 sm:order-1 text-sm sm:text-base"
+            disabled={submitting}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className={`exam-button-mini w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} order-1 sm:order-2 text-sm sm:text-base`}
+            data-hover={buttonHover}
+            disabled={isDisabled}
+          >
+            {buttonText}
+          </button>
         </div>
       </div>
     </div>
