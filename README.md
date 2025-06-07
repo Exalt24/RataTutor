@@ -7,6 +7,8 @@
 
 A full-stack AI-powered study assistant that converts your notes into flashcards, summaries, and quiz questions. Like a tiny chef guiding your culinary creations, RataTutor helps prepare the perfect recipe for exam success!
 
+![RataTutor Demo](./frontend/src/assets/screenshots/quiz.gif)
+
 ## 🚀 Overview
 
 - **Backend:** Django + Django REST Framework + django-cors-headers  
@@ -560,20 +562,6 @@ npm run dev
         <img src="./frontend/src/assets/screenshots/material1.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Material Dashboard</em>
-      </td>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/profile0.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen"/>
-        <br/>
-        <em>Profile Tab</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/quiz.gif" alt="Upload Notes Screen"/>
-        <br/>
-        <em>Quiz Process</em>
       </td>
       <td align="center">
         <img src="./frontend/src/assets/screenshots/profile0.png" alt="Upload Notes Screen"/>
