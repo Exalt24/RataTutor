@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLoading } from '../components/Loading/LoadingContext'
 import { useToast } from '../components/Toast/ToastContext'
-import { useMaterials } from '../utils/materialsContext'
 import { copyMaterial, getPublicMaterials } from '../services/apiService'
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications'
+import { useMaterials } from '../utils/materialsContext'
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications'
 import MaterialCard from './MaterialCard'
 
 // ✅ ADDED: Accept onRefreshProfile prop from Dashboard
@@ -223,9 +223,10 @@ const ExploreScreen = ({ onRefreshProfile }) => {
   }
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="flex flex-col justify-between sm:flex-row gap-4 items-start sm:items-center">
-        <div className="relative w-full max-w-md mx-auto sm:mx-0">
+    <div className="space-y-4 p-4">
+      {/* Search and Filter UI */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 text-xs sm:text-sm">
+        <div className="relative w-full sm:w-auto sm:max-w-md">
           <div className={`
             relative flex items-center
             transition-all duration-200
@@ -260,54 +261,52 @@ const ExploreScreen = ({ onRefreshProfile }) => {
             )}
           </div>
           {searchQuery && (
-            <p className="mt-1 text-xs text-gray-500 text-center sm:text-left">
+            <p className="mt-1 text-xs text-gray-500">
               Found {filteredMaterials.length} results
             </p>
           )}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleRefresh}
-            className="exam-button-mini py-2 px-3 flex items-center gap-2"
+            className="exam-button-mini py-1 px-2"
             data-hover="Refresh"
           >
             Refresh
           </button>
           
-          <div className="flex gap-2">
-            {categories.map(category => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedFilter(category.id)}
-                data-hover={category.name}
-                className={`exam-button-mini ${
-                  selectedFilter === category.id
-                    ? 'text-white'
-                    : 'text-gray-700'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+          {categories.map(category => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedFilter(category.id)}
+              data-hover={category.name}
+              className={`exam-button-mini py-1 px-2 ${
+                selectedFilter === category.id
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
         </div>
       </div>
 
       {materialsData.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 label-text">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 label-text">
                 Community Materials
               </h2>
-              <p className="text-sm text-gray-600 label-text">
+              <p className="text-xs sm:text-sm text-gray-600 label-text">
                 Discover {materialsData.length} public materials shared by the community
                 {searchQuery && ` • ${filteredMaterials.length} match your search`}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">
                 {filteredMaterials.length}
               </div>
               <div className="text-xs text-gray-500">
@@ -318,7 +317,7 @@ const ExploreScreen = ({ onRefreshProfile }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredMaterials.map(material => (
           <MaterialCard
             key={material.id}
