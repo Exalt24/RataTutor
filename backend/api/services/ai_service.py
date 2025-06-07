@@ -7,6 +7,12 @@ from docx import Document as DocxDocument
 from pptx import Presentation as PptxPresentation
 from PyPDF2 import PdfReader
 
+import sys
+
+if os.name == 'nt':
+    sys.stdout.reconfigure(encoding='utf-8')
+
+
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=settings.OPENROUTER_API_KEY,

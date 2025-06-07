@@ -4,6 +4,13 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import UserProfile, Streak
 
+import sys
+import os
+
+if os.name == 'nt':
+    sys.stdout.reconfigure(encoding='utf-8')
+
+
 # Cooking/Culinary-themed first names
 CHEF_FIRST_NAMES = [
     "Chef", "Sage", "Basil", "Rosemary", "Thyme",
