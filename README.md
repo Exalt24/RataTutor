@@ -523,7 +523,15 @@ npm run dev
   <table>
     <tr>
       <td align="center">
-        <img src="https://via.placeholder.com/400x225?text=Upload+Notes+Screen" alt="Upload Notes Screen"/>
+        <img src="./frontend/src/assets/screenshots/flashcard1.png" alt="Upload Notes Screen"/>
+        <br/>
+        <img src="./frontend/src/assets/screenshots/flashcard2.png" alt="Upload Notes Screen"/>
+        <br/>
+        <img src="./frontend/src/assets/screenshots/flashcard3.png" alt="Upload Notes Screen"/>
+        <br/>
+        <img src="./frontend/src/assets/screenshots/flashcard4.png" alt="Upload Notes Screen"/>
+        <br/>
+        <img src="./frontend/src/assets/screenshots/flashcard5.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Upload Notes</em>
       </td>
