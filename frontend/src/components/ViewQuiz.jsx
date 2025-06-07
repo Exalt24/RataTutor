@@ -1,8 +1,8 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Edit, HelpCircle, XCircle } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 import { useToast } from '../components/Toast/ToastContext';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
 const ViewQuiz = ({ 
   mainMaterial, 
@@ -155,7 +155,7 @@ const ViewQuiz = ({
   // ✅ REMOVED: Conditional rendering of CreateQuiz
 
   return (
-    <div className="flex flex-col bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-xl h-[calc(100vh-6rem)]">
+    <div className="flex flex-col bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-xl h-[calc(100vh-7rem)]">
       {showConfetti && (
         <Confetti
           width={windowSize.width}
@@ -178,7 +178,7 @@ const ViewQuiz = ({
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate overflow-hidden">
                   {quizData?.title || 'Quiz'}
                 </h1>
                 <p className="text-sm text-gray-500 label-text">

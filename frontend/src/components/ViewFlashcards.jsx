@@ -1,9 +1,9 @@
-import { ArrowLeft, ArrowRight, BookOpen, Edit, Globe, Lock, Shuffle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Edit, Shuffle } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import Confetti from 'react-confetti';
-import '../styles/components/flashcards.css';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
 import { useToast } from '../components/Toast/ToastContext';
+import '../styles/components/flashcards.css';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
 const ViewFlashcards = ({ 
   mainMaterial, 
@@ -191,7 +191,7 @@ const ViewFlashcards = ({
   // ✅ REMOVED: Conditional rendering of CreateFlashcards
 
   return (
-    <div className="flex flex-col bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 rounded-xl h-[calc(100vh-6rem)]">
+    <div className="flex flex-col bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 rounded-xl h-[calc(100vh-7rem)]">
       {showConfetti && (
         <Confetti
           width={windowSize.width}
@@ -213,7 +213,7 @@ const ViewFlashcards = ({
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate overflow-hidden">
                   {material?.title || 'Flashcards'}
                 </h1>
                 <p className="text-sm text-gray-500 label-text">
@@ -329,7 +329,7 @@ const ViewFlashcards = ({
                       }}
                     >
                       <div className="text-center px-12">
-                        <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                        <h2 className="text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text break-words overflow-wrap">
                           {formattedFlashcards[safeCurrentIndex]?.front || 'Loading...'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-6 label-text">Click to show answer</p>
@@ -346,7 +346,7 @@ const ViewFlashcards = ({
                       }}
                     >
                       <div className="text-center px-12">
-                        <h2 className="text-3xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                        <h2 className="text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text break-words overflow-wrap">
                           {formattedFlashcards[safeCurrentIndex]?.back || 'Loading...'}
                         </h2>
                         <p className="text-sm text-gray-500 mt-6 label-text">Click to show question</p>

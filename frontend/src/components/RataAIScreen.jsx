@@ -2,33 +2,31 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
+  Edit2,
   FileText,
+  HelpCircle,
   MoreHorizontal,
   Search,
   Send,
   Upload,
   X,
-  HelpCircle,
-  Edit2,
 } from "lucide-react";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
-import { useMaterials } from '../utils/materialsContext';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import UploadFile from '../components/UploadFile';
+import { useMaterials } from '../utils/materialsContext';
 import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
-import { 
-  getMaterialConversation, 
-  chatConversation,
-  startMaterialConversation,
-  sendMessage,
-  uploadAttachment,
+import {
   generateFlashcardsFromSpecificFiles,
-  generateNotesFromSpecificFiles, 
+  generateNotesFromSpecificFiles,
   generateQuizFromSpecificFiles,
-  createMaterial
+  sendMessage,
+  startMaterialConversation,
+  uploadAttachment
 } from "../services/apiService";
 
 const RataAIScreen = () => {
@@ -554,14 +552,6 @@ const RataAIScreen = () => {
                 <p className="text-sm text-gray-500 mt-2 mb-4">
                   Select a material from the panel to start chatting with Rata AI
                 </p>
-                {materials.length === 0 && (
-                  <button
-                    onClick={handleGoToMaterials}
-                    className="exam-button-mini"
-                  >
-                    Go to Materials
-                  </button>
-                )}
               </div>
             </div>
           ) : (
@@ -612,7 +602,13 @@ const RataAIScreen = () => {
                           overflowWrap: "break-word",
                         }}
                       >
-                        {message.content}
+                        {!isUser ? (
+                          <div className="prose prose-sm max-w-none">
+                            <ReactMarkdown>{message.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          message.content
+                        )}
                       </div>
                       {localTime && (
                         <span className="text-xs text-gray-400 px-2">
@@ -766,16 +762,41 @@ const RataAIScreen = () => {
                 filteredMaterials.map((material, fileIndex) => (
                   <div
                     key={material.id}
-                    className={`exam-card exam-card--alt p-4 transition-all duration-300 ease-in-out cursor-pointer hover:bg-white rounded-xl border border-gray-200 ${
+                    className={`exam-card exam-card--alt p-4 transition-all duration-300 ease-in-out cursor-pointer hover:bg-white rounded-xl border border-gray-200 shadow-sm ${
                       selectedMaterial?.id === material.id
-                        ? "bg-white shadow-sm ring-2 ring-blue-200"
-                        : "bg-white/50"
+                        ? "bg-white ring-2 ring-blue-200"
+                        : "bg-white/50 hover:shadow-md"
                     }`}
                     onClick={() => handleMaterialSelect(material)}
                   >
-                    <h3 className="font-medium mb-3 text-gray-800">
-                      {material.title}
-                    </h3>
+                    {/* Flex container for header elements */}
+                    <div className="flex items-center justify-between mb-2">
+                      {/* Material Icon and Title (Left side) */}
+                      <div className="flex items-center gap-2">
+                        <BookOpen size={20} className="text-gray-600" />
+                        <h3 className="font-medium text-gray-800">
+                          {material.title}
+                        </h3>
+                      </div>
+
+                      {/* Add creation time with icon (Right side) */}
+                      {material.created_at && (
+                        <div className="inline-flex items-center gap-1 text-xs text-gray-500">
+                          <FileText size={12} className="text-gray-400" />
+                          <span>{new Date(material.created_at).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Empty State */}
+                    {(!material.flashcard_sets || material.flashcard_sets.length === 0) &&
+                     (!material.notes || material.notes.length === 0) &&
+                     (!material.quizzes || material.quizzes.length === 0) &&
+                     (!material.attachments || material.attachments.length === 0) && (
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        No content yet
+                      </div>
+                    )}
 
                     {/* Flashcards Folder */}
                     {material.flashcard_sets && material.flashcard_sets.length > 0 && (
