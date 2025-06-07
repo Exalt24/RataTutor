@@ -168,7 +168,7 @@ const ViewQuiz = ({
       
       {/* Header */}
       <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-        <div className="max-w-[90rem] mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-[90rem] mx-auto px-2 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4">
               <button
@@ -177,24 +177,24 @@ const ViewQuiz = ({
               >
                 <ArrowLeft size={18} className="text-gray-600" />
               </button>
-              <div>
-                <h1 className="text-base sm:text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate overflow-hidden max-w-[200px] sm:max-w-none">
+              <div className="min-w-0 flex-auto max-w-full overflow-hidden">
+                <h1 className="text-base sm:text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate max-w-[150px] sm:max-w-xl">
                   {quizData?.title || 'Quiz'}
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-500 label-text">
+                <p className="text-xs sm:text-sm text-gray-500 label-text truncate max-w-[150px] sm:max-w-xl">
                   {quizData?.description || 'Test your knowledge'} • {quizData?.questions?.length || 0} questions
                   {quizSubmitted && <span className="ml-2 text-green-600">• Completed</span>}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
               {/* Progress indicator */}
               {!quizSubmitted && quizData?.questions && quizData.questions.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs sm:text-sm text-gray-500 bg-gray-50 px-2 sm:px-3 py-1 rounded-full label-text">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <span className="text-xs sm:text-sm text-gray-500 bg-gray-50 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full label-text">
                     Q{safeCurrentIndex + 1}/{quizData.questions.length}
                   </span>
-                  <div className="h-1.5 w-20 sm:w-32 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-12 sm:w-32 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-green-500 transition-all duration-300"
                       style={{
@@ -207,13 +207,13 @@ const ViewQuiz = ({
               {/* Edit button */}
               {!readOnly && onEdit && (
                 <>
-                  <div className="h-6 w-px bg-gray-200"></div>
+                  <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
                   <button
                     onClick={handleEdit}
-                    className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                    className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
                   >
                     <Edit size={14} className="sm:w-4 sm:h-4" />
-                    <span className="label-text text-sm sm:text-base">Edit</span>
+                    <span className="label-text text-xs sm:text-base hidden sm:inline">Edit</span>
                   </button>
                 </>
               )}
@@ -224,14 +224,14 @@ const ViewQuiz = ({
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-4 h-full">
+        <div className="max-w-4xl mx-auto px-2 sm:px-6 py-2 sm:py-4 h-full">
           {quizData?.questions && quizData.questions.length > 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-4 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-3 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col">
               {!quizSubmitted ? (
                 // Quiz taking interface
-                <>
+                <div className="flex flex-col h-full">
                   {/* Progress */}
-                  <div className="flex items-center justify-between mb-4 sm:mb-8">
+                  <div className="flex-none flex items-center justify-between mb-3 sm:mb-8">
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 sm:p-2 bg-green-50 rounded-lg">
                         <HelpCircle size={16} className="sm:w-5 sm:h-5 text-green-500" />
@@ -246,15 +246,15 @@ const ViewQuiz = ({
                   </div>
 
                   {/* Question */}
-                  <div className="mb-4 sm:mb-8">
-                    <h2 className="text-lg sm:text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-4 sm:mb-6 label-text">
+                  <div className="flex-1 min-h-0 overflow-y-auto mb-3 sm:mb-8">
+                    <h2 className="text-sm sm:text-lg font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-2 sm:mb-4 label-text break-words">
                       {quizData.questions[safeCurrentIndex]?.question_text || 'Loading...'}
                     </h2>
-                    <div className="space-y-2 sm:space-y-3">
+                    <div className="space-y-2 sm:space-y-3 max-w-[95%] mx-auto">
                       {(quizData.questions[safeCurrentIndex]?.choices || []).map((option, index) => (
                         <label
                           key={index}
-                          className={`flex items-center p-3 sm:p-4 border rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                          className={`flex items-start p-1.5 sm:p-3 border rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
                             selectedAnswers[quizData.questions[safeCurrentIndex].id] === option
                               ? 'border-green-500 bg-green-50'
                               : 'border-gray-200 hover:border-green-400'
@@ -266,90 +266,90 @@ const ViewQuiz = ({
                             value={option}
                             checked={selectedAnswers[quizData.questions[safeCurrentIndex].id] === option}
                             onChange={() => handleAnswerSelect(quizData.questions[safeCurrentIndex].id, option)}
-                            className="mr-2 sm:mr-3 text-green-500 focus:ring-green-500"
+                            className="mt-0.5 mr-2 sm:mr-3 text-green-500 focus:ring-green-500 flex-shrink-0"
                           />
-                          <span className="label-text text-sm sm:text-base">{option}</span>
+                          <span className="label-text text-xs sm:text-sm break-words flex-1">{option}</span>
                         </label>
                       ))}
                     </div>
                   </div>
 
                   {/* Navigation */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex-none flex items-center justify-between">
                     <button
                       onClick={handlePreviousQuestion}
                       disabled={currentQuestionIndex === 0}
-                      className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 text-sm sm:text-base ${
+                      className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 text-xs sm:text-base ${
                         currentQuestionIndex === 0
                           ? 'text-gray-400 cursor-not-allowed'
                           : 'text-gray-600 hover:text-gray-800 hover:scale-105'
                       }`}
                     >
-                      <ArrowLeft size={16} className="sm:w-4 sm:h-4" />
+                      <ArrowLeft size={14} className="sm:w-4 sm:h-4" />
                       <span className="label-text">Previous</span>
                     </button>
                     
                     <div className="text-xs sm:text-sm text-gray-500 label-text">
-                    Question {Math.min(safeCurrentIndex + 1, quizData.questions.length)} of {quizData.questions.length}
+                      {Math.min(safeCurrentIndex + 1, quizData.questions.length)}/{quizData.questions.length}
                     </div>
 
                     {currentQuestionIndex === quizData.questions.length - 1 ? (
                       <button
                         onClick={handleSubmit}
-                        className="exam-button-mini text-sm sm:text-base"
-                        data-hover="Submit Quiz"
+                        className="exam-button-mini text-xs sm:text-base"
+                        data-hover="Submit"
                       >
-                        <span className="label-text">Submit Quiz</span>
+                        <span className="label-text">Submit</span>
                       </button>
                     ) : (
                       <button
                         onClick={handleNextQuestion}
-                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105 text-sm sm:text-base"
+                        className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105 text-xs sm:text-base"
                       >
                         <span className="label-text">Next</span>
-                        <ArrowRight size={16} className="sm:w-4 sm:h-4" />
+                        <ArrowRight size={14} className="sm:w-4 sm:h-4" />
                       </button>
                     )}
                   </div>
-                </>
+                </div>
               ) : (
                 // Results interface
-                <>
-                  <div className="text-center mb-6 sm:mb-8">
-                    <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3 sm:mb-4 label-text">
+                <div className="flex flex-col h-full">
+                  <div className="flex-none text-center mb-4 sm:mb-8">
+                    <div className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2 sm:mb-4 label-text">
                       {calculateScore()}%
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text mb-2">
+                    <h2 className="text-lg sm:text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text mb-2">
                       Quiz Completed!
                     </h2>
-                    <p className="text-sm sm:text-base text-gray-600 label-text">
+                    <p className="text-xs sm:text-base text-gray-600 label-text">
                       You got {Math.round((calculateScore() / 100) * quizData.questions.length)} out of {quizData.questions.length} questions correct!
                     </p>
                   </div>
 
                   {/* Results breakdown */}
-                  <div className="space-y-3 sm:space-y-4 max-h-[calc(100%-12rem)] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-green-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-green-400/50 pr-2 sm:pr-4">
+                  <div className="flex-1 min-h-0 overflow-y-auto space-y-2 sm:space-y-4 pr-2 sm:pr-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-green-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-green-400/50">
                     {quizData.questions.map((question, index) => {
                       const status = getQuestionStatus(question.id);
                       return (
-                        <div key={question.id} className="border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-md transition-all duration-200">
-                          <div className="flex items-start gap-3 sm:gap-4">
+                        <div key={question.id} className="border border-gray-200 rounded-xl p-3 sm:p-6 hover:shadow-md transition-all duration-200">
+                          <div className="flex items-start gap-2 sm:gap-4">
                             <div className="flex-shrink-0">
                               {status === 'correct' ? (
-                                <CheckCircle2 size={20} className="sm:w-6 sm:h-6 text-green-600" />
+                                <CheckCircle2 size={18} className="sm:w-6 sm:h-6 text-green-600" />
                               ) : (
-                                <XCircle size={20} className="sm:w-6 sm:h-6 text-red-500" />
+                                <XCircle size={18} className="sm:w-6 sm:h-6 text-red-500" />
                               )}
                             </div>
-                            <div className="flex-1">
-                              <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 label-text text-sm sm:text-base">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 mb-2 sm:mb-4 label-text text-xs sm:text-base break-words">
                                 {index + 1}. {question.question_text}
                               </h3>
-                              <div className="space-y-2">
+                              <div className="space-y-1.5 sm:space-y-2">
                                 {(question.choices || []).map((option, optIndex) => (
                                   <div
                                     key={optIndex}
-                                    className={`p-2 sm:p-3 rounded-lg transition-all duration-200 text-sm sm:text-base ${
+                                    className={`p-2 sm:p-3 rounded-lg transition-all duration-200 text-xs sm:text-base break-words ${
                                       option === question.correct_answer
                                         ? 'bg-green-100 text-green-800 border border-green-200'
                                         : option === selectedAnswers[question.id] && option !== question.correct_answer
@@ -359,10 +359,10 @@ const ViewQuiz = ({
                                   >
                                     <span className="label-text">{option}</span>
                                     {option === question.correct_answer && (
-                                      <span className="ml-2 text-green-600 text-xs sm:text-sm">✓ Correct</span>
+                                      <span className="ml-1 sm:ml-2 text-green-600 text-[10px] sm:text-sm">✓ Correct</span>
                                     )}
                                     {option === selectedAnswers[question.id] && option !== question.correct_answer && (
-                                      <span className="ml-2 text-red-600 text-xs sm:text-sm">✗ Your answer</span>
+                                      <span className="ml-1 sm:ml-2 text-red-600 text-[10px] sm:text-sm">✗ Your answer</span>
                                     )}
                                   </div>
                                 ))}
@@ -375,30 +375,30 @@ const ViewQuiz = ({
                   </div>
 
                   {/* Try again button */}
-                  <div className="mt-4 sm:mt-6 flex justify-center">
+                  <div className="mt-3 sm:mt-6 flex justify-center">
                     <button
                       onClick={resetQuiz}
-                      className="exam-button-mini text-sm sm:text-base"
+                      className="exam-button-mini text-xs sm:text-base"
                       data-hover="Try Again"
                     >
                       <span className="label-text">Try Again</span>
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
           ) : (
             // Empty state
-            <div className="text-center py-8 sm:py-12">
-              <div className="p-3 sm:p-4 bg-gray-100 rounded-full w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 flex items-center justify-center">
-                <HelpCircle size={32} className="sm:w-12 sm:h-12 text-gray-400" />
+            <div className="text-center py-6 sm:py-12">
+              <div className="p-2 sm:p-4 bg-gray-100 rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 flex items-center justify-center">
+                <HelpCircle size={24} className="sm:w-12 sm:h-12 text-gray-400" />
               </div>
-              <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2 label-text">No questions available</h3>
-              <p className="text-sm sm:text-base text-gray-600 label-text">This quiz is empty.</p>
+              <h3 className="text-base sm:text-xl font-medium text-gray-900 mb-1 sm:mb-2 label-text">No questions available</h3>
+              <p className="text-xs sm:text-base text-gray-600 label-text">This quiz is empty.</p>
               {!readOnly && onEdit && (
                 <button
                   onClick={handleEdit}
-                  className="mt-3 sm:mt-4 exam-button-mini text-sm sm:text-base"
+                  className="mt-2 sm:mt-4 exam-button-mini text-xs sm:text-base"
                   data-hover="Add Questions"
                 >
                   Add Questions
