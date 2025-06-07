@@ -203,35 +203,35 @@ const ViewFlashcards = ({
       )}
       {/* Header */}
       <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-        <div className="max-w-[90rem] mx-auto px-6 py-4">
+        <div className="max-w-[90rem] mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
               >
-                <ArrowLeft size={20} className="text-gray-600" />
+                <ArrowLeft size={18} className="text-gray-600" />
               </button>
               <div>
-                <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate overflow-hidden">
+                <h1 className="text-base sm:text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text truncate overflow-hidden max-w-[200px] sm:max-w-none">
                   {material?.title || 'Flashcards'}
                 </h1>
-                <p className="text-sm text-gray-500 label-text">
+                <p className="text-xs sm:text-sm text-gray-500 label-text">
                   {material?.description || 'Study and review your flashcards'} • {formattedFlashcards.length} cards
                   {isShuffled && <span className="ml-2 text-blue-600">• Shuffled</span>}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {!readOnly && onEdit && (
                 <>
                   <div className="h-6 w-px bg-gray-200"></div>
                   <button
                     onClick={handleEdit}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
+                    className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 transition-all duration-200 hover:scale-105"
                   >
-                    <Edit size={16} />
-                    <span className="label-text">Edit</span>
+                    <Edit size={14} className="sm:w-4 sm:h-4" />
+                    <span className="label-text text-sm sm:text-base">Edit</span>
                   </button>
                 </>
               )}
@@ -242,23 +242,23 @@ const ViewFlashcards = ({
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">
-        <div className="max-w-4xl mx-auto px-6 py-4 h-full">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-4 h-full">
           {formattedFlashcards.length > 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+            <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-4 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
               {/* Progress */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-8">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <BookOpen size={20} className="text-[#1b81d4]" />
+                  <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg">
+                    <BookOpen size={16} className="sm:w-5 sm:h-5 text-[#1b81d4]" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700 label-text">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 label-text">
                     {isFinished ? "Finished" : `${safeCurrentIndex + 1} of ${formattedFlashcards.length}`}
                   </span>
                 </div>
                 <button
                   onClick={handleShuffle}
                   disabled={formattedFlashcards.length <= 1}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm sm:text-base ${
                     formattedFlashcards.length <= 1
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : isShuffled
@@ -267,27 +267,27 @@ const ViewFlashcards = ({
                   }`}
                   title={isShuffled ? "Return to original order" : "Shuffle cards"}
                 >
-                  <Shuffle size={20} />
+                  <Shuffle size={16} className="sm:w-5 sm:h-5" />
                   <span className="label-text">{isShuffled ? "Unshuffle" : "Shuffle"}</span>
                 </button>
               </div>
 
               {/* Flashcard with 3D flip animation */}
               {isFinished ? (
-                <div className="relative h-[270px] w-[500px] mx-auto mb-8">
+                <div className="relative h-[200px] sm:h-[270px] w-full sm:w-[500px] mx-auto mb-4 sm:mb-8">
                   <div className="w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-xl border border-gray-200 shadow-xl flex items-center justify-center">
-                    <div className="text-center px-12">
-                      <h2 className="text-3xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent label-text mb-4">
+                    <div className="text-center px-4 sm:px-12">
+                      <h2 className="text-xl sm:text-3xl font-medium bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent label-text mb-2 sm:mb-4">
                         Congratulations!
                       </h2>
-                      <p className="text-lg text-gray-600 label-text mb-6">
+                      <p className="text-base sm:text-lg text-gray-600 label-text mb-4 sm:mb-6">
                         You've completed reviewing all {formattedFlashcards.length} flashcards
-                        {isShuffled && <span className="block text-sm mt-2 text-blue-600">in shuffled order</span>}
+                        {isShuffled && <span className="block text-xs sm:text-sm mt-2 text-blue-600">in shuffled order</span>}
                       </p>
-                      <div className="flex gap-3 justify-center">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
                         <button
                           onClick={resetToStart}
-                          className="exam-button-mini"
+                          className="exam-button-mini text-sm sm:text-base"
                           data-hover="Review Again"
                         >
                           Review Again
@@ -295,7 +295,7 @@ const ViewFlashcards = ({
                         {isShuffled && (
                           <button
                             onClick={resetToOriginalOrder}
-                            className="exam-button-mini bg-blue-600 hover:bg-blue-700"
+                            className="exam-button-mini bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
                             data-hover="Review Original Order"
                           >
                             Original Order
@@ -307,7 +307,7 @@ const ViewFlashcards = ({
                 </div>
               ) : (
                 <div 
-                  className="relative h-[270px] w-[500px] mx-auto mb-8"
+                  className="relative h-[200px] sm:h-[270px] w-full sm:w-[500px] mx-auto mb-4 sm:mb-8"
                   style={{ perspective: '1000px' }}
                   onClick={handleFlip}
                 >
@@ -328,11 +328,11 @@ const ViewFlashcards = ({
                         opacity: showAnswer ? 0 : 1
                       }}
                     >
-                      <div className="text-center px-12">
-                        <h2 className="text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text break-words overflow-wrap">
+                      <div className="text-center px-4 sm:px-12">
+                        <h2 className="text-lg sm:text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text break-words overflow-wrap">
                           {formattedFlashcards[safeCurrentIndex]?.front || 'Loading...'}
                         </h2>
-                        <p className="text-sm text-gray-500 mt-6 label-text">Click to show answer</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-4 sm:mt-6 label-text">Click to show answer</p>
                       </div>
                     </div>
                     
@@ -345,11 +345,11 @@ const ViewFlashcards = ({
                         opacity: showAnswer ? 1 : 0
                       }}
                     >
-                      <div className="text-center px-12">
-                        <h2 className="text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text break-words overflow-wrap">
+                      <div className="text-center px-4 sm:px-12">
+                        <h2 className="text-lg sm:text-2xl font-medium bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text break-words overflow-wrap">
                           {formattedFlashcards[safeCurrentIndex]?.back || 'Loading...'}
                         </h2>
-                        <p className="text-sm text-gray-500 mt-6 label-text">Click to show question</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-4 sm:mt-6 label-text">Click to show question</p>
                       </div>
                     </div>
                   </div>
@@ -362,44 +362,44 @@ const ViewFlashcards = ({
                   <button
                     onClick={handlePrevious}
                     disabled={formattedFlashcards.length <= 1}
-                    className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:scale-105 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 hover:scale-105 text-sm sm:text-base ${
                       formattedFlashcards.length <= 1 
                         ? 'text-gray-400 cursor-not-allowed' 
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    <ArrowLeft size={20} />
+                    <ArrowLeft size={16} className="sm:w-5 sm:h-5" />
                     <span className="label-text">Previous</span>
                   </button>
-                  <div className="text-sm text-gray-500 label-text">
+                  <div className="text-xs sm:text-sm text-gray-500 label-text">
                     Card {Math.min(safeCurrentIndex + 1, formattedFlashcards.length)} of {formattedFlashcards.length}
                   </div>
                   <button
                     onClick={handleNext}
                     disabled={formattedFlashcards.length <= 1}
-                    className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:scale-105 ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 hover:scale-105 text-sm sm:text-base ${
                       formattedFlashcards.length <= 1 
                         ? 'text-gray-400 cursor-not-allowed' 
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
                     <span className="label-text">Next</span>
-                    <ArrowRight size={20} />
+                    <ArrowRight size={16} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <BookOpen size={48} className="text-gray-400" />
+            <div className="text-center py-8 sm:py-12">
+              <div className="p-3 sm:p-4 bg-gray-100 rounded-full w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 flex items-center justify-center">
+                <BookOpen size={32} className="sm:w-12 sm:h-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2 label-text">No flashcards available</h3>
-              <p className="text-gray-600 label-text">This flashcard set is empty.</p>
+              <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2 label-text">No flashcards available</h3>
+              <p className="text-sm sm:text-base text-gray-600 label-text">This flashcard set is empty.</p>
               {!readOnly && onEdit && (
                 <button
                   onClick={handleEdit}
-                  className="mt-4 exam-button-mini"
+                  className="mt-3 sm:mt-4 exam-button-mini text-sm sm:text-base"
                   data-hover="Add Flashcards"
                 >
                   Add Flashcards
