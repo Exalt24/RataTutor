@@ -514,12 +514,10 @@ const RataAIScreen = () => {
     <div className="flex flex-col md:flex-row h-full">
       {/* Chat Area */}
       <div
-        className={`flex-1 flex flex-col shadow-lg overflow-hidden ${
-          isPanelVisible ? "md:rounded-l-xl" : "rounded-xl"
-        }`}
+        className={`flex-1 flex flex-col shadow-lg overflow-hidden rounded-xl`}
       >
         {/* Header */}
-        <div className="h-16 px-4 border-b border-gray-200 bg-white flex items-center justify-between">
+        <div className="h-14 md:h-16 px-3 md:px-4 border-b border-gray-200 bg-white flex items-center justify-between rounded-t-xl">
           <div className="flex flex-col flex-1 min-w-0">
             <h2 className="text-lg font-semibold text-gray-800 label-text truncate">
               {selectedMaterial
@@ -534,7 +532,7 @@ const RataAIScreen = () => {
           </div>
           <button
             onClick={() => setIsPanelVisible(!isPanelVisible)}
-            className="ml-2 bg-gray-50 rounded-full p-2 shadow-sm hover:bg-gray-100 transition-colors flex-shrink-0"
+            className="ml-1.5 md:ml-2 bg-gray-50 rounded-xl p-1.5 md:p-2 shadow-sm hover:bg-gray-100 transition-colors flex-shrink-0"
           >
             <MoreHorizontal size={20} className="text-gray-600" />
           </button>
@@ -689,29 +687,29 @@ const RataAIScreen = () => {
 
       {/* Materials Panel */}
       {isPanelVisible && (
-        <div className="w-full md:w-80 bg-white border-t md:border-l border-gray-200 flex flex-col h-[50vh] md:h-full shadow-lg md:rounded-r-xl overflow-hidden">
-          <div className="h-16 px-4 border-b border-gray-200 bg-white">
-            <div className="flex items-center h-full relative">
-              <h2 className="label-text text-lg font-semibold text-gray-800">
+        <div className="w-full md:w-80 bg-white border-t md:border-l border-gray-200 flex flex-col h-[50vh] md:h-full shadow-lg rounded-xl overflow-hidden">
+          <div className="h-14 md:h-16 px-3 md:px-4 border-b border-gray-200 bg-white rounded-t-xl">
+            <div className="flex items-center justify-between h-full relative">
+              <h2 className="label-text text-sm md:text-base font-semibold text-gray-800">
                 Materials
               </h2>
-              <div className="absolute right-0">
+              <div className="flex items-center">
                 {!isSearchExpanded ? (
                   <button
                     onClick={() => setIsSearchExpanded(true)}
-                    className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors shadow-sm"
+                    className="p-1.5 md:p-2 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors shadow-sm"
                   >
-                    <Search size={16} className="text-gray-600" />
+                    <Search size={14} className="text-gray-600" />
                   </button>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <div className="relative">
+                    <div className="relative w-[140px] md:w-[180px]">
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search materials..."
-                        className="label-text w-36 md:w-48 px-3 py-1.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all duration-300 ease-in-out bg-gray-50"
+                        className="label-text w-full px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all duration-300 ease-in-out bg-gray-50"
                         autoFocus
                       />
                       <button
@@ -721,7 +719,7 @@ const RataAIScreen = () => {
                         }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       >
-                        <X size={14} />
+                        <X size={12} />
                       </button>
                     </div>
                   </div>
@@ -730,19 +728,19 @@ const RataAIScreen = () => {
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-3 md:p-4 bg-gray-50">
-            <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto p-2 md:p-4 bg-gray-50">
+            <div className="space-y-2 md:space-y-4">
               {filteredMaterials.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-500 max-w-md">
                     <FileText
-                      size={48}
-                      className="mx-auto mb-4 text-gray-400"
+                      size={40}
+                      className="mx-auto mb-3 md:mb-4 text-gray-400"
                     />
-                    <p className="text-lg font-medium text-gray-700">
+                    <p className="text-sm md:text-base font-medium text-gray-700">
                       {materials.length === 0 ? 'No materials yet' : 'No materials found'}
                     </p>
-                    <p className="text-sm text-gray-500 mt-2 mb-4">
+                    <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-2 mb-3 md:mb-4">
                       {materials.length === 0 
                         ? 'Create your first material to start chatting with Rata AI'
                         : 'Try adjusting your search query'
@@ -751,7 +749,7 @@ const RataAIScreen = () => {
                     {materials.length === 0 && (
                       <button
                         onClick={handleGoToMaterials}
-                        className="exam-button-mini"
+                        className="exam-button-mini text-xs md:text-sm"
                       >
                         Go to Materials
                       </button>
@@ -762,7 +760,7 @@ const RataAIScreen = () => {
                 filteredMaterials.map((material, fileIndex) => (
                   <div
                     key={material.id}
-                    className={`exam-card exam-card--alt p-4 transition-all duration-300 ease-in-out cursor-pointer hover:bg-white rounded-xl border border-gray-200 shadow-sm ${
+                    className={`exam-card exam-card--alt p-2 md:p-4 transition-all duration-300 ease-in-out cursor-pointer hover:bg-white rounded-xl border border-gray-200 shadow-sm ${
                       selectedMaterial?.id === material.id
                         ? "bg-white ring-2 ring-blue-200"
                         : "bg-white/50 hover:shadow-md"
@@ -770,19 +768,19 @@ const RataAIScreen = () => {
                     onClick={() => handleMaterialSelect(material)}
                   >
                     {/* Flex container for header elements */}
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1 md:mb-2">
                       {/* Material Icon and Title (Left side) */}
-                      <div className="flex items-center gap-2">
-                        <BookOpen size={20} className="text-gray-600" />
-                        <h3 className="font-medium text-gray-800">
+                      <div className="flex items-center gap-1.5 md:gap-2 min-w-0 flex-1">
+                        <BookOpen size={14} className="text-gray-600 flex-shrink-0" />
+                        <h3 className="font-medium text-gray-800 truncate text-[10px] md:text-[11px]">
                           {material.title}
                         </h3>
                       </div>
 
                       {/* Add creation time with icon (Right side) */}
                       {material.created_at && (
-                        <div className="inline-flex items-center gap-1 text-xs text-gray-500">
-                          <FileText size={12} className="text-gray-400" />
+                        <div className="inline-flex items-center gap-1 text-[8px] md:text-xs text-gray-500 flex-shrink-0 ml-1.5 md:ml-2">
+                          <FileText size={10} className="text-gray-400" />
                           <span>{new Date(material.created_at).toLocaleDateString()}</span>
                         </div>
                       )}
@@ -793,38 +791,38 @@ const RataAIScreen = () => {
                      (!material.notes || material.notes.length === 0) &&
                      (!material.quizzes || material.quizzes.length === 0) &&
                      (!material.attachments || material.attachments.length === 0) && (
-                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <div className="inline-flex items-center px-1.5 md:px-2.5 py-0.5 rounded-xl text-[8px] md:text-xs font-medium bg-gray-100 text-gray-800">
                         No content yet
                       </div>
                     )}
 
                     {/* Flashcards Folder */}
                     {material.flashcard_sets && material.flashcard_sets.length > 0 && (
-                      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="mb-2 md:mb-3" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleFolder(fileIndex, "flashcards")}
-                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                          className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-xs text-gray-600 hover:text-gray-800"
                         >
                           {expandedFolders[`${fileIndex}-flashcards`] ? (
-                            <ChevronDown size={16} />
+                            <ChevronDown size={12} />
                           ) : (
-                            <ChevronRight size={16} />
+                            <ChevronRight size={12} />
                           )}
-                          <BookOpen size={16} />
+                          <BookOpen size={12} />
                           <span>Flashcards ({material.flashcard_sets.length})</span>
                         </button>
                         {expandedFolders[`${fileIndex}-flashcards`] && (
-                          <div className="ml-6 mt-2 space-y-2">
+                          <div className="ml-4 md:ml-6 mt-1.5 md:mt-2 space-y-1.5 md:space-y-2">
                             {material.flashcard_sets.map((flashcard_set, flashIndex) => (
                               <div
                                 key={flashcard_set.id}
-                                className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                                className="text-[9px] md:text-[10px] p-1.5 md:p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
                                 onClick={() => handleFileSelect(flashcard_set, material)}
                               >
-                                <div className="font-medium text-gray-800">
+                                <div className="font-medium text-gray-800 truncate text-[9px] md:text-[10px]">
                                   {flashcard_set.title}
                                 </div>
-                                <div className="text-gray-500 text-[10px]">
+                                <div className="text-gray-500 text-[8px] md:text-[9px]">
                                   {flashcard_set.flashcards?.length || 0} cards
                                 </div>
                               </div>
@@ -836,31 +834,31 @@ const RataAIScreen = () => {
 
                     {/* Notes Folder */}
                     {material.notes && material.notes.length > 0 && (
-                      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="mb-2 md:mb-3" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleFolder(fileIndex, "notes")}
-                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                          className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-xs text-gray-600 hover:text-gray-800"
                         >
                           {expandedFolders[`${fileIndex}-notes`] ? (
-                            <ChevronDown size={16} />
+                            <ChevronDown size={12} />
                           ) : (
-                            <ChevronRight size={16} />
+                            <ChevronRight size={12} />
                           )}
-                          <FileText size={16} />
+                          <FileText size={12} />
                           <span>Notes ({material.notes.length})</span>
                         </button>
                         {expandedFolders[`${fileIndex}-notes`] && (
-                          <div className="ml-6 mt-2 space-y-2">
+                          <div className="ml-4 md:ml-6 mt-1.5 md:mt-2 space-y-1.5 md:space-y-2">
                             {material.notes.map((note) => (
                               <div
                                 key={note.id}
-                                className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                                className="text-[9px] md:text-[10px] p-1.5 md:p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
                                 onClick={() => handleFileSelect(note, material)}
                               >
-                                <div className="font-medium text-gray-800">
+                                <div className="font-medium text-gray-800 truncate text-[9px] md:text-[10px]">
                                   {note.title}
                                 </div>
-                                <div className="text-gray-500 text-[10px]">
+                                <div className="text-gray-500 text-[8px] md:text-[9px]">
                                   Note
                                 </div>
                               </div>
@@ -872,31 +870,31 @@ const RataAIScreen = () => {
 
                     {/* Quizzes Folder */}
                     {material.quizzes && material.quizzes.length > 0 && (
-                      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="mb-2 md:mb-3" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleFolder(fileIndex, "quizzes")}
-                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                          className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-xs text-gray-600 hover:text-gray-800"
                         >
                           {expandedFolders[`${fileIndex}-quizzes`] ? (
-                            <ChevronDown size={16} />
+                            <ChevronDown size={12} />
                           ) : (
-                            <ChevronRight size={16} />
+                            <ChevronRight size={12} />
                           )}
-                          <BookOpen size={16} />
+                          <BookOpen size={12} />
                           <span>Quizzes ({material.quizzes.length})</span>
                         </button>
                         {expandedFolders[`${fileIndex}-quizzes`] && (
-                          <div className="ml-6 mt-2 space-y-2">
+                          <div className="ml-4 md:ml-6 mt-1.5 md:mt-2 space-y-1.5 md:space-y-2">
                             {material.quizzes.map((quiz) => (
                               <div
                                 key={quiz.id}
-                                className="text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
+                                className="text-[9px] md:text-[10px] p-1.5 md:p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"
                                 onClick={() => handleFileSelect(quiz, material)}
                               >
-                                <div className="font-medium text-gray-800">
+                                <div className="font-medium text-gray-800 truncate text-[9px] md:text-[10px]">
                                   {quiz.title}
                                 </div>
-                                <div className="text-gray-500 text-[10px]">
+                                <div className="text-gray-500 text-[8px] md:text-[9px]">
                                   {quiz.questions?.length || 0} questions
                                 </div>
                               </div>
@@ -908,31 +906,33 @@ const RataAIScreen = () => {
 
                     {/* Attachments Folder */}
                     {material.attachments && material.attachments.length > 0 && (
-                      <div onClick={(e) => e.stopPropagation()}>
+                      <div className="mb-2 md:mb-3" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleFolder(fileIndex, "attachments")}
-                          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                          className="flex items-center gap-1.5 md:gap-2 text-[9px] md:text-xs text-gray-600 hover:text-gray-800"
                         >
                           {expandedFolders[`${fileIndex}-attachments`] ? (
-                            <ChevronDown size={16} />
+                            <ChevronDown size={12} />
                           ) : (
-                            <ChevronRight size={16} />
+                            <ChevronRight size={12} />
                           )}
-                          <FileText size={16} />
+                          <FileText size={12} />
                           <span>Files ({material.attachments.length})</span>
                         </button>
                         {expandedFolders[`${fileIndex}-attachments`] && (
-                          <div className="ml-6 mt-2 space-y-2">
+                          <div className="ml-4 md:ml-6 mt-1.5 md:mt-2 space-y-1.5 md:space-y-2">
                             {material.attachments.map((att) => (
                               <a
                                 key={att.id}
                                 href={att.file}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block text-xs p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50 text-blue-600 underline"
+                                className="block text-[9px] md:text-[10px] p-1.5 md:p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50 text-blue-600 hover:text-blue-700 transition-colors"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {att.file.split("/").pop()}
+                                <div className="truncate">
+                                  {att.file.split("/").pop()}
+                                </div>
                               </a>
                             ))}
                           </div>
