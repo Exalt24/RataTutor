@@ -518,7 +518,7 @@ npm run dev
 ## 🖼️ Screenshots & Showcase
 
 <div align="center">
-  <p><i>Coming soon! Screenshots and GIFs of RataTutor in action will be added here.</i></p>
+  <p><i>Screenshots and GIFs of RataTutor in action.</i></p>
   <!-- Placeholder for future screenshots -->
   <table>
     <tr>
@@ -578,9 +578,11 @@ npm run dev
         <em>Material Dashboard</em>
       </td>
       <td align="center">
-        <img src="https://via.placeholder.com/400x225?text=Study+Summary" alt="Study Summary"/>
+        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen"/>
         <br/>
-        <em>Study Summary</em>
+        <img src="./frontend/src/assets/screenshots/profile2.png" alt="Upload Notes Screen"/>
+        <br/>
+        <em>Profile Tab</em>
       </td>
     </tr>
   </table>
