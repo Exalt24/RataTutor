@@ -475,9 +475,9 @@ const CreateFlashcards = React.memo(({
 
   return (
     <div className="letter-no-lines">
-      <div className="max-w-[90rem] mx-auto px-10 py-3">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-10 py-3">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
             <button
               onClick={onClose}
@@ -487,7 +487,7 @@ const CreateFlashcards = React.memo(({
               <ArrowLeft size={24} />
             </button>
             <div>
-              <h2 className="text-3xl font-semibold label-text">
+              <h2 className="text-2xl sm:text-3xl font-semibold label-text">
                 {isEditMode ? 'Edit Flashcards' : 'Create Flashcards'}
               </h2>
               {material && (
@@ -508,13 +508,13 @@ const CreateFlashcards = React.memo(({
         <ErrorBanner errors={bannerErrors} />
 
         {/* Details Section */}
-        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all mb-8">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 md:p-8 shadow-sm hover:shadow-md transition-all mb-6 sm:mb-8">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-medium label-text">Details</h3>
+              <h3 className="text-lg sm:text-xl font-medium label-text">Details</h3>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             <ValidatedInput
               label="Title"
               name="flashcardSetTitle"
@@ -545,7 +545,7 @@ const CreateFlashcards = React.memo(({
         </div>
 
         {/* Flashcards Section */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {items.map((item, index) => {
             const frontTrimmed = item.front.trim();
             const backTrimmed = item.back.trim();
@@ -564,7 +564,6 @@ const CreateFlashcards = React.memo(({
               cardStatus = 'Valid';
             }
 
-            // ✅ FIXED: Calculate border class inline instead of using useMemo inside map
             const borderClass = getBorderClass(isPartial, isEmpty, frontError, backError, isValid);
 
             return (
@@ -574,18 +573,18 @@ const CreateFlashcards = React.memo(({
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(index)}
-                className={`bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all cursor-move ${
+                className={`bg-white border border-gray-200 rounded-xl p-4 sm:p-6 md:p-8 shadow-sm hover:shadow-md transition-all cursor-move ${
                   draggedIndex === index ? 'shadow-lg' : ''
                 } ${borderClass}`}
               >
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-medium label-text">
+                    <h3 className="text-lg sm:text-xl font-medium label-text">
                       Card {index + 1}
                     </h3>
                     <CardStatusBadge status={cardStatus} isExisting={!!item.id} />
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <GripVertical size={24} className="text-gray-400 rotate-90" />
                     <button
                       onClick={() => swapFields(index)}
@@ -607,7 +606,7 @@ const CreateFlashcards = React.memo(({
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
                   <ValidatedInput
                     label="Term"
                     name="flashcardQuestion"
@@ -643,7 +642,7 @@ const CreateFlashcards = React.memo(({
 
         {/* Summary Section */}
         {items.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6 mt-6 sm:mt-8">
             <h3 className="text-lg font-medium label-text mb-3">Summary</h3>
             <SummaryStats
               validCount={cardValidationStatus.validCardCount}
@@ -666,26 +665,26 @@ const CreateFlashcards = React.memo(({
         )}
 
         {/* Actions */}
-        <div className="flex justify-between mt-8">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6 sm:mt-8">
           <button
             onClick={addNewItem}
-            className="exam-button-mini"
+            className="exam-button-mini w-full sm:w-auto"
             data-hover="Add New"
             disabled={submitting}
           >
             Add New Flashcard
           </button>
-          <div className="space-x-4">
+          <div className="flex flex-col sm:flex-row gap-4 sm:space-x-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 w-full sm:w-auto"
               disabled={submitting}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className={`exam-button-mini ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`exam-button-mini w-full sm:w-auto ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               data-hover={buttonHover}
               disabled={isDisabled}
             >
