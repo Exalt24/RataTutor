@@ -18,7 +18,11 @@ const AccordionContext = React.createContext({
 const useAccordion = () => React.useContext(AccordionContext);
 
 export function AccordionContainer({ children, className }) {
-  return <div className={`grid grid-cols-2 gap-2 ${className}`}>{children}</div>;
+  return (
+    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 export function AccordionWrapper({ children }) {
@@ -86,18 +90,22 @@ export function AccordionHeader({ children, customIcon, className }) {
   return (
     <motion.div
       data-active={isActive || undefined}
-      className={`
-        group p-4 cursor-pointer font-semibold flex justify-between items-center
-        text-black transition-all min-w-[315px]
-        ${isActive ? `${pastelHeaderActive}` : `${pastelHeader}`}
+      className={`group cursor-pointer font-semibold flex justify-between items-center
+        text-black transition-all
+        px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base
+        min-w-full sm:min-w-[315px]
+        ${isActive ? pastelHeaderActive : pastelHeader}
         ${pastelHoverLight} ${pastelHeaderHover}
-      `}
+        ${className || ''}`
+      }
       onClick={() => onChangeIndex(value)}
     >
       {children}
       {!customIcon && (
         <ChevronDown
-          className={`transition-transform text-[#5e4149] hover:text-[#ff7c99] ${isActive ? 'rotate-180' : 'rotate-0'}`}
+          className={`transition-transform text-[#5e4149] hover:text-[#ff7c99] ${
+            isActive ? 'rotate-180' : 'rotate-0'
+          }`}
         />
       )}
     </motion.div>
@@ -118,15 +126,15 @@ export function AccordionPanel({ children, className }) {
           className={`group bg-pink-50 ${className}`}
           style={{ overflow: 'hidden' }}
         >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="p-3 text-sm text-gray-800"
-          >
-            {children}
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-gray-800"
+        >
+          {children}
+        </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
