@@ -519,51 +519,52 @@ npm run dev
 
 <div align="center">
   <p><i>Screenshots and GIFs of RataTutor in action.</i></p>
-  <table style="width: 100%; table-layout: fixed;">
+  <!-- Placeholder for future screenshots -->
+  <table>
     <tr>
-      <td style="width: 50%; padding: 10px;" align="center">
-        <img src="./frontend/src/assets/screenshots/note2.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/note2.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/note4.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+        <img src="./frontend/src/assets/screenshots/note4.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Upload Notes</em>
       </td>
-      <td style="width: 50%; padding: 10px;" align="center">
-        <img src="./frontend/src/assets/screenshots/AI1.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/AI1.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/AI2.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+        <img src="./frontend/src/assets/screenshots/AI2.png" alt="Upload Notes Screen"/>
         <br/>
         <em>AI Chat Assistant</em>
       </td>
     </tr>
     <tr>
-      <td style="width: 50%; padding: 10px;" align="center">
-        <img src="./frontend/src/assets/screenshots/flashcard1.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/flashcard1.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/flashcard2.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+        <img src="./frontend/src/assets/screenshots/flashcard2.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Flashcards Generation</em>
       </td>
-      <td style="width: 50%; padding: 10px;" align="center">
-        <img src="./frontend/src/assets/screenshots/quiz1.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/quiz1.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/quiz2.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+        <img src="./frontend/src/assets/screenshots/quiz2.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Interactive Quizzes</em>
       </td>
     </tr>
     <tr>
-      <td style="width: 50%; padding: 10px;" align="center">
-        <img src="./frontend/src/assets/screenshots/material.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/material.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/material1.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+        <img src="./frontend/src/assets/screenshots/material1.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Material Dashboard</em>
       </td>
-      <td style="width: 50%; padding: 10px;" align="center">
-        <img src="./frontend/src/assets/screenshots/profile0.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/profile0.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen" style="max-width: 100%; height: auto;"/>
+        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Profile Tab</em>
       </td>
