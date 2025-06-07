@@ -227,19 +227,24 @@ const ViewNotes = ({
               </div>
 
               {/* Note content with proper scrolling */}
-              <div className="overflow-y-auto h-[calc(100%-4rem)] sm:h-[calc(100%-5rem)] pr-2 sm:pr-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-400/50">
-                <div
-                  className="prose prose-sm sm:prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-600"
-                >
-                  {shouldUseMarkdown ? (
-                    // Use ReactMarkdown for content detected as markdown
-                    <ReactMarkdown>{noteContent}</ReactMarkdown>
-                  ) : (
-                    // Use dangerouslySetInnerHTML with highlighting for other content
-                    <div dangerouslySetInnerHTML={{
-                      __html: highlightText(noteContent, searchQuery)
-                    }} />
-                  )}
+              <div className="relative h-[calc(100%-4rem)] sm:h-[calc(100%-5rem)] overflow-hidden">
+                <div className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-400/50">
+                  <div className="overflow-x-auto">
+                    <div
+                      className="prose prose-sm sm:prose-base max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-600 whitespace-pre-wrap break-words"
+                      style={{ maxWidth: '100%', wordBreak: 'break-word' }}
+                    >
+                      {shouldUseMarkdown ? (
+                        // Use ReactMarkdown for content detected as markdown
+                        <ReactMarkdown>{noteContent}</ReactMarkdown>
+                      ) : (
+                        // Use dangerouslySetInnerHTML with highlighting for other content
+                        <div dangerouslySetInnerHTML={{
+                          __html: highlightText(noteContent, searchQuery)
+                        }} />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
