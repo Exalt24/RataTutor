@@ -13,11 +13,11 @@ import {
   Upload
 } from "lucide-react";
 import React, { useState } from "react";
-import { useToast } from '../components/Toast/ToastContext';
 import { useLoading } from '../components/Loading/LoadingContext';
+import { useToast } from '../components/Toast/ToastContext';
+import { deleteAttachment, deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
 import { useMaterials } from '../utils/materialsContext';
 import { useFileUpload } from '../utils/useFileUpload';
-import { deleteAttachment, deleteFlashcardSet, deleteNote, deleteQuiz } from '../services/apiService';
 import FilePreview from "./FilePreview";
 import MaterialFile from "./MaterialFile";
 
@@ -36,25 +36,25 @@ const EmptyState = () => (
 
 const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, readOnly }) => (
   <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center gap-3">
-      <div className={`p-2.5 rounded-xl ${
+    <div className="flex items-center gap-2 sm:gap-3">
+      <div className={`p-2 sm:p-2.5 rounded-xl ${
         title === "Flashcards" ? "bg-blue-50" :
         title === "Notes" ? "bg-purple-50" :
         title === "Quizzes" ? "bg-green-50" :
         "bg-orange-50"
       }`}>
-        <Icon size={22} className={
+        <Icon size={18} className={`sm:w-[22px] sm:h-[22px] ${
           title === "Flashcards" ? "text-blue-500" :
           title === "Notes" ? "text-purple-500" :
           title === "Quizzes" ? "text-green-500" :
           "text-orange-500"
-        } />
+        }`} />
       </div>
-      <div className="flex items-center gap-2.5">
-        <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        <h2 className="text-base sm:text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
           {title}
         </h2>
-        <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium label-text">
+        <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-gray-100 text-gray-600 rounded-full text-xs sm:text-sm font-medium label-text">
           {count}
         </span>
       </div>
@@ -62,7 +62,7 @@ const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, readOnl
     <div className="flex items-center gap-2">
       <button
         onClick={onToggle}
-        className={`flex items-center gap-2 px-4 py-2 transition-all duration-200 text-sm font-medium rounded-xl border label-text ${
+        className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 text-xs sm:text-sm font-medium rounded-xl border label-text ${
           isExpanded 
             ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50' 
             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
@@ -70,8 +70,8 @@ const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, readOnl
       >
         <span>{isExpanded ? "Hide" : "Show"}</span>
         <ChevronDown
-          size={16}
-          className={`transition-transform duration-200 ${
+          size={14}
+          className={`sm:w-4 sm:h-4 transition-transform duration-200 ${
             isExpanded ? "transform rotate-180" : ""
           }`}
         />
@@ -611,17 +611,17 @@ const MaterialContent = ({
 
       <div className="flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-xl">
         <div className="flex-none border-b rounded-t-xl border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-          <div className="max-w-[90rem] mx-auto px-6 py-4 rounded-t-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <div className="max-w-[90rem] mx-auto px-4 sm:px-6 py-3 sm:py-4 rounded-t-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <button
                   onClick={onBack}
-                  className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                 >
-                  <ArrowLeft size={20} className="text-gray-600" />
+                  <ArrowLeft size={18} className="sm:w-5 sm:h-5 text-gray-600" />
                 </button>
                 <div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     {isEditingTitle && !readOnly ? (
                       <input
                         type="text"
@@ -629,11 +629,11 @@ const MaterialContent = ({
                         onChange={(e) => setEditedTitle(e.target.value)}
                         onBlur={handleTitleSave}
                         onKeyDown={handleTitleKeyDown}
-                        className="text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
+                        className="text-lg sm:text-2xl font-semibold bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 label-text"
                         autoFocus
                       />
                     ) : (
-                      <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
+                      <h1 className="text-lg sm:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent label-text">
                         {material?.title || "Material"}
                       </h1>
                     )}
@@ -643,12 +643,12 @@ const MaterialContent = ({
                         className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
                         title="Edit Title"
                       >
-                        <Pencil size={16} className="text-gray-600" />
+                        <Pencil size={14} className="sm:w-4 sm:h-4 text-gray-600" />
                       </button>
                     )}
                     <button
                       onClick={onVisibilityToggle}
-                      className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                      className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg border transition-all duration-200 hover:scale-105 ${
                         isPublic 
                           ? 'bg-white border-gray-300 hover:bg-gray-50' 
                           : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
@@ -658,13 +658,13 @@ const MaterialContent = ({
                     >
                       {isPublic ? (
                         <>
-                          <Globe size={16} className="text-[#1b81d4]" />
-                          <span className="text-[#1b81d4] text-sm font-medium">Public</span>
+                          <Globe size={14} className="sm:w-4 sm:h-4 text-[#1b81d4]" />
+                          <span className="text-[#1b81d4] text-xs sm:text-sm font-medium">Public</span>
                         </>
                       ) : (
                         <>
-                          <Lock size={16} className="text-gray-600" />
-                          <span className="text-gray-600 text-sm font-medium">Private</span>
+                          <Lock size={14} className="sm:w-4 sm:h-4 text-gray-600" />
+                          <span className="text-gray-600 text-xs sm:text-sm font-medium">Private</span>
                         </>
                       )}
                     </button>
@@ -677,12 +677,12 @@ const MaterialContent = ({
                         onChange={(e) => setEditedDescription(e.target.value)}
                         onBlur={handleDescriptionSave}
                         onKeyDown={handleDescriptionKeyDown}
-                        className="text-sm text-gray-500 bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 w-full label-text"
+                        className="text-xs sm:text-sm text-gray-500 bg-transparent border-b border-blue-500 focus:outline-none focus:border-blue-600 w-full label-text"
                         placeholder="Add a description..."
                         autoFocus
                       />
                     ) : (
-                      <p className="text-sm text-gray-500 label-text">
+                      <p className="text-xs sm:text-sm text-gray-500 label-text">
                         {material?.description || "View and manage your content"}
                       </p>
                     )}
@@ -692,48 +692,50 @@ const MaterialContent = ({
                         className="p-1 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105"
                         title="Edit Description"
                       >
-                        <Pencil size={14} className="text-gray-600" />
+                        <Pencil size={12} className="sm:w-3.5 sm:h-3.5 text-gray-600" />
                       </button>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={handleUploadAttachment}
-                  className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
+                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105"
                   title="Upload Attachment"
                   disabled={readOnly}
                 >
-                  <Upload size={20} className={readOnly ? "text-gray-400" : "text-gray-600"} />
+                  <Upload size={18} className={`sm:w-5 sm:h-5 ${readOnly ? "text-gray-400" : "text-gray-600"}`} />
                 </button>
                 {!readOnly && (
                   <>
                     <div className="h-6 w-px bg-gray-200"></div>
-                    <button
-                      className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={handleCreateFlashcards}
-                      data-hover="Create Flashcards"
-                    >
-                      <BookOpen size={16} />
-                      Create Flashcards
-                    </button>
-                    <button
-                      className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={handleCreateNotes}
-                      data-hover="Create Notes"
-                    >
-                      <FileText size={16} />
-                      Create Notes
-                    </button>
-                    <button
-                      className="exam-button-mini py-2 px-4 flex items-center gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
-                      onClick={handleCreateQuiz}
-                      data-hover="Create Quiz"
-                    >
-                      <HelpCircle size={16} />
-                      Create Quiz
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className="exam-button-mini py-1.5 sm:py-2 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                        onClick={handleCreateFlashcards}
+                        data-hover="Create Flashcards"
+                      >
+                        <BookOpen size={14} className="sm:w-4 sm:h-4" />
+                        Create Flashcards
+                      </button>
+                      <button
+                        className="exam-button-mini py-1.5 sm:py-2 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                        onClick={handleCreateNotes}
+                        data-hover="Create Notes"
+                      >
+                        <FileText size={14} className="sm:w-4 sm:h-4" />
+                        Create Notes
+                      </button>
+                      <button
+                        className="exam-button-mini py-1.5 sm:py-2 px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#1b81d4] to-[#1670b3] text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                        onClick={handleCreateQuiz}
+                        data-hover="Create Quiz"
+                      >
+                        <HelpCircle size={14} className="sm:w-4 sm:h-4" />
+                        Create Quiz
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
@@ -743,7 +745,7 @@ const MaterialContent = ({
 
         <div className="flex-1 overflow-hidden bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 rounded-b-xl">
           <div className="max-w-[90rem] mx-auto h-[calc(100vh-12rem)]">
-            <div className="overflow-y-auto py-8 h-[calc(100%-4rem)] px-6 space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
+            <div className="overflow-y-auto py-6 sm:py-8 h-[calc(100%-4rem)] px-4 sm:px-6 space-y-8 sm:space-y-12 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50">
               
               {/* Attachments Section with Preview Support */}
               <div>
