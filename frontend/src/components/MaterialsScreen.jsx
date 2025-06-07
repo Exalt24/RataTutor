@@ -2,7 +2,7 @@
 
 import { ChevronDown, FileQuestion, Folder, Pin, Search, X } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
 import { useMaterials } from '../utils/materialsContext';
@@ -160,6 +160,7 @@ const FilterDropdown = React.memo(({
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-haspopup="true"
+      data-hover={title}
     >
       <span className="flex items-center">
         {title}
@@ -175,6 +176,7 @@ const FilterDropdown = React.memo(({
               selectedValue === value ? 'text-blue-600' : 'text-gray-700'
             }`}
             onClick={() => onSelect(value)}
+            data-hover={label}
           >
             {label}
           </button>
@@ -396,6 +398,7 @@ const MaterialsList = () => {
           <button 
             className="exam-button-mini py-1 px-2"
             onClick={() => setShowCreateModal(true)}
+            data-hover="Create Material"
           >
             Create Material
           </button>
@@ -404,6 +407,7 @@ const MaterialsList = () => {
             className="exam-button-mini py-1 px-2"
             onClick={fetchMaterials}
             disabled={isFetching}
+            data-hover="Refresh"
           >
             {isFetching ? 'Refreshing...' : 'Refresh'}
           </button>

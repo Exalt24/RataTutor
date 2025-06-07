@@ -523,11 +523,7 @@ npm run dev
   <table>
     <tr>
       <td align="center">
-        <img src="./frontend/src/assets/screenshots/note1.png" alt="Upload Notes Screen"/>
-        <br/>
         <img src="./frontend/src/assets/screenshots/note2.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/note3.png" alt="Upload Notes Screen"/>
         <br/>
         <img src="./frontend/src/assets/screenshots/note4.png" alt="Upload Notes Screen"/>
         <br/>
@@ -547,26 +543,12 @@ npm run dev
         <br/>
         <img src="./frontend/src/assets/screenshots/flashcard2.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/flashcard3.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/flashcard4.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/flashcard5.png" alt="Upload Notes Screen"/>
-        <br/>
         <em>Flashcards Generation</em>
       </td>
       <td align="center">
         <img src="./frontend/src/assets/screenshots/quiz1.png" alt="Upload Notes Screen"/>
         <br/>
         <img src="./frontend/src/assets/screenshots/quiz2.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/quiz3.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/quiz4.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/quiz5.png" alt="Upload Notes Screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/quiz6.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Interactive Quizzes</em>
       </td>
@@ -575,12 +557,14 @@ npm run dev
       <td align="center">
         <img src="./frontend/src/assets/screenshots/material.png" alt="Upload Notes Screen"/>
         <br/>
+        <img src="./frontend/src/assets/screenshots/material1.png" alt="Upload Notes Screen"/>
+        <br/>
         <em>Material Dashboard</em>
       </td>
       <td align="center">
-        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen"/>
+        <img src="./frontend/src/assets/screenshots/profile0.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/profile2.png" alt="Upload Notes Screen"/>
+        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Profile Tab</em>
       </td>
