@@ -523,9 +523,9 @@ npm run dev
   <table>
     <tr>
       <td align="center">
-        <img src="./frontend/src/assets/screenshots/note2.png" alt="Upload Notes Screen"/>
+        <img src="./frontend/src/assets/screenshots/notes1.png" alt="Upload Notes Screen"/>
         <br/>
-        <img src="./frontend/src/assets/screenshots/note4.png" alt="Upload Notes Screen"/>
+        <img src="./frontend/src/assets/screenshots/notes2.png" alt="Upload Notes Screen"/>
         <br/>
         <em>Upload Notes</em>
       </td>
