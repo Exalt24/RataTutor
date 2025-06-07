@@ -5,7 +5,6 @@ import Hero from '../components/Hero'
 const Home = () => {
   return (
     <div>
-      hello
       <Hero />
     </div>
   )
