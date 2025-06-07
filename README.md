@@ -569,6 +569,20 @@ npm run dev
         <em>Profile Tab</em>
       </td>
     </tr>
+    <tr>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/quiz.gif" alt="Upload Notes Screen"/>
+        <br/>
+        <em>Quiz Process</em>
+      </td>
+      <td align="center">
+        <img src="./frontend/src/assets/screenshots/profile0.png" alt="Upload Notes Screen"/>
+        <br/>
+        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Upload Notes Screen"/>
+        <br/>
+        <em>Profile Tab</em>
+      </td>
+    </tr>
   </table>
 </div>
 
