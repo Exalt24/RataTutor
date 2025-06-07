@@ -637,11 +637,15 @@ const CreateNotes = React.memo(({
             <div className="overflow-x-auto -mx-1 sm:mx-0">
               <MenuBar editor={editor} submitting={submitting} />
             </div>
-            <div className="relative">
-              <EditorContent 
-                editor={editor} 
-                className="min-h-[250px] sm:min-h-[300px] md:min-h-[400px] focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500 transition-all prose-sm sm:prose-base max-w-none px-2 sm:px-4"
-              />
+            <div className="relative h-[calc(100vh-30rem)] overflow-hidden">
+              <div className="absolute inset-0 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-300/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-400/50">
+                <div className="overflow-x-auto">
+                  <EditorContent 
+                    editor={editor} 
+                    className="min-h-[250px] sm:min-h-[300px] md:min-h-[400px] focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500 transition-all prose-sm sm:prose-base max-w-none px-2 sm:px-4 whitespace-pre-wrap break-words"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
