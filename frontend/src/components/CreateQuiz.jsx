@@ -1,11 +1,11 @@
 import { AlertCircle, ArrowLeft, GripVertical, HelpCircle, Plus, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import ValidatedInput from '../components/ValidatedInput';
 import { useLoading } from '../components/Loading/LoadingContext';
 import { useToast } from '../components/Toast/ToastContext';
-import { defaultValidators } from '../utils/validation';
+import ValidatedInput from '../components/ValidatedInput';
 import { createQuiz, updateQuiz } from '../services/apiService';
-import { trackActivityAndNotify, createCombinedSuccessMessage } from '../utils/streakNotifications';
+import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
+import { defaultValidators } from '../utils/validation';
 
 // ✅ Helper function to calculate border class (moved outside component)
 const getBorderClass = (isPartial, isEmpty, questionError, isValid) => {
@@ -515,23 +515,23 @@ const CreateQuiz = React.memo(({
 
   return (
     <div className="letter-no-lines">
-      <div className="max-w-[90rem] mx-auto px-10 py-3">
+      <div className="max-w-[90rem] mx-auto px-4 sm:px-6 md:px-10 py-3">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-8">
           <div className="flex items-center">
             <button
               onClick={onClose}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-4"
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2 sm:mr-4"
               disabled={submitting}
             >
-              <ArrowLeft size={24} />
+              <ArrowLeft size={20} className="sm:w-6 sm:h-6 w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-3xl font-semibold label-text">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold label-text">
                 {isEditMode ? 'Edit Quiz' : 'Create Quiz'}
               </h2>
               {material && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   for "{material.title}"
                   {isEditMode && (
                     <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
@@ -548,13 +548,13 @@ const CreateQuiz = React.memo(({
         <ErrorBanner errors={bannerErrors} />
 
         {/* Details Section */}
-        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all mb-8">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 md:p-8 shadow-sm hover:shadow-md transition-all mb-4 sm:mb-8">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-medium label-text">Details</h3>
+              <h3 className="text-lg sm:text-xl font-medium label-text">Details</h3>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-4 sm:gap-8">
             <ValidatedInput
               label="Title"
               name="quizTitle"
@@ -585,7 +585,7 @@ const CreateQuiz = React.memo(({
         </div>
 
         {/* Questions Section */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {items.map((item, index) => {
             const questionTrimmed = item.question.trim();
             const validChoices = item.choices.filter(choice => choice.trim().length > 0);
@@ -613,33 +613,33 @@ const CreateQuiz = React.memo(({
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(index)}
-                className={`bg-white border border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all cursor-move ${
+                className={`bg-white border border-gray-200 rounded-xl p-4 sm:p-6 md:p-8 shadow-sm hover:shadow-md transition-all cursor-move ${
                   draggedIndex === index ? 'shadow-lg' : ''
                 } ${borderClass}`}
               >
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-4 sm:mb-6">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-medium label-text">
+                    <h3 className="text-lg sm:text-xl font-medium label-text">
                       Question {index + 1}
                     </h3>
                     <QuestionStatusBadge status={questionStatus} isExisting={!!item.id} />
                   </div>
-                  <div className="flex items-center gap-4">
-                    <GripVertical size={24} className="text-gray-400 rotate-90" />
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <GripVertical size={20} className="text-gray-400 rotate-90 sm:w-6 sm:h-6" />
                     {items.length > 1 && (
                       <button
                         onClick={() => removeItem(index)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                        className="p-1.5 sm:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
                         title="Remove Question"
                         disabled={submitting}
                       >
-                        <Trash2 size={20} />
+                        <Trash2 size={18} className="sm:w-5 sm:h-5" />
                       </button>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <ValidatedInput
                     label="Question"
                     name="quizQuestion"
@@ -655,15 +655,15 @@ const CreateQuiz = React.memo(({
                   />
 
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                       <label className="label-text block text-sm font-medium text-gray-700">
                         Answer Choices
                       </label>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full self-start sm:self-auto">
                         ✓ Mark the correct answer
                       </span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {item.choices.map((choice, choiceIndex) => {
                         const isCorrect = item.correctAnswer === choiceIndex;
                         return (
@@ -682,9 +682,9 @@ const CreateQuiz = React.memo(({
                               </div>
                             )}
                             
-                            <div className="flex items-center gap-3 p-3">
+                            <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3">
                               {/* Large, visible radio button */}
-                              <label className="flex items-center cursor-pointer">
+                              <label className="flex items-center cursor-pointer flex-shrink-0">
                                 <div className="relative">
                                   <input
                                     type="radio"
@@ -694,42 +694,44 @@ const CreateQuiz = React.memo(({
                                     disabled={submitting}
                                     className="sr-only"
                                   />
-                                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                                     isCorrect 
                                       ? 'border-green-500 bg-green-500' 
                                       : 'border-gray-300 bg-white hover:border-green-400'
                                   }`}>
                                     {isCorrect && (
-                                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full"></div>
                                     )}
                                   </div>
                                 </div>
-                                <span className="ml-2 text-sm text-gray-600 font-medium">
+                                <span className="ml-2 text-xs sm:text-sm text-gray-600 font-medium whitespace-nowrap">
                                   {isCorrect ? 'Correct Answer' : 'Mark as Correct'}
                                 </span>
                               </label>
                               
                               {/* Choice input */}
-                              <input
-                                type="text"
-                                value={choice}
-                                onChange={(e) => updateChoice(index, choiceIndex, e.target.value)}
-                                disabled={submitting}
-                                className={`flex-1 px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 label-text ${
-                                  isCorrect ? 'bg-green-50 border-green-300 font-medium' : 'bg-white'
-                                }`}
-                                placeholder={`Enter choice ${choiceIndex + 1}...`}
-                              />
+                              <div className="flex-1 min-w-0">
+                                <input
+                                  type="text"
+                                  value={choice}
+                                  onChange={(e) => updateChoice(index, choiceIndex, e.target.value)}
+                                  disabled={submitting}
+                                  className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 label-text text-sm sm:text-base ${
+                                    isCorrect ? 'bg-green-50 border-green-300 font-medium' : 'bg-white'
+                                  }`}
+                                  placeholder={`Enter choice ${choiceIndex + 1}...`}
+                                />
+                              </div>
                               
                               {/* Remove choice button */}
                               {item.choices.length > 2 && (
                                 <button
                                   onClick={() => removeChoice(index, choiceIndex)}
-                                  className="flex-shrink-0 p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors"
+                                  className="flex-shrink-0 p-1.5 sm:p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors"
                                   title="Remove this choice"
                                   disabled={submitting}
                                 >
-                                  <Trash2 size={16} />
+                                  <Trash2 size={16} className="sm:w-4 sm:h-4" />
                                 </button>
                               )}
                             </div>
@@ -740,10 +742,10 @@ const CreateQuiz = React.memo(({
                       {/* Add choice button */}
                       <button
                         onClick={() => addChoice(index)}
-                        className="flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50 p-3 border border-dashed border-green-300 rounded-lg hover:bg-green-50 transition-colors w-full justify-center"
+                        className="flex items-center gap-2 text-green-600 hover:text-green-700 disabled:opacity-50 p-2 sm:p-3 border border-dashed border-green-300 rounded-lg hover:bg-green-50 transition-colors w-full justify-center text-sm sm:text-base"
                         disabled={submitting}
                       >
-                        <Plus size={18} />
+                        <Plus size={16} className="sm:w-5 sm:h-5" />
                         <span className="label-text">Add Another Choice</span>
                       </button>
                     </div>
@@ -751,8 +753,8 @@ const CreateQuiz = React.memo(({
                     {/* Warning if no correct answer selected */}
                     {!item.choices[item.correctAnswer]?.trim() && (
                       <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
-                        <AlertCircle size={16} className="text-yellow-600" />
-                        <span className="text-sm text-yellow-700">
+                        <AlertCircle size={16} className="text-yellow-600 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm text-yellow-700">
                           Please select which choice is the correct answer
                         </span>
                       </div>
@@ -766,8 +768,8 @@ const CreateQuiz = React.memo(({
 
         {/* Summary Section */}
         {items.length > 0 && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-6 mt-8">
-            <h3 className="text-lg font-medium label-text mb-3">Summary</h3>
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 mt-4 sm:mt-8">
+            <h3 className="text-base sm:text-lg font-medium label-text mb-3">Summary</h3>
             <SummaryStats
               validCount={questionValidationStatus.validQuestionCount}
               partialCount={questionValidationStatus.partialQuestionCount}
@@ -775,13 +777,13 @@ const CreateQuiz = React.memo(({
               emptyCount={questionValidationStatus.emptyQuestionCount}
             />
             {questionValidationStatus.validQuestionCount > 0 && (
-              <p className="text-sm text-green-700 mt-4">
+              <p className="text-xs sm:text-sm text-green-700 mt-3 sm:mt-4">
                 ✅ {questionValidationStatus.validQuestionCount} question(s) will be saved.
                 {questionValidationStatus.emptyQuestionCount > 0 && ` ${questionValidationStatus.emptyQuestionCount} empty question(s) will be ignored.`}
               </p>
             )}
             {questionValidationStatus.hasProblems && (
-              <p className="text-sm text-amber-700 mt-2">
+              <p className="text-xs sm:text-sm text-amber-700 mt-2">
                 ⚠️ Complete all incomplete or invalid questions before saving.
               </p>
             )}
@@ -789,29 +791,29 @@ const CreateQuiz = React.memo(({
         )}
 
         {/* Actions */}
-        <div className="flex justify-between mt-8">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6 sm:mt-8">
           <button
             onClick={addNewItem}
-            className="exam-button-mini"
+            className="exam-button-mini w-full sm:w-auto"
             data-hover="Add New Question"
             disabled={submitting}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-center">
               <HelpCircle size={16} />
               Add New Question
             </div>
           </button>
-          <div className="space-x-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 w-full sm:w-auto"
               disabled={submitting}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className={`exam-button-mini ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`exam-button-mini w-full sm:w-auto ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               data-hover={buttonHover}
               disabled={isDisabled}
             >
