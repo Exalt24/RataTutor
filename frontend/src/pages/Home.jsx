@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/logotemp.png';
 import bookImg from '../assets/book2.png';
 import quizGif from '../assets/screenshots/quiz.gif';
-import '../styles/pages/Home.css';
+import '../styles/pages/home.css';
 
 const Home = () => {
   const [activeSection, setActiveSection] = useState('home');
