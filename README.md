@@ -106,6 +106,7 @@ touch .env .env.development .env.production
 
 # For .env (Base variables for all environments):
 # VITE_API_URL="http://localhost:8000/api/"
+# VITE_AUTH_URL="http://localhost:8000/auth/"
 # VITE_APP_TITLE="RataTutor"
 
 # For .env.development (Development-only variables):
