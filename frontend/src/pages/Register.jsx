@@ -5,6 +5,7 @@ import Form from "../components/Form";
 import { User, Mail, Lock } from "lucide-react";
 import "../styles/pages/register.css";
 import { ArrowLeft } from "lucide-react";
+import bg from "../assets/creator_bg.png";
 
 const registerFields = [
   {
@@ -127,38 +128,37 @@ export default function Register({ isActive, onGoLogin }) {
       return;
     }
 
-  // After successful registration
-  setAnimationStage(2);
-  setTimeout(() => {
-    setAnimationStage(3);
+    // After successful registration
+    setAnimationStage(2);
     setTimeout(() => {
-      setHideForm(true);
+      setAnimationStage(3);
+      setTimeout(() => {
+        setHideForm(true);
 
-      showToast({
-        variant: "success",
-        title: "Registration successful!",
-        subtitle: "Welcome aboard!",
-      });
+        showToast({
+          variant: "success",
+          title: "Registration successful!",
+          subtitle: "Welcome aboard!",
+        });
 
-      setTimeout(onGoLogin, 1000);
+        setTimeout(onGoLogin, 1000);
+      }, 1500);
     }, 1500);
-  }, 1500);
-};
+  };
 
-const isDisabled =
-  Object.values(validities).some((v) => !v) ||
-  formData.password !== formData.confirmPassword ||
-  sending;  // Button will be disabled when sending is true
+  const isDisabled =
+    Object.values(validities).some((v) => !v) ||
+    formData.password !== formData.confirmPassword ||
+    sending;  // Button will be disabled when sending is true
 
   return (
     <>
-      <div className="register-container">
+      <div className="register-container" style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
         <div className="register-content-wrapper">
           {!hideForm && (
             <Form
-              wrapperClass={`register-letter ${
-                animationStage >= 2 ? "sending" : ""
-              }`}
+              wrapperClass={`register-letter ${animationStage >= 2 ? "sending" : ""
+                }`}
               enableTilt={true}
               title="Join RataTutor"
               titleKey={titleKey}
@@ -177,9 +177,8 @@ const isDisabled =
 
           <div className="register-mailbox">
             <div
-              className={`register-mailbox-slot ${
-                animationStage >= 2 ? "highlight" : ""
-              }`}
+              className={`register-mailbox-slot ${animationStage >= 2 ? "highlight" : ""
+                }`}
             ></div>
             <div className={`register-mailbox-flag ${sending ? "down" : ""}`}>
               <div className="register-mailbox-flag-head"></div>

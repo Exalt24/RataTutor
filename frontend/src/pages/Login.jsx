@@ -5,6 +5,7 @@ import Form from "../components/Form";
 import { useLoading } from "../components/Loading/LoadingContext"; // Import useLoading
 import { useToast } from "../components/Toast/ToastContext";
 import { login } from "../services/authService";
+import bg from "../assets/creator_bg.png";
 import "../styles/pages/login.css";
 
 const loginFields = [
@@ -101,7 +102,7 @@ export default function Login({ isActive, onGoRegister }) {
   };
 
   return (
-    <div className="login-container" onClick={handleOutsideClick}>
+    <div className="login-container" onClick={handleOutsideClick} style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
       <div
         className={`envelope ${isOpen ? "open" : ""} ${isPulledOut ? "form-pulled" : ""}`}
         onMouseEnter={() => setIsOpen(true)}
