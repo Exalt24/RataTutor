@@ -8,7 +8,7 @@ gunicorn==23.0.0
 
 # Database and static files
 whitenoise==6.9.0
-sqlparse==0.5.3
+sqlparse==0.5.4
 
 # Cloudinary for file storage
 cloudinary==1.44.0
