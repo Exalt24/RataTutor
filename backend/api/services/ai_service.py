@@ -5,7 +5,7 @@ from django.conf import settings
 from openai import OpenAI
 from docx import Document as DocxDocument
 from pptx import Presentation as PptxPresentation
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 
 import sys
 
