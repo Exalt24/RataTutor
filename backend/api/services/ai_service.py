@@ -18,6 +18,12 @@ client = OpenAI(
     api_key=settings.OPENROUTER_API_KEY,
 )
 
+# The model is a setting (OPENROUTER_MODEL in backend/.env), not a literal in each
+# call. The previous hardcoded id, google/gemini-2.0-flash-exp:free, was removed from
+# OpenRouter's catalogue and every AI call started failing. Pick a current id from
+# https://openrouter.ai/api/v1/models when this one is retired.
+AI_MODEL = getattr(settings, "OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
+
 # ===== UTILITY FUNCTIONS =====
 
 
@@ -278,7 +284,7 @@ def generate_conversation_summary(messages, existing_summary=""):
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "system", "content": system_prompt}],
             max_tokens=300,  # Limit summary length
         )
@@ -313,7 +319,7 @@ def generate_enhanced_conversation_summary(conversation):
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "system", "content": system_prompt}],
             max_tokens=400,
         )
@@ -367,7 +373,7 @@ def generate_ai_response_with_context(conversation, prompt):
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": combined_prompt},
@@ -385,7 +391,7 @@ def generate_ai_response(text: str) -> str:
     """Simple AI response for basic prompts without conversation context"""
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "user", "content": text}],
         )
         return response.choices[0].message.content
@@ -406,7 +412,7 @@ def generate_ai_response_for_material(material, prompt: str) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "user", "content": combined}],
         )
         return response.choices[0].message.content
@@ -456,7 +462,7 @@ def generate_flashcards_from_material(
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "system", "content": system_prompt}],
         )
         raw = response.choices[0].message.content.strip()
@@ -549,7 +555,7 @@ def generate_notes_from_material(material, specific_attachment_ids=None) -> dict
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "system", "content": system_prompt}],
         )
         raw = response.choices[0].message.content.strip()
@@ -636,7 +642,7 @@ def generate_quiz_from_material(
 
     try:
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model=AI_MODEL,
             messages=[{"role": "system", "content": system_prompt}],
         )
         raw = response.choices[0].message.content.strip()

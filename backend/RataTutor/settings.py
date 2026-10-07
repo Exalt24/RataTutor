@@ -176,6 +176,9 @@ EMAIL_USE_SSL = False
 
 # API keys and secrets
 OPENROUTER_API_KEY = env('OPENROUTER_API_KEY')
+# Model id sent to OpenRouter for every AI call. Optional; the default is a free
+# model that was listed in OpenRouter's catalogue on 2026-10-07.
+OPENROUTER_MODEL = env('OPENROUTER_MODEL', default='google/gemma-4-31b-it:free')
 
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 60 * 60
