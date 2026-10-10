@@ -489,11 +489,11 @@ const Home = () => {
                 you!
               </p>
               <a
-                href="mailto:asterius069@gmail.com"
+                href="mailto:danielalexiscruz.pro@gmail.com"
                 className="exam-button inline-block text-lg"
                 data-hover="Submit"
               >
-                dcruz@up.edu.ph
+                danielalexiscruz.pro@gmail.com
               </a>
             </div>
           </div>
@@ -507,10 +507,10 @@ const Home = () => {
               Need Help?
             </h3>
             <a
-              href="mailto:support@ratatutor.com"
+              href="mailto:danielalexiscruz.pro@gmail.com"
               className="text-[var(--pastel-blue-active)] font-semibold hover:underline font-['Poppins']"
             >
-              dcruz@up.edu.ph
+              danielalexiscruz.pro@gmail.com
             </a>
           </div>
 
