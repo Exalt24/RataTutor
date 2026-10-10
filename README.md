@@ -9,7 +9,7 @@ A study assistant that turns your notes and documents into flashcards, summary n
 
 ![RataTutor Demo](./frontend/src/assets/screenshots/quiz.gif)
 
-Demo: [https://ratatutor.onrender.com](https://ratatutor.onrender.com). It runs on a free Render instance that sleeps when idle, so the first request after a quiet spell can take minutes. The AI features call OpenRouter with the model named in `OPENROUTER_MODEL` (see below), so they only work while that model id is still listed there.
+The hosted copy is offline: the free-tier host suspended its services in October 2026, so the links that used to be here led to empty pages and were removed. Everything runs locally from the steps below. The AI features call OpenRouter with the model named in `OPENROUTER_MODEL` (see below), so they only work while that model id is still listed there.
 
 ## Stack
 
