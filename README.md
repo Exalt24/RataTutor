@@ -1,21 +1,23 @@
 # RataTutor
 
+![RataTutor running locally: register, upload notes, AI flashcards, a quiz, and the chat tutor](./docs/demo.gif)
+
+*The real app on a local stack (Django on localhost, Vite dev server) with a local model, qwen3:14b through Ollama, not OpenRouter. Waiting stretches are sped up and labelled with the speed in the corner; the red dot is a pointer overlay added for the recording.*
+
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Python](https://img.shields.io/badge/python-3.10+-yellow)
-![Node](https://img.shields.io/badge/node-20.x-brightgreen)
+![Node](https://img.shields.io/badge/node-20.19+-brightgreen)
 
 A study assistant that turns your notes and documents into flashcards, summary notes and quizzes, with a chat tutor attached to each study material. It started as a five-person university web engineering project, and I kept maintaining it afterwards.
 
-![RataTutor Demo](./frontend/src/assets/screenshots/quiz.gif)
-
-The hosted copy is offline: the free-tier host suspended its services in October 2026, so the links that used to be here led to empty pages and were removed. Everything runs locally from the steps below. The AI features call OpenRouter with the model named in `OPENROUTER_MODEL` (see below), so they only work while that model id is still listed there.
+The hosted copy is offline: the free-tier host suspended its services in October 2026, so the links that used to be here led to empty pages and were removed. Everything runs locally from the steps below. The AI features call an OpenAI-compatible endpoint: OpenRouter by default, with the model named in `OPENROUTER_MODEL`, or a local server such as Ollama through `OPENROUTER_BASE_URL` (see "Model setting"). Against OpenRouter they only work while the model id is still listed there.
 
 ## Stack
 
 - **Backend:** Django, Django REST Framework, SimpleJWT, django-cors-headers, SQLite in development, Cloudinary for uploaded files in production
 - **Frontend:** React, Vite, Tailwind CSS
-- **AI:** the OpenAI Python SDK pointed at OpenRouter
+- **AI:** the OpenAI Python SDK pointed at OpenRouter by default, or at any OpenAI-compatible server such as a local Ollama
 - **Document parsing:** pypdf, python-docx, python-pptx
 - **Run and deploy:** one npm command for local development, one Docker image serving both the API and the built front end on Render
 
@@ -38,7 +40,19 @@ Each conversation stores its messages, a rolling summary and a count of messages
 
 ## Model setting
 
-All AI calls read one model id from `OPENROUTER_MODEL` in `backend/.env`, defaulting to `google/gemma-4-31b-it:free`. This used to be a literal `google/gemini-2.0-flash-exp:free` repeated in eight calls in `backend/api/services/ai_service.py`. OpenRouter removed that model from its catalogue and every AI call failed, so the id is now a setting. When a model is retired, pick a current id from `https://openrouter.ai/api/v1/models` and change the environment variable, with no code change.
+All AI calls read one model id from `OPENROUTER_MODEL` and one endpoint from `OPENROUTER_BASE_URL`, both in `backend/.env`. The defaults are `google/gemma-4-31b-it:free` and `https://openrouter.ai/api/v1`. The model used to be a literal `google/gemini-2.0-flash-exp:free` repeated in eight calls in `backend/api/services/ai_service.py`. OpenRouter removed that model from its catalogue and every AI call failed, so the id is now a setting. When a model is retired, pick a current id from `https://openrouter.ai/api/v1/models` and change the environment variable, with no code change.
+
+### Run the AI features on a local model
+
+The base URL setting exists so the app can run with no OpenRouter account. The recording at the top used Ollama with `qwen3:14b` (`ollama pull qwen3:14b`); Ollama serves an OpenAI-compatible API under `/v1`. In `backend/.env`:
+
+```
+OPENROUTER_BASE_URL=http://localhost:11434/v1
+OPENROUTER_MODEL=qwen3:14b
+OPENROUTER_API_KEY=ollama
+```
+
+The SDK needs a non-empty key, so any string works for a local server. With that setup, on a desktop with a 16 GB GPU, a ten-card flashcard set, a ten-question quiz and a chat answer each took roughly 10 to 25 seconds. I only tried short notes of about 1 KB: Ollama's default context window was 4096 tokens here, so longer documents would need a larger `num_ctx`, which I have not tested.
 
 ## API
 
@@ -58,23 +72,23 @@ There are no automated tests yet. `backend/api/tests.py` and `backend/accounts/t
 
 ## My part
 
-From `git log`, 127 of the 256 commits in this repository are mine (the rest are teammates and 18 Dependabot commits). The work I can point to in the history:
+From `git log`, 131 of the 260 commits in this repository are mine (the rest are teammates and 18 Dependabot commits). The work I can point to in the history:
 
 - The initial Django, React, Vite and Tailwind integration, the Dockerfile and entrypoint, and the Render deployment, including the catch-all redirect that serves the React app from Django.
 - Backend validation and serializers, password reset by email, Cloudinary storage and the split between development and production storage.
 - The streak logic, moved fully to the backend, with logins counting as activity.
 - The AI service: the switch from the Google Gemini SDK to the OpenAI SDK on OpenRouter, conversation summaries, and the flashcard, note and quiz generators.
 - Login and register screens, toast notifications, material, trash and explore screens, and the dashboard's centralised data fetch.
-- Later maintenance: the `pypdf` swap to clear a Dependabot alert, and the `OPENROUTER_MODEL` setting described above.
+- Later maintenance: the `pypdf` swap to clear a Dependabot alert, and the `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` settings described above.
 
 ## Prerequisites
 
 - Python 3.10+
-- Node.js 20.x
-- An OpenRouter API key
-- Cloudinary credentials (used for file storage)
-- A Gmail app password for the password reset emails
+- Node.js 20.19 or newer (the Vite version in `frontend/package.json` requires it)
+- An AI endpoint: an OpenRouter API key, or a local Ollama (see "Model setting")
 - Docker, optionally, for the container build
+
+Cloudinary and Gmail credentials are not needed to run it locally. In development (`DEBUG=True`) uploads go to `backend/media/` on disk and Cloudinary is never called, and Gmail is only used to send password reset emails. `settings.py` still reads those variables at startup, so they must exist in `.env`, and placeholder values are enough.
 
 ## Setup
 
@@ -96,26 +110,28 @@ pip install -r requirements.txt
 python -c "from django.core.management.utils import get_random_secret_key; print('SECRET_KEY=' + get_random_secret_key())"
 ```
 
-Create `backend/.env`:
+Create `backend/.env` (the `<any-string-for-local-use>` values stand for any text you like in local development, for example `local-dev`; use real ones in production):
 
 ```
-SECRET_KEY=django-insecure-<your-generated-secret>
+SECRET_KEY=<paste-the-generated-key-here>
 DEBUG=True
-EMAIL_HOST_USER=<your-email>
-EMAIL_HOST_PASSWORD=<google-app-password>
+EMAIL_HOST_USER=<any-string-for-local-use>
+EMAIL_HOST_PASSWORD=<any-string-for-local-use>
 OPENROUTER_API_KEY=<your-api-key>
 OPENROUTER_MODEL=google/gemma-4-31b-it:free
-CLOUDINARY_CLOUD_NAME=<your-cloudinary-cloud-name>
-CLOUDINARY_API_KEY=<your-cloudinary-api-key>
-CLOUDINARY_API_SECRET=<your-cloudinary-api-secret>
+CLOUDINARY_CLOUD_NAME=<any-string-for-local-use>
+CLOUDINARY_API_KEY=<any-string-for-local-use>
+CLOUDINARY_API_SECRET=<any-string-for-local-use>
 ```
 
-`OPENROUTER_MODEL` is optional and falls back to the default above. Then:
+`OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` are optional and fall back to the defaults above; for a local model use the three lines from "Run the AI features on a local model" instead of the OpenRouter ones. Then:
 
 ```bash
 python manage.py migrate
 cd ..
 ```
+
+Stay in the repository root with the virtual environment still activated for the steps below, because the root npm scripts call `python`.
 
 Frontend:
 
@@ -138,7 +154,21 @@ VITE_APP_TITLE="RataTutor"
 npm run dev
 ```
 
-This creates a development test user and starts Django on [http://localhost:8000](http://localhost:8000) and the React dev server on [http://localhost:3000](http://localhost:3000), with `/api/*` proxied to Django. The test user is `testuser` / `testuser@gmail.com` / `t@st12345`, for development only.
+This creates a development test user and starts Django on [http://localhost:8000](http://localhost:8000) and the React dev server on [http://localhost:3000](http://localhost:3000). The front end calls the API at the `VITE_API_URL` and `VITE_AUTH_URL` addresses from `frontend/.env`; the `/api` proxy entries in `vite.config.js` point at port 8000 and are not used while those variables hold absolute URLs. The test user is `testuser` / `testuser@gmail.com` / `t@st12345`, for development only.
+
+To register your own user, the password needs 8 or more characters with a letter, a digit and one of `@$!%*#?&`. Those are the only special characters the backend accepts, so a hyphen or underscore is rejected with the same "include a special char" message.
+
+### Other ports
+
+`npm run dev` has ports 8000 and 3000 written into its script. To use other ports, start the two halves separately from the repository root, here Django on 4850 and the front end on 4851:
+
+```bash
+npm run create-test-user
+npm run backend -- 4850
+npm run frontend -- -- --port 4851 --strictPort
+```
+
+and set `VITE_API_URL="http://localhost:4850/api/"` and `VITE_AUTH_URL="http://localhost:4850/auth/"` in `frontend/.env` first. That is how the demo recording above was made.
 
 | Command | What it does |
 |---|---|
@@ -183,14 +213,14 @@ docker run --rm -it -p 8000:8000 \
 
 The React app is then at [http://localhost:8000/](http://localhost:8000/) and the API at [http://localhost:8000/api/](http://localhost:8000/api/).
 
-On Render, create a Web Service with the Docker environment and the repository root as the root directory. Set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `OPENROUTER_API_KEY`, optionally `OPENROUTER_MODEL`, and the three `CLOUDINARY_*` variables. One service serves both the API at `/api/` and the front end at `/`.
+On Render, create a Web Service with the Docker environment and the repository root as the root directory. Set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `OPENROUTER_API_KEY`, optionally `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL`, and the three `CLOUDINARY_*` variables. One service serves both the API at `/api/` and the front end at `/`.
 
 ## Troubleshooting
 
 - **Database errors:** `npm run reset`.
-- **AI requests failing:** check `OPENROUTER_API_KEY`, then check that the model id in `OPENROUTER_MODEL` is still listed at `https://openrouter.ai/api/v1/models`. A retired model id fails every call.
+- **AI requests failing:** against OpenRouter, check `OPENROUTER_API_KEY`, then check that the model id in `OPENROUTER_MODEL` is still listed at `https://openrouter.ai/api/v1/models`; a retired model id fails every call. Against a local server, check that it is running at `OPENROUTER_BASE_URL` and that the model has been pulled.
 - **Upload permission errors:** make sure `backend/media/` and `backend/attachments/` are writable.
-- **Port conflicts:** change the port in the `backend` or `frontend` script.
+- **Port conflicts:** see "Other ports" above.
 - **Stuck conversation summaries:** in `python manage.py shell`, run `AIConversation.objects.update(summary_context="", messages_since_summary=0)` after importing it from `api.models`.
 
 ## Screenshots

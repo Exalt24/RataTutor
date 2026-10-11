@@ -14,7 +14,7 @@ if os.name == "nt":
 
 
 client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
+    base_url=getattr(settings, "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
     api_key=settings.OPENROUTER_API_KEY,
 )
 

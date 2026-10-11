@@ -179,6 +179,10 @@ OPENROUTER_API_KEY = env('OPENROUTER_API_KEY')
 # Model id sent to OpenRouter for every AI call. Optional; the default is a free
 # model that was listed in OpenRouter's catalogue on 2026-10-07.
 OPENROUTER_MODEL = env('OPENROUTER_MODEL', default='google/gemma-4-31b-it:free')
+# Base URL of the OpenAI-compatible endpoint. Optional; the default is OpenRouter.
+# Point it at a local server (for example Ollama at http://localhost:11434/v1) to run
+# the AI features without an OpenRouter account.
+OPENROUTER_BASE_URL = env('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
 
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 60 * 60
