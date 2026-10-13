@@ -1,6 +1,6 @@
 # Core Django packages (version-pinned for stability)
 Django==5.2.14
-djangorestframework==3.16.0
+djangorestframework==3.17.2
 django-cors-headers==4.7.0
 django-environ==0.12.0
 djangorestframework_simplejwt==5.5.1
