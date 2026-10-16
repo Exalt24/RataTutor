@@ -1,298 +1,76 @@
 # RataTutor
 
-![RataTutor running locally: register, upload notes, AI flashcards, a quiz, and the chat tutor](./docs/demo.gif)
+Study assistant: turns notes and documents into flashcards, summary notes and quizzes, with an AI tutor per material.
+
+![RataTutor running locally: register, upload notes, AI flashcards, a quiz, and the chat tutor](docs/demo.gif)
 
 *The real app on a local stack (Django on localhost, Vite dev server) with a local model, qwen3:14b through Ollama, not OpenRouter. Waiting stretches are sped up and labelled with the speed in the corner; the red dot is a pointer overlay added for the recording.*
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Python](https://img.shields.io/badge/python-3.10+-yellow)
-![Node](https://img.shields.io/badge/node-20.19+-brightgreen)
+## My part
 
-A study assistant that turns your notes and documents into flashcards, summary notes and quizzes, with a chat tutor attached to each study material. It started as a five-person university web engineering project, and I kept maintaining it afterwards.
+A five-person university web engineering project that I kept maintaining afterwards. By author name, 135 of the 264 commits are mine (121 under my name, 14 under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
 
-The hosted copy is offline: the free-tier host suspended its services in October 2026, so the links that used to be here led to empty pages and were removed. Everything runs locally from the steps below. The AI features call an OpenAI-compatible endpoint: OpenRouter by default, with the model named in `OPENROUTER_MODEL`, or a local server such as Ollama through `OPENROUTER_BASE_URL` (see "Model setting"). Against OpenRouter they only work while the model id is still listed there.
+- The initial Django, React, Vite and Tailwind integration, the Dockerfile and entrypoint, and the Render deployment, including the catch-all redirect that serves the React app from Django.
+- Backend validation and serializers, password reset by email, and Cloudinary storage split from development storage.
+- The streak logic, moved fully to the backend, with logins counting as activity.
+- The AI service: the switch from the Google Gemini SDK to the OpenAI SDK on OpenRouter, conversation summaries, and the flashcard, note and quiz generators.
+- Login, register, material, trash and explore screens, and the dashboard's centralised data fetch.
+- Later maintenance: the `pypdf` swap to clear a Dependabot alert, and the `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` settings below.
 
-## Stack
+Team: Nikka Joie Mendoza, Mc Clareenz Zerrudo, Shaira Joy Macale, Vince Quinañola and me.
 
-- **Backend:** Django, Django REST Framework, SimpleJWT, django-cors-headers, SQLite in development, Cloudinary for uploaded files in production
-- **Frontend:** React, Vite, Tailwind CSS
-- **AI:** the OpenAI Python SDK pointed at OpenRouter by default, or at any OpenAI-compatible server such as a local Ollama
-- **Document parsing:** pypdf, python-docx, python-pptx
-- **Run and deploy:** one npm command for local development, one Docker image serving both the API and the built front end on Render
+**Proof:** 42 REST routes, flashcard sets and quizzes of 1 to 20 items, and on a local qwen3:14b (16 GB GPU) a ten-card set, a ten-question quiz and a chat answer each took roughly 10 to 25 seconds on notes of about 1 KB.
 
-## What it does
+The hosted copy is offline: the free-tier host suspended its services in October 2026. Everything runs locally.
 
-- Upload PDF, DOCX, PPTX or TXT files to a study material and extract their text.
-- Generate flashcard sets (1 to 20 cards), multiple-choice quizzes (1 to 20 questions) and summary notes from a material's text. The model's JSON reply is parsed and validated before anything is saved, with a fallback title when the model's title is unusable.
-- Chat with an AI tutor that belongs to one material and keeps its history.
-- Organise materials: pin, trash and restore, permanent delete, public or private, and copy a public material from another user.
-- Keep a study streak: the backend records one active day per day (a login counts), tracks the current and longest streak, and reports when a streak is at risk.
+## What it is and why
 
-## How the chat keeps its context
+Upload PDF, DOCX, PPTX or TXT files to a study material, then generate flashcards, multiple-choice quizzes and summary notes from its text, and chat with a tutor that belongs to that material and keeps its history. Materials can be pinned, trashed, made public or copied from another user, and a study streak is tracked on the backend.
 
-Each conversation stores its messages, a rolling summary and a count of messages since the last summary.
+## What was hard
 
-- A conversation of six messages or fewer sends every message to the model.
-- A longer one sends the stored summary plus the last four messages.
-- The summary is regenerated by a second model call. The trigger is a message count between 5 and 8, chosen by how many "explain / why / how" style words appear in the last five messages.
-- The material's text is included only when the prompt contains a trigger word such as "document", "material" or "according to". A material under 2,000 characters is sent whole. A longer one is cut into 1,000-character chunks and the first three are sent. They are not ranked by relevance, and the code carries a TODO for that.
+- **A retired model took every AI call down.** The model id was a literal repeated in eight calls in `backend/api/services/ai_service.py`. OpenRouter removed that model and every call failed. The id is now `OPENROUTER_MODEL` and the endpoint is `OPENROUTER_BASE_URL`, so a retirement is an environment change, and a local Ollama works with no OpenRouter account.
+- **Chat context without a vector store.** A conversation of six messages or fewer sends everything. A longer one sends a stored summary plus the last four messages, and the summary is regenerated by a second model call. The material's text is included only when the prompt has a trigger word such as "document" or "according to": under 2,000 characters it is sent whole, otherwise the first three 1,000-character chunks, unranked (ranking by relevance is not done).
+- **Untrusted model JSON.** The model's reply is parsed and validated before anything is saved, with a fallback title when the title is unusable.
 
-## Model setting
+## Architecture
 
-All AI calls read one model id from `OPENROUTER_MODEL` and one endpoint from `OPENROUTER_BASE_URL`, both in `backend/.env`. The defaults are `google/gemma-4-31b-it:free` and `https://openrouter.ai/api/v1`. The model used to be a literal `google/gemini-2.0-flash-exp:free` repeated in eight calls in `backend/api/services/ai_service.py`. OpenRouter removed that model from its catalogue and every AI call failed, so the id is now a setting. When a model is retired, pick a current id from `https://openrouter.ai/api/v1/models` and change the environment variable, with no code change.
-
-### Run the AI features on a local model
-
-The base URL setting exists so the app can run with no OpenRouter account. The recording at the top used Ollama with `qwen3:14b` (`ollama pull qwen3:14b`); Ollama serves an OpenAI-compatible API under `/v1`. In `backend/.env`:
-
-```
-OPENROUTER_BASE_URL=http://localhost:11434/v1
-OPENROUTER_MODEL=qwen3:14b
-OPENROUTER_API_KEY=ollama
+```mermaid
+flowchart LR
+    UI["React + Vite + Tailwind"] -- "JWT, REST" --> API["Django REST Framework<br/>accounts, api"]
+    API --> DB[("SQLite dev<br/>Cloudinary files in prod")]
+    API --> AI["ai_service.py<br/>OpenAI SDK"]
+    AI --> M["OpenRouter, or a local<br/>Ollama via OPENROUTER_BASE_URL"]
+    API --> P["pypdf, python-docx, python-pptx"]
 ```
 
-The SDK needs a non-empty key, so any string works for a local server. With that setup, on a desktop with a 16 GB GPU, a ten-card flashcard set, a ten-question quiz and a chat answer each took roughly 10 to 25 seconds. I only tried short notes of about 1 KB: Ollama's default context window was 4096 tokens here, so longer documents would need a larger `num_ctx`, which I have not tested.
+## Run it
 
-## API
+```bash
+git clone https://github.com/Exalt24/RataTutor.git && cd RataTutor && npm install
+cd backend && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && cd ..
+# create backend/.env and frontend/.env (values in docs/SETUP.md), then:
+cd backend && python manage.py migrate && cd .. && cd frontend && npm install && cd ..
+npm run dev     # Django on :8000, React on :3000, with a development test user
+```
 
-There are 42 REST routes under `/api/` and `/auth/`, built from DRF viewsets and a few function-style views.
-
-- **`/auth/`** (10 routes): register, logout, token, token refresh, password reset and confirm, profile read and update, record activity, streak status.
-- **Materials:** list and create, pinned, trash and public lists, detail (get, patch, put, delete), toggle pin, toggle visibility, permanent delete, copy, upload an attachment, get or create the material's conversation.
-- **Generation:** `POST /api/materials/{id}/generate-flashcards/`, `generate-quiz/`, `generate-notes/`.
-- **Conversations:** list, create, retrieve, chat, regenerate summary, delete.
-- **Content:** viewsets for notes, flashcard sets, flashcards, quizzes, quiz questions and attachments.
-
-The full list is in `backend/api/urls.py` and `backend/accounts/urls.py`.
+Environment values, the local-model settings, other ports, Docker and troubleshooting are in [docs/SETUP.md](docs/SETUP.md). Routes are in [docs/API.md](docs/API.md) and screenshots in [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).
 
 ## Tests
 
-There are no automated tests yet. `backend/api/tests.py` and `backend/accounts/tests.py` are the empty files Django generates.
+None yet. `backend/api/tests.py` and `backend/accounts/tests.py` are the empty files Django generates, and there is no CI workflow.
 
-## My part
+## Limits and not done
 
-From `git log`, 131 of the 260 commits in this repository are mine (the rest are teammates and 18 Dependabot commits). The work I can point to in the history:
+- No automated tests and no CI.
+- Against OpenRouter, the AI features work only while the configured model id is still listed there.
+- Local model: Ollama's default context window was 4096 tokens, so longer documents need a larger `num_ctx`, which I have not tested.
+- Chunk selection for long materials is the first three chunks, not the most relevant ones.
 
-- The initial Django, React, Vite and Tailwind integration, the Dockerfile and entrypoint, and the Render deployment, including the catch-all redirect that serves the React app from Django.
-- Backend validation and serializers, password reset by email, Cloudinary storage and the split between development and production storage.
-- The streak logic, moved fully to the backend, with logins counting as activity.
-- The AI service: the switch from the Google Gemini SDK to the OpenAI SDK on OpenRouter, conversation summaries, and the flashcard, note and quiz generators.
-- Login and register screens, toast notifications, material, trash and explore screens, and the dashboard's centralised data fetch.
-- Later maintenance: the `pypdf` swap to clear a Dependabot alert, and the `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` settings described above.
+## Stack
 
-## Prerequisites
-
-- Python 3.10+
-- Node.js 20.19 or newer (the Vite version in `frontend/package.json` requires it)
-- An AI endpoint: an OpenRouter API key, or a local Ollama (see "Model setting")
-- Docker, optionally, for the container build
-
-Cloudinary and Gmail credentials are not needed to run it locally. In development (`DEBUG=True`) uploads go to `backend/media/` on disk and Cloudinary is never called, and Gmail is only used to send password reset emails. `settings.py` still reads those variables at startup, so they must exist in `.env`, and placeholder values are enough.
-
-## Setup
-
-```bash
-git clone https://github.com/Exalt24/RataTutor.git
-cd RataTutor
-npm install
-```
-
-Backend:
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate        # Windows PowerShell: .\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-
-# Generate a Django secret key
-python -c "from django.core.management.utils import get_random_secret_key; print('SECRET_KEY=' + get_random_secret_key())"
-```
-
-Create `backend/.env` (the `<any-string-for-local-use>` values stand for any text you like in local development, for example `local-dev`; use real ones in production):
-
-```
-SECRET_KEY=<paste-the-generated-key-here>
-DEBUG=True
-EMAIL_HOST_USER=<any-string-for-local-use>
-EMAIL_HOST_PASSWORD=<any-string-for-local-use>
-OPENROUTER_API_KEY=<your-api-key>
-OPENROUTER_MODEL=google/gemma-4-31b-it:free
-CLOUDINARY_CLOUD_NAME=<any-string-for-local-use>
-CLOUDINARY_API_KEY=<any-string-for-local-use>
-CLOUDINARY_API_SECRET=<any-string-for-local-use>
-```
-
-`OPENROUTER_MODEL` and `OPENROUTER_BASE_URL` are optional and fall back to the defaults above; for a local model use the three lines from "Run the AI features on a local model" instead of the OpenRouter ones. Then:
-
-```bash
-python manage.py migrate
-cd ..
-```
-
-Stay in the repository root with the virtual environment still activated for the steps below, because the root npm scripts call `python`.
-
-Frontend:
-
-```bash
-cd frontend
-npm install
-```
-
-Create `frontend/.env` with the three variables below. `.env.development` and `.env.production` only need `VITE_DEBUG=true` and `VITE_DEBUG=false`. Only variables with the `VITE_` prefix reach the React code.
-
-```
-VITE_API_URL="http://localhost:8000/api/"
-VITE_AUTH_URL="http://localhost:8000/auth/"
-VITE_APP_TITLE="RataTutor"
-```
-
-## Running it
-
-```bash
-npm run dev
-```
-
-This creates a development test user and starts Django on [http://localhost:8000](http://localhost:8000) and the React dev server on [http://localhost:3000](http://localhost:3000). The front end calls the API at the `VITE_API_URL` and `VITE_AUTH_URL` addresses from `frontend/.env`; the `/api` proxy entries in `vite.config.js` point at port 8000 and are not used while those variables hold absolute URLs. The test user is `testuser` / `testuser@gmail.com` / `t@st12345`, for development only.
-
-To register your own user, the password needs 8 or more characters with a letter, a digit and one of `@$!%*#?&`. Those are the only special characters the backend accepts, so a hyphen or underscore is rejected with the same "include a special char" message.
-
-### Other ports
-
-`npm run dev` has ports 8000 and 3000 written into its script. To use other ports, start the two halves separately from the repository root, here Django on 4850 and the front end on 4851:
-
-```bash
-npm run create-test-user
-npm run backend -- 4850
-npm run frontend -- -- --port 4851 --strictPort
-```
-
-and set `VITE_API_URL="http://localhost:4850/api/"` and `VITE_AUTH_URL="http://localhost:4850/auth/"` in `frontend/.env` first. That is how the demo recording above was made.
-
-| Command | What it does |
-|---|---|
-| `npm run dev` | Backend and frontend together, with test user creation |
-| `npm run backend` | Django only |
-| `npm run frontend` | Front end only |
-| `npm run create-test-user` | Create the test user by hand |
-| `npm run reset` | Delete the SQLite database, `media/` and `attachments/`, migrate, and start (Windows) |
-| `npm run reset:unix` | The same on macOS and Linux |
-
-`reset` permanently deletes local data, so use it only in development.
-
-## Project structure
-
-```
-RataTutor/
-├─ backend/
-│  ├─ accounts/      authentication, profile, streaks
-│  ├─ api/           materials, notes, flashcards, quizzes, conversations
-│  │  └─ services/   ai_service.py: text extraction, prompts, generators, summaries
-│  ├─ RataTutor/     Django settings and URL config
-│  └─ requirements.txt
-├─ frontend/
-│  └─ src/           components, pages, services (API calls), styles
-├─ Dockerfile
-├─ docker-entrypoint.sh
-└─ package.json      root scripts
-```
-
-## Docker and Render
-
-```bash
-docker build -t ratatutor .
-docker run --rm -it -p 8000:8000 \
-  -e SECRET_KEY="<your-secret>" -e DEBUG=True \
-  -e DATABASE_URL="sqlite:///db.sqlite3" \
-  -e OPENROUTER_API_KEY="<your-openrouter-api-key>" \
-  -e OPENROUTER_MODEL="google/gemma-4-31b-it:free" \
-  -e CLOUDINARY_CLOUD_NAME="<name>" -e CLOUDINARY_API_KEY="<key>" -e CLOUDINARY_API_SECRET="<secret>" \
-  ratatutor
-```
-
-The React app is then at [http://localhost:8000/](http://localhost:8000/) and the API at [http://localhost:8000/api/](http://localhost:8000/api/).
-
-On Render, create a Web Service with the Docker environment and the repository root as the root directory. Set `SECRET_KEY`, `DEBUG`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `OPENROUTER_API_KEY`, optionally `OPENROUTER_MODEL` and `OPENROUTER_BASE_URL`, and the three `CLOUDINARY_*` variables. One service serves both the API at `/api/` and the front end at `/`.
-
-## Troubleshooting
-
-- **Database errors:** `npm run reset`.
-- **AI requests failing:** against OpenRouter, check `OPENROUTER_API_KEY`, then check that the model id in `OPENROUTER_MODEL` is still listed at `https://openrouter.ai/api/v1/models`; a retired model id fails every call. Against a local server, check that it is running at `OPENROUTER_BASE_URL` and that the model has been pulled.
-- **Upload permission errors:** make sure `backend/media/` and `backend/attachments/` are writable.
-- **Port conflicts:** see "Other ports" above.
-- **Stuck conversation summaries:** in `python manage.py shell`, run `AIConversation.objects.update(summary_context="", messages_since_summary=0)` after importing it from `api.models`.
-
-## Screenshots
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/notes1.png" alt="Upload notes screen"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/notes2.png" alt="Upload notes screen, second view"/>
-        <br/>
-        <em>Upload notes</em>
-      </td>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/AI1.png" alt="AI chat assistant"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/AI2.png" alt="AI chat assistant, second view"/>
-        <br/>
-        <em>AI chat</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/flashcard1.png" alt="Flashcard generation"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/flashcard2.png" alt="Flashcard generation, second view"/>
-        <br/>
-        <em>Flashcards</em>
-      </td>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/quiz1.png" alt="Interactive quiz"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/quiz2.png" alt="Interactive quiz, second view"/>
-        <br/>
-        <em>Quizzes</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/material.png" alt="Material dashboard"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/material1.png" alt="Material dashboard, second view"/>
-        <br/>
-        <em>Material dashboard</em>
-      </td>
-      <td align="center">
-        <img src="./frontend/src/assets/screenshots/profile0.png" alt="Profile tab"/>
-        <br/>
-        <img src="./frontend/src/assets/screenshots/profile1.png" alt="Profile tab, second view"/>
-        <br/>
-        <em>Profile</em>
-      </td>
-    </tr>
-  </table>
-</div>
-
-## Team
-
-RataTutor was created by:
-
-- **Daniel Alexis Cruz** ([@Exalt24](https://github.com/Exalt24))
-- **Nikka Joie Mendoza** ([@nikkamendoza](https://github.com/nikkamendoza))
-- **Mc Clareenz Zerrudo** ([@clareenz](https://github.com/clareenz))
-- **Shaira Joy Macale** ([@howtodoitpleasehelp](https://github.com/howtodoitpleasehelp))
-- **Vince Quinañola** ([@binskyut](https://github.com/binskyut))
+Django, Django REST Framework, SimpleJWT, SQLite, Cloudinary, React, Vite, Tailwind CSS, the OpenAI Python SDK, pypdf, python-docx, python-pptx, Docker.
 
 ## License
 
 MIT, see [LICENSE](LICENSE).
-
-<div align="center">
-  <img src="./frontend/src/assets/logotemp.png" alt="RataTutor logo" width="80"/>
-  <p><b>Anyone Can Cook Up Knowledge</b></p>
-</div>
