@@ -8,7 +8,7 @@ Study assistant: turns notes and documents into flashcards, summary notes and qu
 
 ## My part
 
-A five-person university web engineering project that I kept maintaining afterwards. By author name, 135 of the 264 commits are mine (121 under my name, 14 under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
+A five-person university web engineering project that I kept maintaining afterwards. By author name, about 135 of the 265 commits are mine (121 under my name, about 15 under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
 
 - The initial Django, React, Vite and Tailwind integration, the Dockerfile and entrypoint, and the Render deployment, including the catch-all redirect that serves the React app from Django.
 - Backend validation and serializers, password reset by email, and Cloudinary storage split from development storage.
@@ -36,9 +36,9 @@ Upload PDF, DOCX, PPTX or TXT files to a study material, then generate flashcard
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     UI["React + Vite + Tailwind"] -- "JWT, REST" --> API["Django REST Framework<br/>accounts, api"]
-    API --> DB[("SQLite dev<br/>Cloudinary files in prod")]
+    API --> DB[("SQLite database<br/>uploads: local disk in dev,<br/>Cloudinary in prod")]
     API --> AI["ai_service.py<br/>OpenAI SDK"]
     AI --> M["OpenRouter, or a local<br/>Ollama via OPENROUTER_BASE_URL"]
     API --> P["pypdf, python-docx, python-pptx"]
