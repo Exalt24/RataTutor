@@ -19,7 +19,7 @@ A five-person university web engineering project that I kept maintaining afterwa
 
 Team: Nikka Joie Mendoza, Mc Clareenz Zerrudo, Shaira Joy Macale, Vince Quinañola and me.
 
-**Proof:** 42 REST routes, flashcard sets and quizzes of 1 to 20 items, and on a local qwen3:14b (16 GB GPU) a ten-card set, a ten-question quiz and a chat answer each took roughly 10 to 25 seconds on notes of about 1 KB.
+**Proof:** 42 REST routes, flashcard sets and quizzes of 1 to 20 items, and on a local qwen3:14b (16 GB GPU) a ten-card set, a ten-question quiz and a chat answer each took roughly 10 to 25 seconds on notes of about 1 KB. Measured: the route count and those timings, on one local run. Not measured: the quality of the generated cards, quizzes and answers.
 
 The hosted copy is offline: the free-tier host suspended its services in October 2026. Everything runs locally.
 
@@ -74,3 +74,5 @@ Django, Django REST Framework, SimpleJWT, SQLite, Cloudinary, React, Vite, Tailw
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+By Daniel Alexis Cruz, [dacruz.vercel.app](https://dacruz.vercel.app), with the team named above.
