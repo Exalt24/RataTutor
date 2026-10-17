@@ -8,7 +8,7 @@ Study assistant: turns notes and documents into flashcards, summary notes and qu
 
 ## My part
 
-A five-person university web engineering project that I kept maintaining afterwards. By author name, about 135 of the 265 commits are mine (121 under my name, about 15 under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
+A five-person university web engineering project that I kept maintaining afterwards. By author name, about 140 of the 269 commits are mine (122 under my name, 18 under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
 
 - The initial Django, React, Vite and Tailwind integration, the Dockerfile and entrypoint, and the Render deployment, including the catch-all redirect that serves the React app from Django.
 - Backend validation and serializers, password reset by email, and Cloudinary storage split from development storage.
