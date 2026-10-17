@@ -8,7 +8,7 @@ Study assistant: turns notes and documents into flashcards, summary notes and qu
 
 ## My part
 
-A five-person university web engineering project that I kept maintaining afterwards. By author name, about 140 of the 269 commits are mine (122 under my name, 18 under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
+A five-person university web engineering project that I kept maintaining afterwards. By author name, about 140 of roughly 270 commits are mine (122 under my name, the rest under my GitHub login); teammates and Dependabot hold the rest. What I can point to in the history:
 
 - The initial Django, React, Vite and Tailwind integration, the Dockerfile and entrypoint, and the Render deployment, including the catch-all redirect that serves the React app from Django.
 - Backend validation and serializers, password reset by email, and Cloudinary storage split from development storage.
@@ -48,7 +48,7 @@ flowchart TD
 
 ```bash
 git clone https://github.com/Exalt24/RataTutor.git && cd RataTutor && npm install
-cd backend && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && cd ..
+cd backend && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt && cd ..   # Windows: venv\Scripts\activate instead of the source line
 # create backend/.env and frontend/.env (values in docs/SETUP.md), then:
 cd backend && python manage.py migrate && cd .. && cd frontend && npm install && cd ..
 npm run dev     # Django on :8000, React on :3000, with a development test user
