@@ -36,7 +36,6 @@ const RataAIScreen = () => {
   const { 
     materials, 
     fetchMaterials, 
-    addMaterial,
     isInitialized, 
     isFetching 
   } = useMaterials();
@@ -45,7 +44,7 @@ const RataAIScreen = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [expandedFolders, setExpandedFolders] = useState({});
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [, setSelectedFile] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -62,7 +61,6 @@ const RataAIScreen = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
   // Refs
-  const fileInputRef = useRef(null);
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -383,13 +381,12 @@ const RataAIScreen = () => {
     
     // Step 2: Generate content based on type using specific attachments
     console.log(`🤖 Generating ${type} from ${attachmentIds.length} specific attachments...`);
-    let generateResponse;
     let contentType;
     
     switch (type) {
       case 'flashcards':
         contentType = 'flashcards';
-        generateResponse = await generateFlashcardsFromSpecificFiles(
+        await generateFlashcardsFromSpecificFiles(
           selectedMaterial.id, 
           attachmentIds, 
           10
@@ -397,7 +394,7 @@ const RataAIScreen = () => {
         break;
       case 'quiz':
         contentType = 'quiz questions';
-        generateResponse = await generateQuizFromSpecificFiles(
+        await generateQuizFromSpecificFiles(
           selectedMaterial.id, 
           attachmentIds, 
           10
@@ -406,7 +403,7 @@ const RataAIScreen = () => {
       case 'notes':
       default:
         contentType = 'notes';
-        generateResponse = await generateNotesFromSpecificFiles(
+        await generateNotesFromSpecificFiles(
           selectedMaterial.id, 
           attachmentIds
         );
@@ -813,7 +810,7 @@ const RataAIScreen = () => {
                         </button>
                         {expandedFolders[`${fileIndex}-flashcards`] && (
                           <div className="ml-4 md:ml-6 mt-1.5 md:mt-2 space-y-1.5 md:space-y-2">
-                            {material.flashcard_sets.map((flashcard_set, flashIndex) => (
+                            {material.flashcard_sets.map((flashcard_set) => (
                               <div
                                 key={flashcard_set.id}
                                 className="text-[9px] md:text-[10px] p-1.5 md:p-2 hover:bg-gray-100 rounded-xl cursor-pointer bg-white/50"

@@ -1,6 +1,5 @@
 'use client';
 import React, {
-  useCallback,
   useContext,
   useEffect,
   useId,
@@ -121,8 +120,9 @@ function DialogDescription({ children, className }) {
   return <div className={`text-sm text-gray-600 ${className || ''}`}>{children}</div>;
 }
 
-function DialogClose({ className }) {
-  const { setIsOpen } = useDialog();
+function DialogClose() {
+  useDialog();
+  return null;
 }
 
 export {

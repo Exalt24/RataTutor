@@ -85,7 +85,7 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
       if (!response.ok) throw new Error('Failed to fetch file');
       const text = await response.text();
       setContent(text);
-    } catch (err) {
+    } catch {
       if (isDevelopment()) {
         setError('Text file preview may not work in development due to CORS. File will work in production.');
       } else {

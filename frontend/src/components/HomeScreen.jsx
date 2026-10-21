@@ -1,5 +1,5 @@
 import { Edit2, FilePlus, FileText, HelpCircle, Sparkles } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 import ChooseModal from './ChooseModal';
@@ -9,15 +9,9 @@ import UploadFile from './UploadFile';
 import UploadPurposeModal from './UploadPurposeModal';
 
 const HomeScreen = ({ 
-  selectedFile, 
-  handleFileChange, 
-  uploadAndGenerate, 
-  generated,
   materialsData,
   onRefreshMaterials,
-  onAddMaterial,
-  onUpdateMaterial,
-  onNavigateToMaterial
+  onAddMaterial
 }) => {
   const navigate = useNavigate();
   
@@ -29,8 +23,7 @@ const HomeScreen = ({
   const [modalMode, setModalMode] = useState('upload'); // 'upload', 'manual', or 'attachment'
   const [pendingManualType, setPendingManualType] = useState(null); // ✅ NEW: Track manual creation type
 
-  // Add refs and hooks for file upload functionality
-  const fileInputRef = useRef(null);
+  // Hooks for file upload functionality
   const { showLoading, hideLoading } = useLoading();
   const { showToast } = useToast();
 

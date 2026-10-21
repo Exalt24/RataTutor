@@ -124,7 +124,7 @@ const FolderDialog = ({ isOpen, onClose, title, files = [] }) => {
     }
   };
 
-  const handleGenerateOption = (type) => {
+  const handleGenerateOption = () => {
     setContextMenu({ show: false, x: 0, y: 0, file: null });
   };
 

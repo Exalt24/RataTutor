@@ -245,7 +245,6 @@ const MaterialsList = () => {
     materials, 
     fetchMaterials, 
     addMaterial, 
-    updateMaterial: updateMaterialInState,
     togglePin, 
     toggleVisibility, 
     moveToTrash,
@@ -266,7 +265,7 @@ const MaterialsList = () => {
   } = useFilters(materials);
 
   // File upload hook
-  const { FileInput, triggerFileSelect, createFileSelectHandler } = useFileUpload();
+  const { FileInput, createFileSelectHandler } = useFileUpload();
   
   // UI state
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
@@ -274,7 +273,7 @@ const MaterialsList = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState(null);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [selectedMaterial] = useState(null);
 
   // Refs for dropdowns
   const typeDropdownRef = useRef(null);
@@ -530,7 +529,7 @@ const MaterialsList = () => {
 };
 
 // ✅ UPDATED: MaterialContentWrapper - accept and pass onRefreshProfile
-const MaterialContentWrapper = ({ onRefreshProfile }) => {
+const MaterialContentWrapper = () => {
   const { materialId } = useParams();
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
@@ -573,17 +572,13 @@ const MaterialContentWrapper = ({ onRefreshProfile }) => {
   }
 
   const handleTitleChange = async (newTitle, newDescription) => {
-    try {
-      await updateMaterialInfo(
-        material.id, 
-        { title: newTitle, description: newDescription },
-        showToast,
-        showLoading,
-        hideLoading
-      );
-    } catch (err) {
-      throw err;
-    }
+    await updateMaterialInfo(
+      material.id,
+      { title: newTitle, description: newDescription },
+      showToast,
+      showLoading,
+      hideLoading
+    );
   };
 
   const handleVisibilityToggle = () => {

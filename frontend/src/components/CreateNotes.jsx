@@ -486,7 +486,7 @@ const CreateNotes = React.memo(({
       const data = err.response?.data || {};
       const msgs = [];
 
-      Object.entries(data).forEach(([key, val]) => {
+      Object.entries(data).forEach(([, val]) => {
         if (Array.isArray(val)) {
           val.forEach((m) => msgs.push(typeof m === 'string' ? m : JSON.stringify(m)));
         } else if (typeof val === "string") {

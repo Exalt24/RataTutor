@@ -7,7 +7,6 @@ import { getStreakMotivationalMessage } from "../utils/streakNotifications";
 const Header = ({
   onLogout,
   onProfile,
-  onStreak,
   profileData
 }) => {
   const [open, setOpen] = useState(false);

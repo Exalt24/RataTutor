@@ -34,7 +34,7 @@ const EmptyState = () => (
   </div>
 );
 
-const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle, readOnly }) => (
+const SectionHeader = ({ icon: Icon, title, count, isExpanded, onToggle }) => (
   <div className="flex items-center justify-between mb-4">
     <div className="flex items-center gap-2 sm:gap-3">
       <div className={`p-2 sm:p-2.5 rounded-xl ${
@@ -120,13 +120,12 @@ const MaterialContent = ({
   onViewQuiz,
   onBack,
   onTitleChange,
-  onMaterialUpdate,
   readOnly = false
 }) => {
   const { showToast } = useToast();
   const { showLoading, hideLoading } = useLoading();
   
-  const { fetchMaterials, updateMaterial } = useMaterials();
+  const { fetchMaterials } = useMaterials();
   const { FileInput, triggerFileSelect, createFileSelectHandler } = useFileUpload();
   
   // ✅ REMOVED: View-related state (no longer needed with routing)
@@ -206,7 +205,7 @@ const MaterialContent = ({
     if (editedTitle.trim() && (editedTitle !== material?.title || editedDescription !== material?.description)) {
       try {
         await onTitleChange(editedTitle, editedDescription);
-      } catch (error) {
+      } catch {
         setEditedTitle(material?.title || "");
         setEditedDescription(material?.description || "");
       }
@@ -233,7 +232,7 @@ const MaterialContent = ({
   const handleDescriptionSave = async () => {
     try {
       await onTitleChange(material?.title || "", editedDescription);
-    } catch (error) {
+    } catch {
       setEditedDescription(material?.description || "");
     }
     setIsEditingDescription(false);

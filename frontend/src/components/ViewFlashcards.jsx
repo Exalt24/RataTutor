@@ -6,11 +6,9 @@ import '../styles/components/flashcards.css';
 import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
 const ViewFlashcards = ({ 
-  mainMaterial, 
   material, 
   onClose, 
   readOnly = false, 
-  onSuccess,
   onEdit // ✅ NEW: Navigation handler for editing
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);

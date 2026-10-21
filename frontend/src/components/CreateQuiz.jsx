@@ -647,7 +647,7 @@ const CreateQuiz = React.memo(({
                     value={item.question}
                     onChange={(e) => updateItem(index, 'question', e.target.value)}
                     required={true}
-                    onValidityChange={(field, isValid) => {}}
+                    onValidityChange={() => {}}
                     rows={3}
                     disabled={submitting}
                     variant="card"

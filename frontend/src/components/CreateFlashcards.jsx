@@ -614,7 +614,7 @@ const CreateFlashcards = React.memo(({
                     value={item.front}
                     onChange={(e) => updateItem(index, 'front', e.target.value)}
                     required={true}
-                    onValidityChange={(field, isValid) => {}}
+                    onValidityChange={() => {}}
                     rows={4}
                     disabled={submitting}
                     variant="card"
@@ -628,7 +628,7 @@ const CreateFlashcards = React.memo(({
                     value={item.back}
                     onChange={(e) => updateItem(index, 'back', e.target.value)}
                     required={true}
-                    onValidityChange={(field, isValid) => {}}
+                    onValidityChange={() => {}}
                     rows={4}
                     disabled={submitting}
                     variant="card"

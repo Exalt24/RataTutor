@@ -1,6 +1,5 @@
 import { Mail } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Form from "../components/Form";
 import { useToast } from "../components/Toast/ToastContext";
 import { requestPasswordReset } from "../services/authService";
@@ -18,7 +17,6 @@ export default function ForgotPassword() {
   const [formData, setFormData] = useState({ email: "" });
   const [validities, setValidities] = useState({ email: false });
 
-  const nav = useNavigate();
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -52,7 +50,7 @@ export default function ForgotPassword() {
     } catch (err) {
       const data = err.response?.data || {};
       const msgs = [];
-      Object.entries(data).forEach(([key, val]) => {
+      Object.entries(data).forEach(([, val]) => {
         if (Array.isArray(val)) val.forEach((m) => msgs.push(m));
         else if (typeof val === "string") msgs.push(val);
       });

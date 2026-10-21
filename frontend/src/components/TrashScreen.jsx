@@ -8,9 +8,7 @@ import { useToast } from './Toast/ToastContext'
 
 const TrashScreen = ({ 
   trashedMaterialsData = [], 
-  onRefreshMaterials, 
   onRestoreMaterial,
-  onRemoveMaterial,
   onRemoveMaterials
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -168,7 +166,7 @@ const TrashScreen = ({
         title: "Materials restored",
         subtitle: `${selectedItems.length} item(s) have been restored to your library.`,
       })
-    } catch (error) {
+    } catch {
       showToast({
         variant: "error",
         title: "Error restoring materials",

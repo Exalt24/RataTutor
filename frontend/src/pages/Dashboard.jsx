@@ -101,7 +101,7 @@ const Dashboard = () => {
     setSelectedFile(e.target.files[0]);
   };
 
-  const uploadAndGenerate = async (type) => {
+  const uploadAndGenerate = async () => {
     if (!selectedFile) return alert('Please select a file first');
     // Your generate logic
   };
@@ -252,9 +252,7 @@ const HomeScreenWrapper = ({
     materials, 
     fetchMaterials, 
     addMaterial, 
-    updateMaterial, 
-    isInitialized, 
-    isFetching 
+    updateMaterial
   } = useMaterials();
 
   return (
@@ -281,9 +279,7 @@ const TrashScreenWrapper = ({ onRefreshMaterials }) => {
     fetchMaterials,
     restoreMaterial, 
     removeFromTrash, 
-    bulkRemoveFromTrash,
-    isInitialized,
-    isFetching
+    bulkRemoveFromTrash
   } = useMaterials();
 
   return (

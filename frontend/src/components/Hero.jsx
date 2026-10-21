@@ -1,8 +1,7 @@
 // src/components/Hero.jsx
 'use client';
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useScroll } from 'framer-motion';
 import r2 from "../assets/book2.png";
 import r3 from "../assets/eraser.png";
 import r4 from "../assets/laptop.png";
@@ -13,15 +12,6 @@ import r5 from "../assets/tablet.png";
 import "../styles/components/hero.css";
 import DevelopersSlideCard from "./DevelopersSlideCard";
 import FeaturesSlideCard from "./FeaturesSlideCard";
-import { isLoggedIn } from "../services/authService";
-
-const developers = [
-  { name: "Daniel Alexis Cruz", img: r1 },
-  { name: "Nikka Joie Mendoza", img: r2 },
-  { name: "Mc Clareenz Zerrudo", img: r3 },
-  { name: "Shaira Joy Macale", img: r4 },
-  { name: "Vince Quinanola", img: r5 },
-];
 
 const slides = [
   { id: 1, cardClass: "card--1", heading: "Home" },
@@ -31,12 +21,6 @@ const slides = [
 ];
 
 export default function Hero() {
-  const container = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: container,
-    offset: ['start start', 'end end'],
-  });
-
   const topImages = [r1, r2, r3, r4, r5, r6];
   const bottomImages = [r1, r2, r3, r4, r5, r6];
   const bgColor = [
@@ -47,29 +31,12 @@ export default function Hero() {
     "linear-gradient(90deg, #90C9FF 0%, #F0F8FF 100%)",
     "linear-gradient(90deg, #A2E4C3 0%, #E8FFF5 100%)"
   ];
-  const [imgIndex, setImgIndex] = useState(0);
-  const [deg, setDeg] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [fade, setFade] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [prevImageIndex, setPrevImageIndex] = useState(null);
   const [activeCard, setActiveCard] = useState(1);
-  const [userLoggedIn, setUserLoggedIn] = useState(false); // Track login status
-
-  // Check login status on component mount and whenever localStorage changes
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      setUserLoggedIn(isLoggedIn());
-    };
-    
-    checkLoginStatus();
-    
-    // Listen for storage changes (in case user logs in/out in another tab)
-    window.addEventListener('storage', checkLoginStatus);
-    
-    return () => window.removeEventListener('storage', checkLoginStatus);
-  }, []);
 
   const handleCardClick = (cardId) => {
     setActiveCard(cardId);
@@ -82,9 +49,7 @@ export default function Hero() {
     const nextIndex = (currentImageIndex + 1) % bottomImages.length;
     setPrevImageIndex(currentImageIndex);
     setCurrentImageIndex(nextIndex);
-    setImgIndex(nextIndex);
     setBgIndex(nextIndex);
-    setDeg((d) => d + 90);
     setFade(true);
     setIsAnimating(true);
     setTimeout(() => { setIsAnimating(false); setPrevImageIndex(null); }, 1500);
@@ -92,7 +57,7 @@ export default function Hero() {
 
   useEffect(() => {
     let last = 0;
-    const onWheel = (e) => {
+    const onWheel = () => {
       const now = Date.now();
       if (now - last < 1000) return;
       last = now;

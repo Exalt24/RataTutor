@@ -5,11 +5,9 @@ import { useToast } from '../components/Toast/ToastContext';
 import { createCombinedSuccessMessage, trackActivityAndNotify } from '../utils/streakNotifications';
 
 const ViewNotes = ({ 
-  mainMaterial, 
   material, 
   onClose, 
   readOnly = false, 
-  onSuccess,
   onEdit // ✅ NEW: Navigation handler for editing
 }) => {
   const { showToast } = useToast();

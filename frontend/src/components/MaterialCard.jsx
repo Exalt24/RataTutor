@@ -85,8 +85,7 @@ const DropdownMenu = React.memo(({
   onCreateNotes, 
   onCreateQuiz,
   onViewMaterial,
-  onDelete,
-  material
+  onDelete
 }) => {
   if (!isOpen) return null;
 

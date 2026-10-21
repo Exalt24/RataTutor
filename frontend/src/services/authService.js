@@ -39,7 +39,7 @@ export function isLoggedIn() {
     }
 
     return true; // Token is still valid
-  } catch (error) {
+  } catch {
     // Token is malformed, clear tokens
     clearTokens();
     return false;
