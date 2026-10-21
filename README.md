@@ -1,5 +1,7 @@
 # RataTutor
 
+[![CI](https://github.com/Exalt24/RataTutor/actions/workflows/ci.yml/badge.svg)](https://github.com/Exalt24/RataTutor/actions/workflows/ci.yml)
+
 Study assistant: turns notes and documents into flashcards, summary notes and quizzes, with an AI tutor per material.
 
 ![RataTutor running locally: register, upload notes, AI flashcards, a quiz, and the chat tutor](docs/demo.gif)
@@ -58,11 +60,11 @@ Environment values, the local-model settings, other ports, Docker and troublesho
 
 ## Tests
 
-None yet. `backend/api/tests.py` and `backend/accounts/tests.py` are the empty files Django generates, and there is no CI workflow.
+No automated tests yet: `backend/api/tests.py` and `backend/accounts/tests.py` are the empty files Django generates. The CI workflow in `.github/workflows/ci.yml` runs `manage.py check`, a migration drift check and `migrate` on an empty SQLite database for the API, and `npm ci` plus the Vite build for the frontend. `npm run lint` is not in CI because it still reports errors.
 
 ## Limits and not done
 
-- No automated tests and no CI.
+- No automated tests, and the frontend lint still fails, so CI only checks that the API loads and migrates and that the frontend builds.
 - Against OpenRouter, the AI features work only while the configured model id is still listed there.
 - Local model: Ollama's default context window was 4096 tokens, so longer documents need a larger `num_ctx`, which I have not tested.
 - Chunk selection for long materials is the first three chunks, not the most relevant ones.

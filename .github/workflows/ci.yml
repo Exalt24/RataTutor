@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Django API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    # Dummy values so settings.py can load; nothing here calls Cloudinary, email or OpenRouter.
+    env:
+      SECRET_KEY: ci-dummy-secret-key
+      DEBUG: "False"
+      EMAIL_HOST_USER: ci@example.com
+      EMAIL_HOST_PASSWORD: ci-dummy
+      OPENROUTER_API_KEY: ci-dummy
+      CLOUDINARY_CLOUD_NAME: ci-dummy
+      CLOUDINARY_API_KEY: ci-dummy
+      CLOUDINARY_API_SECRET: ci-dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Django system check
+        run: python manage.py check
+      - name: Models match the migrations
+        run: python manage.py makemigrations --check --dry-run
+      - name: Apply every migration to an empty SQLite database
+        run: python manage.py migrate --noinput
+
+  frontend:
+    name: React app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
