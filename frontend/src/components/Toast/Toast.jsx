@@ -17,9 +17,9 @@ export default function Toast({
 }) {
   const [internalVisible, setInternalVisible] = useState(visible);
   const mountNode = document.getElementById('portal-root');
-  if (!mountNode) return null;
 
   useEffect(() => {
+    if (!mountNode) return;
     if (visible) {
       setInternalVisible(true);
       const timer = setTimeout(() => {
@@ -28,7 +28,9 @@ export default function Toast({
       }, duration);
       return () => clearTimeout(timer);
     }
-  }, [visible, duration, onClose]);
+  }, [mountNode, visible, duration, onClose]);
+
+  if (!mountNode) return null;
 
   return createPortal(
     <div className={`toast ${VARIANT_STYLES[variant]} ${internalVisible ? 'visible' : ''}`}>

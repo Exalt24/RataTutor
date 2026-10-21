@@ -157,12 +157,9 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
   );
 };
 
-const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
-  // Early return if profileData is not available (during logout)
-  if (!profileData) {
-    return <div>Loading...</div>;
-  }
-
+// The form lives in its own component so its hooks always run in the same order;
+// profileData is null while the profile loads and during logout.
+const EditProfileForm = ({ onBack, profileData, fetchProfileData }) => {
   // Fix 1: Stabilize currentAvatar calculation with proper dependencies
   const currentAvatar = useMemo(() => {
     return getCurrentAvatar(profileData);
@@ -500,6 +497,21 @@ const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
         onSave={handleAvatarSave}
       />
     </>
+  );
+};
+
+const EditProfileScreen = ({ onBack, profileData, fetchProfileData }) => {
+  // Early return if profileData is not available (during logout)
+  if (!profileData) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <EditProfileForm
+      onBack={onBack}
+      profileData={profileData}
+      fetchProfileData={fetchProfileData}
+    />
   );
 };
 

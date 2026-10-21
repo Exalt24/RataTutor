@@ -74,12 +74,9 @@ const ContentStats = React.memo(({ contentValidation, validities }) => (
 
 ContentStats.displayName = 'ContentStats';
 
-// ✅ NEW: Memoized MenuBar component
-const MenuBar = React.memo(({ editor, submitting }) => {
-  if (!editor) {
-    return null;
-  }
-
+// The toolbar body lives in its own component so its hooks always run in the same
+// order; the editor is null until tiptap finishes creating it.
+const MenuBarContent = ({ editor, submitting }) => {
   const setTextColor = useCallback((color) => {
     editor.chain().focus().setColor(color).run();
   }, [editor]);
@@ -267,6 +264,15 @@ const MenuBar = React.memo(({ editor, submitting }) => {
       </button>
     </div>
   );
+};
+
+// ✅ NEW: Memoized MenuBar component
+const MenuBar = React.memo(({ editor, submitting }) => {
+  if (!editor) {
+    return null;
+  }
+
+  return <MenuBarContent editor={editor} submitting={submitting} />;
 });
 
 MenuBar.displayName = 'MenuBar';
