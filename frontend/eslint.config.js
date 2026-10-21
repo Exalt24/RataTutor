@@ -35,4 +35,13 @@ export default [
       ],
     },
   },
+  {
+    // The Tailwind config is CommonJS (module.exports / require), not an ES module.
+    files: ['tailwind.config.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: globals.node,
+      parserOptions: { sourceType: 'commonjs' },
+    },
+  },
 ]
