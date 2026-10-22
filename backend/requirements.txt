@@ -34,7 +34,7 @@ pydantic_core>=2.33.0
 jiter>=0.10.0
 
 # Other dependencies
-requests>=2.32.0
+requests>=2.34.2
 certifi>=2025.4.0
 charset-normalizer>=3.4.0
 urllib3>=2.4.0
