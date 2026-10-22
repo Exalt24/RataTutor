@@ -3,11 +3,9 @@
 import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
-import Underline from '@tiptap/extension-underline';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { AlertCircle, AlignCenter, AlignLeft, AlignRight, ArrowLeft, Bold, FileText, Heading1, Heading2, Heading3, Highlighter, Italic, MinusCircle, RotateCcw, RotateCw, Strikethrough, Underline as UnderlineIcon } from 'lucide-react';
@@ -318,7 +316,8 @@ const CreateNotes = React.memo(({
   // TipTap Editor setup
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // Tiptap 3's StarterKit already bundles Underline and Link, so they are configured here and not added twice.
+      StarterKit.configure({ link: { openOnClick: false } }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -327,10 +326,6 @@ const CreateNotes = React.memo(({
       Highlight.configure({
         multicolor: true,
       }),
-      Underline,
-      Link.configure({
-        openOnClick: false,
-      }),
       Image,
       Placeholder.configure({
         placeholder: 'Start writing your notes here...',
@@ -338,6 +333,8 @@ const CreateNotes = React.memo(({
       }),
     ],
     content: '',
+    // Tiptap 3 stops re-rendering on every transaction by default; the toolbar state and the save gate read the editor during render.
+    shouldRerenderOnTransaction: true,
     editorProps: {
       attributes: {
         class: 'prose max-w-none min-h-[400px] p-6 focus:outline-none',

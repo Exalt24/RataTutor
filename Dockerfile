@@ -1,7 +1,7 @@
 # ┌─────────────────────────────┐
 # │ Stage 1: Build the frontend │
 # └─────────────────────────────┘
-FROM node:20-alpine AS frontend-build
+FROM node:22-alpine AS frontend-build
 
 # Declare ARGs with defaults matching your Render URL and title
 ARG VITE_API_URL="https://ratatutor.onrender.com/api/"
@@ -33,7 +33,7 @@ RUN npm run build
 # ┌────────────────────────────┐
 # │ Stage 2: Build the backend │
 # └────────────────────────────┘
-FROM python:3.10-slim AS backend-build
+FROM python:3.13-slim AS backend-build
 
 # Install system deps (for psycopg2, etc.)
 RUN apt-get update \

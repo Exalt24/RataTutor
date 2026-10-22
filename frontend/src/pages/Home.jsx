@@ -4,10 +4,8 @@ import {
   Mail,
   MessageCircle,
   Globe,
-  Linkedin,
-  Facebook,
-  Instagram,
 } from "lucide-react";
+import { Linkedin, Facebook, Instagram } from "../components/BrandIcons";
 
 import logo from "../assets/logotemp.png";
 import bookImg from "../assets/note1.png";
