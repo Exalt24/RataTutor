@@ -106,7 +106,7 @@ const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
     }
     
     const encodedUrl = encodeURIComponent(attachment.file);
-    let viewerUrl = '';
+    let viewerUrl;
     
     switch (service) {
       case 'google':

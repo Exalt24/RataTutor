@@ -294,8 +294,8 @@ const MaterialContent = ({
   const handleDeleteContent = async (contentId, type) => {
     if (readOnly) return;
     
-    let contentName = '';
-    let content = null;
+    let contentName;
+    let content;
     
     switch (type) {
       case "flashcard":
