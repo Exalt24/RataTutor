@@ -23,7 +23,7 @@ lxml>=5.4.0
 pillow>=11.2.0
 
 # OpenAI API (with flexible dependencies)
-openai>=1.82.0
+openai>=3.31.0
 httpx>=0.28.0
 httpcore>=1.0.0
 h11>=0.16.0
