@@ -1,5 +1,5 @@
 import { ArrowRight, Lock, User } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Form from "../components/Form";
 import { useLoading } from "../components/Loading/LoadingContext"; // Import useLoading
@@ -35,7 +35,10 @@ export default function Login({ isActive, onGoRegister }) {
   const { showToast } = useToast();
   const { showLoading, hideLoading } = useLoading();
 
-  useEffect(() => {
+  // Reset the form each time the page becomes active: React's "adjust state while rendering" pattern, not an effect.
+  const [seenActive, setSeenActive] = useState(false);
+  if (isActive !== seenActive) {
+    setSeenActive(isActive);
     if (isActive) {
       setFormData({ username: "", password: "" });
       setBannerErrors([]);
@@ -43,7 +46,7 @@ export default function Login({ isActive, onGoRegister }) {
       setIsOpen(false);
       setIsPulledOut(false);
     }
-  }, [isActive]);
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;

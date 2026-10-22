@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { confirmPasswordReset } from "../services/authService";
 import { Lock } from "lucide-react";
@@ -37,14 +37,6 @@ export default function PasswordReset() {
   const nav = useNavigate();
   const { uid, token } = useParams();
   const { showToast } = useToast();
-
-  useEffect(() => {
-    setFormData({ password: "", confirmPassword: "" });
-    setValidities({ password: false, confirmPassword: false });
-    setBannerErrors([]);
-    setIsOpen(false);
-    setIsPulledOut(false);
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

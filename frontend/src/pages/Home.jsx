@@ -80,13 +80,15 @@ const Home = () => {
       { rootMargin: "200px" } // Load slightly before it comes into view
     );
 
-    if (gifContainerRef.current) {
-      observer.observe(gifContainerRef.current);
+    // Capture the node now: the ref may point somewhere else by the time the cleanup runs.
+    const gifNode = gifContainerRef.current;
+    if (gifNode) {
+      observer.observe(gifNode);
     }
 
     return () => {
-      if (gifContainerRef.current) {
-        observer.unobserve(gifContainerRef.current);
+      if (gifNode) {
+        observer.unobserve(gifNode);
       }
     };
   }, []);

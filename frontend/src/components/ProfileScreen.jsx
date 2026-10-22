@@ -1,41 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import avatarPlaceholder from '../assets/r1.png';
 import { getCurrentAvatarOrDefault } from '../utils/avatarUtils';
+
+// Barcode SVG; `widths` holds one bar width per bar
+const Barcode = ({ className, widths }) => (
+  <svg className={className} viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg">
+    {widths.map((width, i) => (
+      <rect key={i} x={i * 3.3} y="0" width={width} height="20" fill="black" />
+    ))}
+  </svg>
+);
+
+// QR code placeholder; `cells` holds whether each of the 16 squares is dark
+const QRCode = ({ cells }) => (
+  <div className="w-36 h-36 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+    <div className="grid grid-cols-4 gap-2">
+      {cells.map((dark, i) => (
+        <div key={i} className={`w-7 h-7 rounded-sm ${dark ? 'bg-gray-800' : 'bg-transparent'}`} />
+      ))}
+    </div>
+  </div>
+);
 
 const ProfileScreen = ({ onEditProfile, profileData }) => {
   const currentAvatar = getCurrentAvatarOrDefault(profileData);
 
-  // Barcode SVG component
-  const Barcode = ({ className }) => (
-    <svg className={className} viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg">
-      {[...Array(30)].map((_, i) => (
-        <rect
-          key={i}
-          x={i * 3.3}
-          y="0"
-          width={Math.random() * 2 + 1}
-          height="20"
-          fill="black"
-        />
-      ))}
-    </svg>
-  );
-
-  // QR Code placeholder
-  const QRCode = () => (
-    <div className="w-36 h-36 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-      <div className="grid grid-cols-4 gap-2">
-        {[...Array(16)].map((_, i) => (
-          <div
-            key={i}
-            className={`w-7 h-7 rounded-sm ${
-              Math.random() > 0.5 ? 'bg-gray-800' : 'bg-transparent'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
+  // The decorative patterns are drawn once per mount, so they do not change on every render.
+  const [barWidths] = useState(() => Array.from({ length: 30 }, () => Math.random() * 2 + 1));
+  const [qrCells] = useState(() => Array.from({ length: 16 }, () => Math.random() > 0.5));
 
   return (
     <div className="bg-white rounded-lg shadow-xl max-w-6xl mx-auto font-sans overflow-hidden">
@@ -162,7 +154,7 @@ const ProfileScreen = ({ onEditProfile, profileData }) => {
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 h-full flex flex-col">
                   <div className="label-text text-xs text-gray-500 mb-3 text-center">QR CODE</div>
                   <div className="flex-1 flex items-center justify-center">
-                    <QRCode />
+                    <QRCode cells={qrCells} />
                   </div>
                 </div>
               </div>
@@ -183,7 +175,7 @@ const ProfileScreen = ({ onEditProfile, profileData }) => {
             <div>
               <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                 <div className="label-text text-xs text-gray-500 mb-2">BARCODE</div>
-                <Barcode className="w-full h-10" />
+                <Barcode className="w-full h-10" widths={barWidths} />
               </div>
             </div>
           </div>

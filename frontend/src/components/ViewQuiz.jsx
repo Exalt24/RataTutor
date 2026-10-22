@@ -14,7 +14,14 @@ const ViewQuiz = ({
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   // ✅ REMOVED: showCreateQuiz state (no longer needed)
-  const [showConfetti, setShowConfetti] = useState(false);
+  // Confetti shows from the moment the quiz is submitted until its 5 second timer fires (see the effect below).
+  const [confettiExpired, setConfettiExpired] = useState(false);
+  const [prevSubmitted, setPrevSubmitted] = useState(false);
+  if (quizSubmitted !== prevSubmitted) {
+    setPrevSubmitted(quizSubmitted);
+    if (quizSubmitted) setConfettiExpired(false);
+  }
+  const showConfetti = quizSubmitted && !confettiExpired;
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -37,11 +44,9 @@ const ViewQuiz = ({
 
   // ✅ Good useEffect - UI effects based on state
   useEffect(() => {
-    if (quizSubmitted) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 5000);
-      return () => clearTimeout(timer);
-    }
+    if (!quizSubmitted) return;
+    const timer = setTimeout(() => setConfettiExpired(true), 5000);
+    return () => clearTimeout(timer);
   }, [quizSubmitted]);
 
   // ✅ Derived state using useMemo instead of complex useEffect
@@ -56,21 +61,20 @@ const ViewQuiz = ({
   }, [material]);
 
   // ✅ Derived state for safe bounds checking
-  const safeCurrentIndex = useMemo(() => {
-    if (!quizData?.questions || quizData.questions.length === 0) return 0;
-    return Math.min(currentQuestionIndex, quizData.questions.length - 1);
-  }, [currentQuestionIndex, quizData?.questions?.length]);
+  const questionCount = quizData?.questions?.length ?? 0;
+  const safeCurrentIndex = questionCount === 0 ? 0 : Math.min(currentQuestionIndex, questionCount - 1);
 
-  // ✅ Simple bounds checking when data changes
-  useEffect(() => {
-    if (!quizData?.questions || quizData.questions.length === 0) {
+  // Bounds checking when the data changes. This runs while rendering (React's "adjust state when something changes" pattern),
+  // guarded so it converges, instead of setting state from an effect.
+  if (questionCount === 0) {
+    if (currentQuestionIndex !== 0 || Object.keys(selectedAnswers).length > 0 || quizSubmitted) {
       setCurrentQuestionIndex(0);
       setSelectedAnswers({});
       setQuizSubmitted(false);
-    } else if (safeCurrentIndex !== currentQuestionIndex) {
-      setCurrentQuestionIndex(safeCurrentIndex);
     }
-  }, [safeCurrentIndex, currentQuestionIndex, quizData?.questions?.length]);
+  } else if (safeCurrentIndex !== currentQuestionIndex) {
+    setCurrentQuestionIndex(safeCurrentIndex);
+  }
 
   // ✅ UPDATED: Use navigation instead of local state
   const handleEdit = () => {

@@ -1,5 +1,5 @@
 import { Mail } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Form from "../components/Form";
 import { useToast } from "../components/Toast/ToastContext";
 import { requestPasswordReset } from "../services/authService";
@@ -18,12 +18,6 @@ export default function ForgotPassword() {
   const [validities, setValidities] = useState({ email: false });
 
   const { showToast } = useToast();
-
-  useEffect(() => {
-    // reset state when this component mounts
-    setFormData({ email: "" });
-    setValidities({ email: false });
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

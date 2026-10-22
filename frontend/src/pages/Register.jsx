@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 import { register } from "../services/authService";
 import { useToast } from "../components/Toast/ToastContext";
 import Form from "../components/Form";
@@ -52,11 +52,14 @@ export default function Register({ isActive, onGoLogin }) {
 
 
   const [titleKey, setTitleKey] = useState(0);
-  const prevActive = useRef(false);
 
   const { showToast } = useToast();
 
-  useEffect(() => {
+  // Reset the form each time the page becomes active, and restart the title animation: React's "adjust state while rendering"
+  // pattern, not an effect. This block only runs when isActive changed, so isActive true means it was inactive before.
+  const [seenActive, setSeenActive] = useState(false);
+  if (isActive !== seenActive) {
+    setSeenActive(isActive);
     if (isActive) {
       setFormData({
         username: "",
@@ -74,13 +77,9 @@ export default function Register({ isActive, onGoLogin }) {
       setAnimationStage(1);
       setSending(false);
       setHideForm(false);
-    }
-
-    if (!prevActive.current && isActive) {
       setTitleKey((k) => k + 1);
     }
-    prevActive.current = isActive;
-  }, [isActive]);
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;

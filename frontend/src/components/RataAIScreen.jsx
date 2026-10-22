@@ -80,11 +80,6 @@ const RataAIScreen = () => {
     }
   }, [materials, isInitialized]);
 
-  // ✅ Auto-scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -96,6 +91,11 @@ const RataAIScreen = () => {
       textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
     }
   };
+
+  // ✅ Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     adjustTextareaHeight();
@@ -143,6 +143,8 @@ const RataAIScreen = () => {
     );
 
   // ✅ Start conversation with material (with retry logic for new materials)
+  // The retry below calls the callback through this ref, which is kept pointing at the latest version after it is declared.
+  const startConversationRef = useRef(null);
   const startConversationWithMaterial = useCallback(async (material, retryCount = 0) => {
     try {
       setLoading(true);
@@ -183,7 +185,7 @@ const RataAIScreen = () => {
       if (retryCount < 2 && (error.response?.status === 500 || error.response?.status === 404)) {
         console.log('🔄 Retrying conversation creation after delay...');
         setTimeout(() => {
-          startConversationWithMaterial(material, retryCount + 1);
+          startConversationRef.current?.(material, retryCount + 1);
         }, 1000 * (retryCount + 1)); // Exponential backoff: 1s, 2s
         return;
       }
@@ -207,6 +209,10 @@ const RataAIScreen = () => {
       setLoading(false);
     }
   }, [showToast]);
+
+  useEffect(() => {
+    startConversationRef.current = startConversationWithMaterial;
+  }, [startConversationWithMaterial]);
 
   // ✅ Send message handler (with fallback for local mode)
   const handleSend = useCallback(async () => {

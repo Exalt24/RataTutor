@@ -342,20 +342,18 @@ const CreateNotes = React.memo(({
     },
   });
 
-  // Initialize form data
-  useEffect(() => {
+  // Initialise the form from the note being edited, or suggest a title from the material, whenever that source changes.
+  // This runs while rendering (React's "adjust state when something changes" pattern), not in an effect.
+  const initSource = isEditMode && editContent ? editContent : (material?.title ?? null);
+  const [seenInitSource, setSeenInitSource] = useState(null);
+  if (initSource !== seenInitSource) {
+    setSeenInitSource(initSource);
     if (isEditMode && editContent) {
       // Edit mode: populate with existing data
       setFormData({
         title: editContent.title || '',
         description: editContent.description || '',
       });
-
-      // Set editor content
-      if (editor && editContent.content) {
-        editor.commands.setContent(editContent.content);
-      }
-
       // Set initial validity for pre-filled title
       setValidities(prev => ({
         ...prev,
@@ -372,12 +370,21 @@ const CreateNotes = React.memo(({
         title: true,
       }));
     }
-  }, [editContent, material?.title, isEditMode, editor]);
+  }
+
+  // The editor lives outside React, so its content is synced from an effect once it exists.
+  useEffect(() => {
+    if (isEditMode && editContent?.content && editor) {
+      editor.commands.setContent(editContent.content);
+    }
+  }, [editContent, isEditMode, editor]);
 
   // ✅ OPTIMIZED: Memoized content validation
+  const editorHtml = editor?.getHTML() || '';
+  const editorText = editor?.getText() || '';
   const contentValidation = useMemo(() => {
-    const editorContent = editor?.getHTML() || '';
-    const textContent = editor?.getText() || '';
+    const editorContent = editorHtml;
+    const textContent = editorText;
     const isEmpty = !textContent.trim();
     const isValid = !isEmpty && textContent.trim().length >= 10;
 
@@ -387,7 +394,7 @@ const CreateNotes = React.memo(({
       length: textContent.length,
       content: editorContent
     };
-  }, [editor?.getHTML(), editor?.getText()]);
+  }, [editorHtml, editorText]);
 
   // ✅ OPTIMIZED: Form handlers with useCallback
   const handleTitleChange = useCallback((e) => {

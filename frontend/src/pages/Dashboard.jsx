@@ -64,20 +64,26 @@ const Dashboard = () => {
     }, 500); // ✅ INCREASED: Even longer delay for copy actions
   };
 
-  const fetchInitialData = async () => {
-    try {
-      await fetchProfileData();
-    } catch (error) {
-      console.error('Error fetching initial data:', error);
-    } finally {
-      hideLoading();
-    }
-  };
-
+  // First load: show the app-wide loading overlay, fetch the profile and hide it again. State is only set when the request
+  // finishes, and a result that arrives after the dashboard unmounted is ignored.
   useEffect(() => {
+    let cancelled = false;
     showLoading();
-    fetchInitialData();
-  }, []);
+    getProfile()
+      .then((profile) => {
+        if (!cancelled) setProfileData(profile || {});
+      })
+      .catch((error) => {
+        console.error('❌ Error fetching profile data:', error);
+        if (!cancelled) setProfileData({});
+      })
+      .finally(() => {
+        hideLoading();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showLoading, hideLoading]);
 
   // Navigation functions
   const setScreen = (screenName) => {

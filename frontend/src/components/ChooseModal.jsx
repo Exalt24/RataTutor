@@ -1,5 +1,5 @@
 import { Edit2, FileText, HelpCircle, Plus } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ValidatedInput from './ValidatedInput';
 
 const ChooseModal = ({ 
@@ -21,21 +21,25 @@ const ChooseModal = ({
     materialDescription: true // Description is optional
   });
 
-  // Reset state when modal opens/closes or mode changes
-  useEffect(() => {
-    if (isOpen) {
+  // Reset the form whenever the modal opens or its mode or preselected type changes. This is React's "adjust state while
+  // rendering" pattern, so no state is set from inside an effect (the first render runs it too, like the old mount effect).
+  const resetKey = isOpen ? `${mode}|${preselectedType}` : null;
+  const [seenResetKey, setSeenResetKey] = useState(null);
+  if (resetKey !== seenResetKey) {
+    setSeenResetKey(resetKey);
+    if (resetKey !== null) {
       setSelectedMaterial('');
       setIsCreatingNew(false);
       setNewMaterialName('');
       setNewMaterialDescription('');
       setSelectedType(preselectedType);
       setStep('material');
-      setValidities({ 
-        materialTitle: false, 
-        materialDescription: true 
+      setValidities({
+        materialTitle: false,
+        materialDescription: true
       });
     }
-  }, [isOpen, mode, preselectedType]);
+  }
 
   if (!isOpen) return null;
 

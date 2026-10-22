@@ -15,19 +15,24 @@ export default function Toast({
   duration = 2500, // not strictly necessary here, since ToastProvider handles timing
   onClose,         // ToastProvider never passes this
 }) {
-  const [internalVisible, setInternalVisible] = useState(visible);
+  // The toast shows while `visible` is true until its own timer expires. `expired` is cleared when it is shown again
+  // (React's "adjust state while rendering" pattern), so no state is set synchronously inside the effect.
+  const [expired, setExpired] = useState(false);
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (visible) setExpired(false);
+  }
+  const internalVisible = visible && !expired;
   const mountNode = document.getElementById('portal-root');
 
   useEffect(() => {
-    if (!mountNode) return;
-    if (visible) {
-      setInternalVisible(true);
-      const timer = setTimeout(() => {
-        setInternalVisible(false);
-        onClose?.();
-      }, duration);
-      return () => clearTimeout(timer);
-    }
+    if (!mountNode || !visible) return;
+    const timer = setTimeout(() => {
+      setExpired(true);
+      onClose?.();
+    }, duration);
+    return () => clearTimeout(timer);
   }, [mountNode, visible, duration, onClose]);
 
   if (!mountNode) return null;

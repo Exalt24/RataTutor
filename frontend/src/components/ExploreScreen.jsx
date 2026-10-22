@@ -46,9 +46,33 @@ const ExploreScreen = ({ onRefreshProfile }) => {
     }
   }, [showToast])
 
+  // First load: the state already starts as loading with no error, so nothing is reset here and state is only set when the
+  // request finishes. The refresh button below uses fetchPublicMaterials, which resets first.
   useEffect(() => {
-    fetchPublicMaterials()
-  }, [fetchPublicMaterials])
+    let cancelled = false
+    getPublicMaterials()
+      .then((response) => {
+        if (cancelled) return
+        setMaterialsData(response.data)
+        setError(null)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('Error fetching public materials:', err)
+        setError('Failed to load public materials. Please try again.')
+        showToast({
+          variant: "error",
+          title: "Error loading materials",
+          subtitle: "Failed to fetch public materials. Please try again.",
+        })
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [showToast])
 
   const handleRefresh = useCallback(() => {
     fetchPublicMaterials()

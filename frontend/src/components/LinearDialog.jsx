@@ -1,11 +1,11 @@
 'use client';
 import React, {
   useContext,
-  useEffect,
   useId,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 
@@ -59,14 +59,12 @@ function DialogTrigger({ children, className, style }) {
     );
   }  
 
+const subscribeNothing = () => () => {};
+
 function DialogContainer({ children, className }) {
   const { isOpen, setIsOpen, uniqueId } = useDialog();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+  // False on the first (server or pre-mount) render, true afterwards: no effect or state needed.
+  const mounted = useSyncExternalStore(subscribeNothing, () => true, () => false);
 
   if (!mounted) return null;
 

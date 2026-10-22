@@ -23,14 +23,6 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      // eslint-plugin-react-hooks 7 added React Compiler rules. They flag real patterns to clean up one
-      // component at a time (setState in an effect, mutating a value during render), so they report as
-      // warnings here instead of blocking the lint that the ESLint 10 upgrade needs to stay green.
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/immutability': 'warn',
-      'react-hooks/use-memo': 'warn',
-      'react-hooks/static-components': 'warn',
-      'react-hooks/purity': 'warn',
       // Without eslint-plugin-react, JSX usage (<motion.div>, <Icon />) is invisible to
       // no-unused-vars, so names used only in JSX are exempted by pattern.
       'no-unused-vars': ['error', {
@@ -39,7 +31,8 @@ export default [
       }],
       'react-refresh/only-export-components': [
         'warn',
-        { allowConstantExport: true },
+        // The providers export their hook beside them on purpose (useLoading, useToast, useMaterials).
+        { allowConstantExport: true, allowExportNames: ['useLoading', 'useToast', 'useMaterials'] },
       ],
     },
   },

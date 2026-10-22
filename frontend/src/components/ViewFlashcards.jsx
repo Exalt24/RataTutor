@@ -18,7 +18,14 @@ const ViewFlashcards = ({
   const [shuffleSeed, setShuffleSeed] = useState(0);
   // ✅ REMOVED: showCreateFlashcards state (no longer needed)
   const [isFinished, setIsFinished] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  // Confetti shows from the moment the deck is finished until its 5 second timer fires (see the effect below).
+  const [confettiExpired, setConfettiExpired] = useState(false);
+  const [prevFinished, setPrevFinished] = useState(false);
+  if (isFinished !== prevFinished) {
+    setPrevFinished(isFinished);
+    if (isFinished) setConfettiExpired(false);
+  }
+  const showConfetti = isFinished && !confettiExpired;
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -41,11 +48,9 @@ const ViewFlashcards = ({
 
   // ✅ Good useEffect - UI effects based on state
   useEffect(() => {
-    if (isFinished) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 5000);
-      return () => clearTimeout(timer);
-    }
+    if (!isFinished) return;
+    const timer = setTimeout(() => setConfettiExpired(true), 5000);
+    return () => clearTimeout(timer);
   }, [isFinished]);
 
   // ✅ Derived state using useMemo instead of complex useEffect
@@ -86,18 +91,19 @@ const ViewFlashcards = ({
     return Math.min(currentIndex, formattedFlashcards.length - 1);
   }, [currentIndex, formattedFlashcards.length]);
 
-  // ✅ Reset state when cards change significantly
-  useEffect(() => {
-    if (formattedFlashcards.length === 0) {
+  // Reset state when the card list changes. This runs while rendering (React's "adjust state when something changes" pattern),
+  // guarded so it converges, instead of setting state from an effect.
+  if (formattedFlashcards.length === 0) {
+    if (currentIndex !== 0 || showAnswer || isFinished) {
       setCurrentIndex(0);
       setShowAnswer(false);
       setIsFinished(false);
-    } else if (safeCurrentIndex !== currentIndex) {
-      setCurrentIndex(safeCurrentIndex);
-      setShowAnswer(false);
-      setIsFinished(false);
     }
-  }, [safeCurrentIndex, currentIndex, formattedFlashcards.length]);
+  } else if (safeCurrentIndex !== currentIndex) {
+    setCurrentIndex(safeCurrentIndex);
+    setShowAnswer(false);
+    setIsFinished(false);
+  }
 
   const handleNext = async () => {
     if (formattedFlashcards.length === 0) return;

@@ -160,10 +160,8 @@ const AvatarSelectionModal = ({ isOpen, onClose, currentAvatar, onSave }) => {
 // The form lives in its own component so its hooks always run in the same order;
 // profileData is null while the profile loads and during logout.
 const EditProfileForm = ({ onBack, profileData, fetchProfileData }) => {
-  // Fix 1: Stabilize currentAvatar calculation with proper dependencies
-  const currentAvatar = useMemo(() => {
-    return getCurrentAvatar(profileData);
-  }, [profileData.avatar, profileData.id]); // Only depend on specific stable fields
+  // A plain lookup is cheap, so it is computed directly instead of memoised on a partial dependency list.
+  const currentAvatar = getCurrentAvatar(profileData);
 
   // Fix 2: Use lazy initialization to avoid dependency issues
   const [selectedAvatar, setSelectedAvatar] = useState(() => currentAvatar);

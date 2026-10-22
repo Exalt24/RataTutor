@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { X, FileText, Info, Globe, Pin, AlertCircle } from 'lucide-react';
 import { createMaterial } from '../services/apiService';
 import { trackActivityAndNotify, createCombinedSuccessMessage} from '../utils/streakNotifications';
@@ -25,8 +25,11 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated, onRefreshMaterials}) 
   
   const [submitting, setSubmitting] = useState(false);
 
-  // Reset form when modal opens/closes
-  useEffect(() => {
+  // Reset the form each time the modal opens. This is React's "adjust state while rendering" pattern (no state is set from an
+  // effect); seenOpen starts false, so a modal that is open on its first render is reset too, like the old mount effect.
+  const [seenOpen, setSeenOpen] = useState(false);
+  if (isOpen !== seenOpen) {
+    setSeenOpen(isOpen);
     if (isOpen) {
       setFormData({
         title: '',
@@ -41,7 +44,7 @@ const CreateMaterialModal = ({ isOpen, onClose, onCreated, onRefreshMaterials}) 
       });
       setSubmitting(false);
     }
-  }, [isOpen]);
+  }
 
   // Memoized handlers to prevent infinite re-renders
   const handleTitleChange = useCallback((e) => {

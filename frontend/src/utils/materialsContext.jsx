@@ -439,5 +439,3 @@ export const MaterialsProvider = ({ children, onMaterialsChange }) => { // ✅ C
     </materialsContext.Provider>
   );
 };
-
-export default materialsContext;

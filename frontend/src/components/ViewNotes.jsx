@@ -15,10 +15,10 @@ const ViewNotes = ({
   // ✅ REMOVED: showCreateNotes state (no longer needed)
   
   // Streak tracking state
-  const [studyStartTime] = useState(Date.now());
+  const [studyStartTime] = useState(() => Date.now());
   const [hasTrackedActivity, setHasTrackedActivity] = useState(false);
   const [isActivelyReading, setIsActivelyReading] = useState(true);
-  const lastActivityRef = useRef(Date.now());
+  const lastActivityRef = useRef(null); // set when the tracking effect starts
   
   // Use actual material data
   const noteContent = material?.content || '';
@@ -29,6 +29,7 @@ const ViewNotes = ({
   useEffect(() => {
     const MINIMUM_STUDY_TIME = 2 * 60 * 1000; // 2 minutes
     const ACTIVITY_TIMEOUT = 30 * 1000; // 30 seconds of inactivity
+    lastActivityRef.current = Date.now();
     
     // Update last activity on any interaction
     const updateActivity = () => {

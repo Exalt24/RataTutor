@@ -1,103 +1,96 @@
 import { AlertCircle, Code, Download, ExternalLink, Eye, FileText, Loader2, Monitor, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+const getFileExtensionOf = (filename) => filename?.split('.').pop()?.toLowerCase() || '';
+
+// Development means localhost, where external viewers cannot reach the file.
+const isDevelopmentFor = (file) =>
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.includes('localhost') ||
+  file?.includes('localhost') ||
+  file?.includes('127.0.0.1');
+
+// Cloudinary or another https CDN.
+const isCloudinaryUrlFor = (file) =>
+  file?.includes('cloudinary.com') ||
+  file?.includes('res.cloudinary.com') ||
+  file?.startsWith('https://');
+
+// Works out what the preview shows for a file. It holds no component state: the component stores the finished result.
+async function resolveFilePreview(file) {
+  const extension = getFileExtensionOf(file);
+  const result = { content: '', error: '', previewType: extension };
+  try {
+    switch (extension) {
+      case 'txt':
+        try {
+          const response = await fetch(file);
+          if (!response.ok) throw new Error('Failed to fetch file');
+          result.content = await response.text();
+        } catch {
+          if (isDevelopmentFor(file)) {
+            result.error = 'Text file preview may not work in development due to CORS. File will work in production.';
+          } else {
+            throw new Error('Unable to load text file');
+          }
+        }
+        break;
+      case 'pdf':
+        // PDFs usually work fine in development via iframe
+        result.content = file;
+        break;
+      case 'docx':
+      case 'pptx':
+        // For Office files, check if external viewers will work
+        if (isDevelopmentFor(file) && !isCloudinaryUrlFor(file)) {
+          result.error = `${extension.toUpperCase()} preview requires production URLs. External viewers cannot access localhost files.`;
+        } else {
+          result.content = file;
+        }
+        break;
+      default:
+        result.error = `Preview not supported for ${extension.toUpperCase()} files`;
+    }
+  } catch (err) {
+    console.error('Error loading file:', err);
+    result.error = `Failed to load ${extension.toUpperCase()} file preview`;
+  }
+  return result;
+}
+
 const FilePreview = ({ attachment, isOpen, onClose, onDownload }) => {
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [previewType, setPreviewType] = useState('');
+  // The file being previewed, or undefined while the modal is closed.
+  const file = isOpen ? attachment?.file : undefined;
+  // The finished preview for one file; it only counts while it belongs to the file currently shown.
+  const [result, setResult] = useState({ file: undefined, content: '', error: '', previewType: '' });
+  const current = result.file === file ? result : null;
+  const loading = Boolean(file) && !current;
+  const content = current?.content ?? '';
+  const error = current?.error ?? '';
+  const previewType = current?.previewType ?? '';
+  const setError = (message) => setResult((r) => ({ ...r, error: message }));
 
   useEffect(() => {
-    if (isOpen && attachment) {
-      loadFileContent();
-    } else {
-      // Reset state when modal closes
-      setContent('');
-      setError('');
-      setPreviewType('');
-    }
-  }, [isOpen, attachment]);
+    if (!file) return;
+    let cancelled = false;
+    resolveFilePreview(file).then((resolved) => {
+      if (!cancelled) setResult({ file, ...resolved });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [file]);
 
-  const getFileExtension = (filename) => {
-    return filename?.split('.').pop()?.toLowerCase() || '';
-  };
+  const getFileExtension = getFileExtensionOf;
 
   const getFileName = () => {
     return attachment?.file?.split('/').pop() || 'Unknown File';
   };
 
-  // Check if we're in development mode
-  const isDevelopment = () => {
-    return window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' ||
-           window.location.hostname.includes('localhost') ||
-           attachment?.file?.includes('localhost') ||
-           attachment?.file?.includes('127.0.0.1');
-  };
+  const isDevelopment = () => isDevelopmentFor(attachment?.file);
 
-  // Check if URL is from Cloudinary or other CDN
-  const isCloudinaryUrl = () => {
-    return attachment?.file?.includes('cloudinary.com') ||
-           attachment?.file?.includes('res.cloudinary.com') ||
-           attachment?.file?.startsWith('https://');
-  };
-
-  const loadFileContent = async () => {
-    if (!attachment?.file) return;
-    
-    const extension = getFileExtension(attachment.file);
-    setLoading(true);
-    setError('');
-    setContent('');
-    setPreviewType(extension);
-
-    try {
-      switch (extension) {
-        case 'txt':
-          await loadTextFile();
-          break;
-        case 'pdf':
-          await loadPdfFile();
-          break;
-        case 'docx':
-        case 'pptx':
-          // For Office files, check if external viewers will work
-          if (isDevelopment() && !isCloudinaryUrl()) {
-            setError(`${extension.toUpperCase()} preview requires production URLs. External viewers cannot access localhost files.`);
-          } else {
-            setContent(attachment.file);
-          }
-          break;
-        default:
-          setError(`Preview not supported for ${extension.toUpperCase()} files`);
-      }
-    } catch (err) {
-      console.error('Error loading file:', err);
-      setError(`Failed to load ${extension.toUpperCase()} file preview`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTextFile = async () => {
-    try {
-      const response = await fetch(attachment.file);
-      if (!response.ok) throw new Error('Failed to fetch file');
-      const text = await response.text();
-      setContent(text);
-    } catch {
-      if (isDevelopment()) {
-        setError('Text file preview may not work in development due to CORS. File will work in production.');
-      } else {
-        throw new Error('Unable to load text file');
-      }
-    }
-  };
-
-  const loadPdfFile = async () => {
-    // PDFs usually work fine in development via iframe
-    setContent(attachment.file);
-  };
+  const isCloudinaryUrl = () => isCloudinaryUrlFor(attachment?.file);
 
   const openInExternalViewer = (service) => {
     if (isDevelopment() && !isCloudinaryUrl()) {
