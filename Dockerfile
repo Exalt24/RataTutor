@@ -1,7 +1,7 @@
 # ┌─────────────────────────────┐
 # │ Stage 1: Build the frontend │
 # └─────────────────────────────┘
-FROM node:22-alpine AS frontend-build
+FROM node:25-alpine AS frontend-build
 
 # Declare ARGs with defaults matching your Render URL and title
 ARG VITE_API_URL="https://ratatutor.onrender.com/api/"
