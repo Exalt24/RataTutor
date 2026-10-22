@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   backend:
+    timeout-minutes: 30
     name: Django API
     runs-on: ubuntu-latest
     defaults:
@@ -30,8 +31,8 @@ jobs:
       CLOUDINARY_API_KEY: ci-dummy
       CLOUDINARY_API_SECRET: ci-dummy
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.10"
           cache: pip
@@ -45,14 +46,15 @@ jobs:
         run: python manage.py migrate --noinput
 
   frontend:
+    timeout-minutes: 30
     name: React app
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: npm
