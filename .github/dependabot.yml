@@ -43,6 +43,11 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    # The Node build stage stays on an LTS line that CI also tests (22), so a major bump of the node image is a deliberate change,
+    # not an automatic proposal: the odd-numbered lines (23, 25) are never LTS.
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
