@@ -1,22 +1,22 @@
 # Core Django packages (version-pinned for stability)
 Django==5.2.17
-djangorestframework==3.17.2
-django-cors-headers==4.7.0
-django-environ==0.12.0
+djangorestframework==3.18.3
+django-cors-headers==4.9.0
+django-environ==0.14.0
 djangorestframework_simplejwt==5.5.1
 gunicorn==26.2.0
 
 # Database and static files
-whitenoise==6.9.0
+whitenoise==6.12.0
 sqlparse==0.6.0
 
 # Cloudinary for file storage
-cloudinary==1.44.0
+cloudinary==1.46.3
 django-cloudinary-storage==0.3.0
 
 # Document processing
 pypdf==6.21.1
-python-docx==1.1.2
+python-docx==1.2.0
 python-pptx==1.0.2
 XlsxWriter>=3.2.0
 lxml>=5.4.0
