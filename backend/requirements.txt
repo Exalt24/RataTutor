@@ -47,7 +47,7 @@ tqdm>=4.67.0
 
 # Type checking and utilities
 typing_extensions>=4.16.0
-typing-inspection>=0.4.1
+typing-inspection>=0.4.4
 annotated-types>=0.8.0
 
 # Build tools
