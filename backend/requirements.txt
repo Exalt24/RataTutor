@@ -58,5 +58,5 @@ packaging>=25.0
 # Core utilities
 PyJWT>=2.15.1
 six>=1.17.0
-tzdata>=2025.2
+tzdata>=2026.5
 asgiref>=3.12.1
