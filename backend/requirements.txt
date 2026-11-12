@@ -51,7 +51,7 @@ typing-inspection>=0.4.4
 annotated-types>=0.8.0
 
 # Build tools
-setuptools>=80.9.0
+setuptools>=84.2.1
 wheel>=0.45.0
 packaging>=26.3
 
