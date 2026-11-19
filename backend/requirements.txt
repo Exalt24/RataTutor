@@ -11,7 +11,7 @@ whitenoise==6.12.0
 sqlparse==0.6.1
 
 # Cloudinary for file storage
-cloudinary==1.46.3
+cloudinary==1.47.0
 django-cloudinary-storage==0.3.0
 
 # Document processing
