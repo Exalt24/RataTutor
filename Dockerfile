@@ -33,7 +33,7 @@ RUN npm run build
 # ┌────────────────────────────┐
 # │ Stage 2: Build the backend │
 # └────────────────────────────┘
-FROM python:3.13-slim AS backend-build
+FROM python:3.15-slim AS backend-build
 
 # Install system deps (for psycopg2, etc.)
 RUN apt-get update \
