@@ -52,7 +52,7 @@ annotated-types>=0.8.0
 
 # Build tools
 setuptools>=84.2.1
-wheel>=0.45.0
+wheel>=0.48.0
 packaging>=26.3
 
 # Core utilities
