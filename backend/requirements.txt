@@ -36,7 +36,7 @@ jiter>=0.19.0
 # Other dependencies
 requests>=2.34.2
 certifi>=2026.10.19
-charset-normalizer>=3.4.0
+charset-normalizer>=3.5.2
 urllib3>=2.8.0
 idna>=3.20
 anyio>=4.9.0
