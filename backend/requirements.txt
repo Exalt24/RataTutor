@@ -31,7 +31,7 @@ h11>=0.16.0
 # Pydantic (flexible versions - will get latest with Python 3.14 wheels)
 pydantic>=2.14.3
 pydantic_core>=2.50.1
-jiter>=0.10.0
+jiter>=0.19.0
 
 # Other dependencies
 requests>=2.34.2
